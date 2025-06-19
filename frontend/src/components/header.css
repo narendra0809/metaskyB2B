@@ -1,0 +1,254 @@
+header {
+  background-color: #000F33;
+  height: 80px;
+  display: flex;
+  border: 1px solid #FFFFFF;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 20px;
+  padding-left: 0px;
+  box-shadow: 2px 0px 2px 2px rgba(0, 0, 0, 0.1);
+  color: var(--main-col);
+  font-weight: 500;
+  z-index: 100;
+
+  /* Add for fixed positioning */
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+
+}
+
+/* Add this to your CSS file */
+main, .content-container, #root > div:not(header) {
+  padding-top: 40px; /* Same as your header height */
+}
+@media (width <= 768px) {
+  main, .content-container, #root > div:not(header) {
+    padding-top: 30px; /* Adjust if header height changes on mobile */
+  }
+}
+
+
+
+.header-left {
+  display: flex;
+  height: 100%;
+  position: relative;
+}
+
+/* Add new container for arrow button */
+.arrow-btn-container {
+  position: absolute;
+  top: 50%;
+  right: -25px;
+  transform: translateY(-50%);
+  z-index: 10;
+  width: 37px;
+  height: 37px;
+}
+.emailProfile{
+  color:#919EAB;
+}
+
+.header-logo {
+  width: var(--nav-width);
+  height: 80px;
+  padding: 0px 10px;
+  display: flex;
+  justify-content: center;
+  transition: var(--duration-slide);
+}
+
+.header-logo.deactive {
+  width: var(--nav-width-colps);
+}
+
+.header-logo > img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+/* Completely restructured arrow button */
+.arrow-btn {
+  background: linear-gradient(90deg, rgba(255,255,255,1) 0%, rgba(21,162,176,1) 35%);
+  color: #FFFFFF;
+  width: 100%;
+  height: 100%;
+  border-radius: 8px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 0;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
+  border: none;
+  cursor: pointer;
+}
+
+.arrow-btn:hover {
+  background-color: #2e787e;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* Rotate only the icon */
+.arrow-btn i {
+  transition: transform 0.3s ease;
+}
+
+.arrow-btn i.rotated {
+  transform: rotate(180deg);
+}
+
+/* Header right section */
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+/* Balance display */
+.balance-display {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  color: white;
+  font-size: 14px;
+}
+
+.balance-amount {
+  font-weight: bold;
+}
+
+/* Profile section */
+.profile-section {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: white;
+  padding: 8px 12px;
+  border-radius: 4px;
+}
+
+/* Header icons */
+.header-icons {
+  display: flex;
+  gap: 15px;
+}
+
+.icon-link {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  transition: all 0.3s ease;
+}
+
+.icon-link:hover {
+  background-color: rgba(121, 12, 12, 0.2);
+}
+
+.icon-link:hover .icon-tooltip {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.icon-link img {
+  width: 20px;
+  height: 20px;
+  object-fit: contain;
+}
+
+.icon-tooltip {
+  position: absolute;
+  bottom: -30px;
+  white-space: nowrap;
+  background-color: #000F33;
+  color: white;
+  padding: 5px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  opacity: 0;
+  transform: translateY(-10px);
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+.logout-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+@media (width <= 768px) {
+  .header-logo {
+    display: none;
+  }
+  
+  .arrow-btn-container {
+    position: relative;
+    top: auto;
+    right: auto;
+    transform: none;
+    margin-left: 10px;
+  }
+  
+  .header-right {
+    gap: 10px;
+  }
+}
+
+@media (width <= 425px) {
+  header {
+    padding: 10px;
+  }
+  
+  .balance-display {
+    font-size: 12px;
+  }
+  
+  .user-info span {
+    display: none;
+  }
+  
+  .header-icons {
+    gap: 8px;
+  }
+  
+  .icon-link {
+    width: 30px;
+    height: 30px;
+  }
+  
+  .user-details {
+    display: none;
+  }
+}
+
+.user-details {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.2;
+}
+
+.username {
+  color: #FFFFFF;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.user-id {
+  color: silver;
+  font-size: 12px;
+  opacity: 0.8;
+}

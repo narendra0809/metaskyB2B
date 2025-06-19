@@ -1,0 +1,45 @@
+.login-custom-col {
+  /* fallback for old browsers */
+  background: #fccb90;
+}
+
+@media (min-width: 768px) {
+  .login-form {
+    height: 100vh !important;
+  }
+}
+@media (min-width: 769px) {
+  .login-custom-col {
+    border-top-right-radius: 0.3rem;
+    border-bottom-right-radius: 0.3rem;
+  }
+}
+.h-100{
+  background-color: #02001e;
+
+}
+.pb-5{
+  background-color: #000d3d;
+  border:1px solid #5650FF;
+}
+.small{
+  color: #ffffff;
+}
+.p-data{
+  color: white;
+  font-weight: 600;
+}
+.card{
+  background: #000d3d;
+  color:white;
+}
+.mb-2{
+  color: #ffffff;
+}
+.mb-0{
+  color:#ffffff;
+}
+.text-muted {
+  --bs-text-opacity: 1;
+  color:#ffffff !important;
+}

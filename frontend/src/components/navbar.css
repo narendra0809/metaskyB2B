@@ -1,0 +1,239 @@
+nav {
+  /* position: absolute;
+  top: var(--header-height);
+  left: 0; */
+  flex-shrink: 0;
+  min-height: calc(100% - var(--header-height));
+  width: var(--nav-width);
+  background-color: var(--white-col);
+  transition: var(--duration-slide);
+  /* z-index: 99; */
+
+  &.active {
+    width: var(--nav-width-colps);
+  }
+  &.active .nav-link > .nav-icons {
+    transform: scale(1.4);
+    margin-right: 0px;
+  }
+  &.active .nav-link .no-display {
+    display: none;
+  }
+  &.active .nav-link-dropdown-cont {
+    position: relative;
+
+    & > .nav-link-dropdown-menu {
+      display: none;
+    }
+
+    &:hover > .nav-link-dropdown-menu {
+      display: block;
+      position: absolute;
+      padding-right: var(--nav-padding);
+      border: 1px solid var(--bg-col);
+
+      left: 100%;
+      top: 0px;
+    }
+  }
+}
+
+.nav-link {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  height: 55px;
+  padding-left: var(--nav-padding);
+  color: var(--main-col);
+  font-size: var(--nav-font-size);
+  overflow: hidden;
+  /* transition: var(--duration-links); */
+
+  &:hover {
+    color: var(--sec-col);
+  }
+
+  &.active {
+    border-left: 5px solid var(--sec-col);
+    padding-left: calc(var(--nav-padding) - 5px);
+    background-color: var(--slate-col);
+    color: var(--sec-col);
+  }
+
+  & .nav-icons {
+    flex-shrink: 0;
+    display: flex;
+    width: 25px;
+    font-size: 1.25rem;
+    margin-right: 10px;
+    align-items: center;
+  }
+
+  & span {
+    text-wrap: nowrap;
+  }
+}
+
+.nav-link-dropdown-menu {
+  background-color: var(--light-main-col);
+  transition: var(--duration-slide);
+  display: grid;
+  grid-template-rows: 0fr;
+
+  & > .nav-dropdown-link-cont {
+    overflow: hidden;
+  }
+
+  &.active {
+    grid-template-rows: 1fr;
+  }
+}
+.nav-dropdown-btn {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-right: var(--nav-padding);
+}
+.nav-dropdown-title {
+  display: flex;
+  align-items: center;
+}
+.nav-dropdown-link {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  height: 55px;
+  padding-left: var(--nav-padding);
+  color: var(--main-col);
+  font-size: var(--nav-font-size);
+  text-decoration: none;
+  /* transition: var(--duration-links); */
+
+  &:hover {
+    color: var(--sec-col);
+  }
+
+  &.active {
+    font-weight: bold;
+  }
+
+  & .nav-dropdown-icons {
+    flex-shrink: 0;
+    display: flex;
+    width: 15px;
+    font-size: 0.75rem;
+    margin-right: 5px;
+    align-items: center;
+  }
+}
+
+@media (width <= 768px) {
+  nav {
+    transform: translateX(-100%);
+
+    &.active {
+      width: var(--nav-width);
+      transform: translateX(0%);
+    }
+    &.active .nav-link .nav-icons {
+      transform: none;
+      margin-right: 10px;
+    }
+    &.active .nav-link .no-display {
+      display: inline;
+    }
+
+    &.active .nav-link-dropdown-cont {
+      position: relative;
+
+      & > .nav-link-dropdown-menu {
+        display: grid;
+      }
+
+      &:hover > .nav-link-dropdown-menu {
+        display: grid;
+
+        position: static;
+        padding-right: 0px;
+        border: 0px;
+        transform: translateY(0%);
+      }
+    }
+  }
+}
+
+nav {
+  /* Your existing styles */
+
+  flex-shrink: 0;
+  width: var(--nav-width);
+  background-color: var(--white-col);
+  transition: var(--duration-slide);
+  
+  /* Add these styles to make the navbar scrollable */
+  position: fixed;
+  height: calc(100vh - var(--header-height));
+  overflow-y: auto;
+  overflow-x: hidden;
+  top: var(--header-height); /* Position it right below the header */
+  left: 0;
+}
+nav::-webkit-scrollbar{
+  display:none;
+
+}
+
+/* Style for the container that holds all nav links */
+.nav-links {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  padding-bottom: 20px; /* Add some padding at the bottom for better scrolling experience */
+}
+
+/* Add this to your main content container */
+main, .main-content {
+  margin-left: var(--nav-width);
+  min-height: 100vh;
+  margin-top: 2rem;
+  transition: margin-left var(--duration-slide);
+}
+
+nav.active + main, 
+nav.active + .main-content {
+  margin-left: var(--nav-width-colps);
+}
+
+
+@media (width <= 768px) {
+  nav {
+    transform: translateX(-100%);
+    z-index: 99; 
+  }
+  
+  nav.active {
+    transform: translateX(0);
+  }
+  
+  main, .main-content {
+    margin-left: 0;
+  }
+}
+
+/* Add this to your CSS file */
+.nav-dropdown-btn.active {
+  background-color:#15A2B0;
+  border-left: 5px solid #FFFFFF;
+  padding-left: calc(var(--nav-padding) - 5px);
+  color: var(--sec-col);
+}
+
+/* Make sure dropdown arrows stay white when active */
+.nav-dropdown-btn.active .dropdown-arrow {
+  color: white;
+}
+
+.nav-dropdown-icons{
+  height:27px;
+  margin-bottom: 17px;
+}

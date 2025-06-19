@@ -1,0 +1,183 @@
+.display-section {
+  --display-section-padding: 10px;
+
+  background-color:#000A2F;
+  border-radius: 5px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.btn-primary {
+  --bs-btn-bg: #1cb3be; 
+  --bs-btn-border-color: #0d6a70; 
+  --bs-btn-color: #fff; 
+  --bs-btn-hover-bg: #2e787e; --bs-btn-active-bg: #2e787e; /* Even darker brown on active state */
+  --bs-btn-active-color: #fff; /* White text on active state */
+  --bs-btn-active-border-color: #2e787e;
+  transition: transform 0.3s ease, box-shadow 0.3s ease, background-color 0.3s ease, color 0.3s ease; /* Smooth transition */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Default shadow */
+  border-radius: 8px; /* Rounded corners */
+  border: 2px solid transparent; /* Transparent border */
+}
+
+.btn-primary:hover {
+  transform: translateY(-5px); /* Lift button up by 5px */
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2); /* Enhanced shadow on hover */
+  border-color: #14cad7; /* Border color on hover */
+  --bs-btn-hover-bg: #0d6a70; /* Slightly darker brown on hover */
+}
+
+.btn-primary:active {
+  transform: translateY(0); /* Reset lift effect on click */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Reset shadow on click */
+  --bs-btn-active-bg: #255d61; /* Even darker brown on active state */
+  --bs-btn-active-color: #fff; /* White text on active state */
+}
+
+.btn-info {
+  --bs-btn-bg: #1cb3be; 
+  --bs-btn-border-color: #0d6a70; 
+  --bs-btn-color: #fff; 
+  --bs-btn-hover-bg: #2e787e; --bs-btn-active-bg: #2e787e; /* Even darker brown on active state */
+  --bs-btn-active-color: #fff; /* White text on active state */
+  --bs-btn-active-border-color: #2e787e;
+  transition: transform 0.3s ease, box-shadow 0.3s ease, background-color 0.3s ease, color 0.3s ease; /* Smooth transition */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Default shadow */
+  border-radius: 8px; /* Rounded corners */
+  border: 2px solid transparent; /* Transparent border */
+}
+.icon{
+  color: #FFFFFF;
+}
+.fa-solid, .fas {
+  color: white;
+  font-weight: 900;
+}
+
+.btn-info:hover {
+  transform: translateY(-5px); /* Lift button up by 5px */
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2); /* Enhanced shadow on hover */
+  border-color: #14cad7; /* Border color on hover */
+  --bs-btn-hover-bg: #0d6a70; /* Slightly darker brown on hover */
+}
+
+.btn-info:active {
+  transform: translateY(0); /* Reset lift effect on click */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Reset shadow on click */
+  --bs-btn-active-bg: #255d61; /* Even darker brown on active state */
+  --bs-btn-active-color: #fff; /* White text on active state */
+}
+
+.page-wrapper{
+    color: #FFFFFF;
+}
+
+
+.display-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--display-section-padding);
+  padding: var(--display-section-padding);
+}
+.display-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--display-section-padding);
+  padding: var(--display-section-padding);
+}
+
+.page-title{
+  Color:#ffffff;
+}
+
+.display-title {
+  color: #f3f3f3;
+  font-size: 1.5rem;
+  margin: 0px;
+}
+.display-search {
+  border:1px solid #15A2B0;
+  background-color: #000A2F;
+  max-width: 250px;
+  width: 100%;
+}
+/* loader icon */
+
+.loader {
+  border: 4px solid #f3f3f3; /* Light grey */
+  border-top: 4px solid #FF7D34; /* Blue */
+  border-radius: 50%;
+  width: 20px; /* Size of the loader */
+  height: 20px; /* Size of the loader */
+  animation: spin 1s linear infinite; /* Animation for spinning effect */
+  display: inline-block; /* To align it properly with text */
+  margin-left: 5px; /* Space between text and loader */
+}
+
+.form-control {
+  border: 1px solid #15A2B0;
+  color: #ffffff;
+  background-color: #000A2F;
+}
+
+.form-control::placeholder {
+  color: #ffffff;
+  opacity: 1;
+}
+
+.form-control:focus {
+  background-color: #000A2F;
+  color: #ffffff;
+  border-color: #15A2B0;
+  box-shadow: none;
+}
+/* Target the password reveal icon */
+.input-password-toggle .input-group-text {
+  background-color: transparent;
+  border-color: #15A2B0;
+  color: #ffffff;
+}
+
+/* Make sure the icon itself is white */
+.input-password-toggle .input-group-text i,
+.input-password-toggle .input-group-text svg,
+.password-toggle-indicator::before {
+  color: #ffffff !important;
+}
+
+
+
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+/* end */
+
+@media (width <= 768px) {
+  .display-header {
+    flex-wrap: wrap;
+
+    & > .display-search {
+      order: 1;
+      max-width: 100%;
+    }
+  }
+}
+@media (width <= 380px) {
+  .display-header > button {
+    order: 1;
+    width: 100%;
+  }
+}
+.form-control:disabled {
+  background-color: #4f5f6f;
+  opacity: 1;
+}
+.p-3{
+  background: #000d3d;
+  color: white;
+}
+
