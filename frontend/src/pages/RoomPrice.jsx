@@ -1,105 +1,115 @@
-import { useState } from 'react'
-import useApiData from '../hooks/useApiData'
-import { useAuth } from '../context/authContext'
+import { useState } from "react";
+import useApiData from "../hooks/useApiData";
+import Loader from "../Loader";
+import "../Loader.css";
+import { useAuth } from "../context/AuthContext";
 
-const SightseeingPrice = () => {
-  const base_url = process.env.REACT_APP_API_URL
-  const { authToken } = useAuth()
+const RoomPrice = () => {
+  const base_url = import.meta.env.VITE_API_URL;
+  const { authToken } = useAuth();
 
   /* -- variables -- */
-  let output, outputData, filteredData
-  let totalPageNo = 0
+  let output, outputData, filteredData;
+  let totalPageNo = 0;
 
   /* -- fetch data -- */
   const { data, loading } = useApiData(
-    `${base_url}/api/getsswithcity`,
+    `${base_url}/api/getHotelsWithCity`,
     authToken
-  )
+  );
 
   /* -- state variables -- */
   const [filterValue, setFilterValue] = useState({
-    search: '',
-    hotels: '',
-  })
-  let [perPage, setPerPage] = useState(10)
-  let [currPageNo, setCurrPageNo] = useState(0)
+    search: "",
+    hotels: "",
+  });
+  let [perPage, setPerPage] = useState(10);
+  let [currPageNo, setCurrPageNo] = useState(0);
 
   /* -- render data -- */
   if (!loading) {
-    // Check if data and data.sightseeing are available
-    if (data && data.sightseeing) {
+    // Check if data and data.hotels are available
+    if (data && data.hotels) {
       // filtering
-      filteredData = data.sightseeing.filter(
-        (item) =>
-          item.company_name
-            .toLowerCase()
-            .includes(filterValue.search.toLowerCase()) ||
-          item.city.toLowerCase().includes(filterValue.search.toLowerCase())
-      )
+      filteredData = data.hotels.filter((item) =>
+        item.hotel_name.toLowerCase().includes(filterValue.search.toLowerCase())
+      );
 
-      totalPageNo = Math.ceil(filteredData.length / perPage)
+      totalPageNo = Math.ceil(filteredData.length / perPage);
 
       // pagination
       outputData = filteredData.slice(
         perPage * currPageNo,
         perPage * currPageNo + perPage
-      )
+      );
 
       // render
       output = outputData.map((item, index) => (
         <tr key={index}>
-          <td className="align-middle">{item.company_name}</td>
-          <td className="align-middle">{item.description}</td>
+          <td className="align-middle">{item.hotel_name}</td>
           <td className="align-middle">{item.city}</td>
-          <td className="align-middle">{item.rate_adult}</td>
-          <td className="align-middle">{item.rate_child}</td>
+          <td>
+            {item.room_types.map((room, i) => (
+              <p key={i}>{room.type}</p>
+            ))}
+          </td>
+          <td>
+            {item.room_types.map((room, i) => (
+              <p key={i}>₹ {room.rate} /-</p>
+            ))}
+          </td>
         </tr>
-      ))
+      ));
     } else {
       output = (
         <tr>
-          <td colSpan={5}>No sightseeing options found</td>
+          <td colSpan={4} style={{ textAlign: "center" }}>
+            No hotels found
+          </td>
         </tr>
-      )
+      );
     }
   } else {
     output = (
       <tr>
-        <td colSpan={5}>Loading...</td>
+        <td colSpan={4}>
+          {" "}
+          <Loader />
+        </td>
       </tr>
-    )
+    );
   }
 
   /* -- functions -- */
   const handlePerPage = (e) => {
-    setPerPage(e.target.value)
-    setCurrPageNo(0)
-  }
+    setPerPage(e.target.value);
+    setCurrPageNo(0);
+  };
 
   const handleFilter = ({ currentTarget }) => {
     setFilterValue((item) => ({
       ...item,
       [currentTarget.name]: currentTarget.value,
-    }))
-    setCurrPageNo(0)
-  }
+    }));
+    setCurrPageNo(0);
+  };
 
   const handlePageInc = () => {
     if (currPageNo + 1 < totalPageNo) {
-      setCurrPageNo((item) => item + 1)
+      setCurrPageNo((item) => item + 1);
     }
-  }
+  };
   const handlePageDec = () => {
     if (currPageNo > 0) {
-      setCurrPageNo((item) => item - 1)
+      setCurrPageNo((item) => item - 1);
     }
-  }
+  };
 
   return (
     <>
       <section className="page-section">
         <div className="page-header">
-          <h1 className="page-title">Sightseeing Price</h1>
+          <h1 className="page-title">Room Price</h1>
         </div>
 
         {/* Table */}
@@ -145,16 +155,15 @@ const SightseeingPrice = () => {
               </div>
             </div>
 
-            <div style={{ display: 'grid' }}>
+            <div style={{ display: "grid" }}>
               <div className="table-responsive mt-4">
                 <table className="table table-hover text-center">
                   <thead>
                     <tr>
-                      <th>Company Name</th>
-                      <th>Description</th>
+                      <th>Hotel Name</th>
                       <th>City</th>
-                      <th>Adult Cost</th>
-                      <th>Child Cost</th>
+                      <th>Room Types</th>
+                      <th>Room Cost</th>
                     </tr>
                   </thead>
                   <tbody className="bg-white">
@@ -162,7 +171,7 @@ const SightseeingPrice = () => {
                       output
                     ) : (
                       <tr>
-                        <td colSpan={5}>No record found</td>
+                        <td colSpan={4}>No record found</td>
                       </tr>
                     )}
                   </tbody>
@@ -170,16 +179,16 @@ const SightseeingPrice = () => {
               </div>
               <div className="d-flex justify-content-between align-items-center">
                 <small>
-                  Showing {(currPageNo + 1) * perPage - (perPage - 1)} to{' '}
+                  Showing {(currPageNo + 1) * perPage - (perPage - 1)} to{" "}
                   {(currPageNo + 1) * perPage < filteredData?.length
                     ? (currPageNo + 1) * perPage
-                    : filteredData?.length}{' '}
+                    : filteredData?.length}{" "}
                   of {filteredData?.length} entries
                 </small>
                 <ul className="pagination mt-4">
                   <li className="page-item">
                     <button
-                      className={`page-link ${currPageNo <= 0 && 'disabled'}`}
+                      className={`page-link ${currPageNo <= 0 && "disabled"}`}
                       onClick={handlePageDec}
                     >
                       Prev
@@ -188,7 +197,7 @@ const SightseeingPrice = () => {
                   <li className="page-item">
                     <button
                       className={`page-link ${
-                        currPageNo + 1 >= totalPageNo && 'disabled'
+                        currPageNo + 1 >= totalPageNo && "disabled"
                       }`}
                       onClick={handlePageInc}
                     >
@@ -202,7 +211,7 @@ const SightseeingPrice = () => {
         </div>
       </section>
     </>
-  )
-}
+  );
+};
 
-export default SightseeingPrice
+export default RoomPrice;

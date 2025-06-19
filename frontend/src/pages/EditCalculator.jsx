@@ -1,43 +1,46 @@
-import { useEffect, useState } from 'react'
-import useApiData from '../hooks/useApiData'
-import { useAuth } from '../context/authContext'
-import useSendData from '../hooks/useSendData'
-import Loader from '../Loader';
-import '../Loader.css';
-import Alert from '../components/alert'
-import { useParams } from 'react-router-dom'
+import { useEffect, useState } from "react";
+import useApiData from "../hooks/useApiData";
+import useSendData from "../hooks/useSendData";
+import Loader from "../Loader";
+import "../Loader.css";
+import Alert from "../components/Alert";
+import { useParams } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 
 const EditCalculator = () => {
-  const { bookingId } = useParams()
+  const { bookingId } = useParams();
 
-  const base_url = process.env.REACT_APP_API_URL
-  const { authUser, authToken } = useAuth()
-  const today = new Date().toISOString().split('T')[0]
+  const base_url = import.meta.env.VITE_API_URL;
+  const { authUser, authToken } = useAuth();
+  const today = new Date().toISOString().split("T")[0];
 
   // Fetch Data
-  const countriesData = useApiData(`${base_url}/api/countries`, authToken)
+  const countriesData = useApiData(`${base_url}/api/countries`, authToken);
   const destinationsData = useApiData(
     `${base_url}/api/getdestinations`,
     authToken
-  )
-  const hotelsData = useApiData(`${base_url}/api/hotels`, authToken)
-  const transportData = useApiData(`${base_url}/api/transportations`, authToken)
-  const sightseeingData = useApiData(`${base_url}/api/sightseeings`, authToken)
+  );
+  const hotelsData = useApiData(`${base_url}/api/hotels`, authToken);
+  const transportData = useApiData(
+    `${base_url}/api/transportations`,
+    authToken
+  );
+  const sightseeingData = useApiData(`${base_url}/api/sightseeings`, authToken);
 
   // Booking Data
   const bookingData = useApiData(
     `${base_url}/api/showbooking/${authUser.id}`,
     authToken
-  )
+  );
 
   const bookingRecord = bookingData.data?.data?.find(
     (booking) => booking.booking?.id == bookingId
-  )?.booking
+  )?.booking;
 
   const subFormData = useSendData(
     `${base_url}/api/editbooking/${bookingRecord?.id}`,
     authToken
-  )
+  );
 
   // Calculate values
   const [calc, setCalc] = useState({
@@ -48,34 +51,34 @@ const EditCalculator = () => {
     perChild: 0,
     taxAmount: 0,
     finalAmount: 0,
-  })
+  });
 
-  const [err, setErr] = useState(null)
-  const [success, setSuccess] = useState(false)
-  const [popUp, setPopUp] = useState(false)
+  const [err, setErr] = useState(null);
+  const [success, setSuccess] = useState(false);
+  const [popUp, setPopUp] = useState(false);
 
   // Submission state
-  const [toSubmit, setToSubmit] = useState(false)
+  const [toSubmit, setToSubmit] = useState(false);
 
   // Form Data
   const defaultForm = {
     user_id: authUser.id,
-    customer_name: '',
-    phone_no: '',
-    travel_date_from: '',
-    travel_date_to: '',
+    customer_name: "",
+    phone_no: "",
+    travel_date_from: "",
+    travel_date_to: "",
     no_adults: 0,
     no_children: 0,
     hotel_info: [
       {
-        destination_id: '',
-        hotel_id: '',
-        room_type: '',
+        destination_id: "",
+        hotel_id: "",
+        room_type: "",
         rooms: 0,
         ex_adults: 0,
         ex_children: 0,
-        check_in: '',
-        check_out: '',
+        check_in: "",
+        check_out: "",
         room_type_cost: 0,
         ex_adult_cost: 0,
         ex_children_cost: 0,
@@ -84,54 +87,54 @@ const EditCalculator = () => {
     ],
     transport_info: [
       {
-        destination_id: '',
-        transport_id: '',
-        v_type: '',
-        date: '',
+        destination_id: "",
+        transport_id: "",
+        v_type: "",
+        date: "",
         transport_cost: 0,
       },
     ],
     sightseeing_info: [
       {
-        destination_id: '',
-        sightseeing_id: '',
+        destination_id: "",
+        sightseeing_id: "",
         adults: 0,
         children: 0,
-        date: '',
+        date: "",
         adult_cost: 0,
         children_cost: 0,
       },
     ],
-    remarks: '',
+    remarks: "",
     taxes: [],
-    customer_status: 'pending',
-    payment_status: 'unpaid',
-    final_payment: '',
-    total_per_adult: '',
-    total_per_child: '',
-  }
-  const [formData, setFormData] = useState({ ...defaultForm })
+    customer_status: "pending",
+    payment_status: "unpaid",
+    final_payment: "",
+    total_per_adult: "",
+    total_per_child: "",
+  };
+  const [formData, setFormData] = useState({ ...defaultForm });
 
   useEffect(() => {
     if (bookingRecord) {
       setFormData({
         user_id: authUser.id,
-        customer_name: bookingRecord.customer_name || '',
-        phone_no: bookingRecord.phone_no || '',
-        travel_date_from: bookingRecord.travel_date_from?.split('T')[0] || '',
-        travel_date_to: bookingRecord.travel_date_to?.split('T')[0] || '',
+        customer_name: bookingRecord.customer_name || "",
+        phone_no: bookingRecord.phone_no || "",
+        travel_date_from: bookingRecord.travel_date_from?.split("T")[0] || "",
+        travel_date_to: bookingRecord.travel_date_to?.split("T")[0] || "",
         no_adults: bookingRecord.no_adults || 0,
         no_children: bookingRecord.no_children || 0,
         hotel_info: JSON.parse(bookingRecord.hotel_info) || [
           {
-            destination_id: '',
-            hotel_id: '',
-            room_type: '',
+            destination_id: "",
+            hotel_id: "",
+            room_type: "",
             rooms: 0,
             ex_adults: 0,
             ex_children: 0,
-            check_in: '',
-            check_out: '',
+            check_in: "",
+            check_out: "",
             room_type_cost: 0,
             ex_adult_cost: 0,
             ex_children_cost: 0,
@@ -140,169 +143,169 @@ const EditCalculator = () => {
         ],
         transport_info: JSON.parse(bookingRecord.transport_info) || [
           {
-            destination_id: '',
-            transport_id: '',
-            v_type: '',
-            date: '',
+            destination_id: "",
+            transport_id: "",
+            v_type: "",
+            date: "",
             transport_cost: 0,
           },
         ],
         sightseeing_info: JSON.parse(bookingRecord.sightseeing_info) || [
           {
-            destination_id: '',
-            sightseeing_id: '',
+            destination_id: "",
+            sightseeing_id: "",
             adults: 0,
             children: 0,
-            date: '',
+            date: "",
             adult_cost: 0,
             children_cost: 0,
           },
         ],
-        remarks: bookingRecord.remarks || '',
+        remarks: bookingRecord.remarks || "",
         taxes: JSON.parse(bookingRecord.taxes) || [],
-        customer_status: bookingRecord.customer_status || 'pending',
-        payment_status: bookingRecord.payment_status || 'unpaid',
-        final_payment: bookingRecord.final_payment || '',
-        total_per_adult: bookingRecord.total_per_adult || '',
-        total_per_child: bookingRecord.total_per_child || '',
-      })
+        customer_status: bookingRecord.customer_status || "pending",
+        payment_status: bookingRecord.payment_status || "unpaid",
+        final_payment: bookingRecord.final_payment || "",
+        total_per_adult: bookingRecord.total_per_adult || "",
+        total_per_child: bookingRecord.total_per_child || "",
+      });
     }
-  }, [bookingData?.loading])
+  }, [bookingData?.loading]);
 
   // Add Info functions
   const handleAddInfo = (type) => {
-    setToSubmit(false)
+    setToSubmit(false);
     switch (type) {
       // hotel
-      case 'hotel':
+      case "hotel":
         setFormData((prev) => ({
           ...prev,
           hotel_info: [
             ...prev.hotel_info,
             {
-              destination_id: '',
-              hotel_id: '',
-              room_type: '',
-              rooms: '',
-              ex_adults: '',
-              ex_children: '',
-              check_in: '',
-              check_out: '',
-              room_type_cost: '',
-              ex_adult_cost: '',
-              ex_children_cost: '',
+              destination_id: "",
+              hotel_id: "",
+              room_type: "",
+              rooms: "",
+              ex_adults: "",
+              ex_children: "",
+              check_in: "",
+              check_out: "",
+              room_type_cost: "",
+              ex_adult_cost: "",
+              ex_children_cost: "",
             },
           ],
-        }))
-        break
+        }));
+        break;
 
       // transport
-      case 'transport':
+      case "transport":
         setFormData((prev) => ({
           ...prev,
           transport_info: [
             ...prev.transport_info,
             {
-              destination_id: '',
-              transport_id: '',
-              no_of_people: '',
-              date: '',
-              transport_cost: '',
+              destination_id: "",
+              transport_id: "",
+              no_of_people: "",
+              date: "",
+              transport_cost: "",
             },
           ],
-        }))
-        break
+        }));
+        break;
 
       // sightseeing
-      case 'sightseeing':
+      case "sightseeing":
         setFormData((prev) => ({
           ...prev,
           sightseeing_info: [
             ...prev.sightseeing_info,
             {
-              destination_id: '',
-              sightseeing_id: '',
-              adults: '',
-              children: '',
-              date: '',
-              adult_cost: '',
-              children_cost: '',
+              destination_id: "",
+              sightseeing_id: "",
+              adults: "",
+              children: "",
+              date: "",
+              adult_cost: "",
+              children_cost: "",
             },
           ],
-        }))
-        break
+        }));
+        break;
     }
-  }
+  };
 
   // Delete Info functions
   const handleDeleteInfo = (key, index) => {
-    setToSubmit(false)
+    setToSubmit(false);
 
-    const data = { ...formData }
-    data[key].splice(index, 1)
-    setFormData(data)
-  }
+    const data = { ...formData };
+    data[key].splice(index, 1);
+    setFormData(data);
+  };
 
   // Handle Data Change
   const handleDataChange = ({ currentTarget }) => {
-    setToSubmit(false)
+    setToSubmit(false);
 
-    const { name, value } = currentTarget
-    let filteredValue = value
+    const { name, value } = currentTarget;
+    let filteredValue = value;
 
-    if (name === 'travel_date_from') {
-      formData.travel_date_to = ''
+    if (name === "travel_date_from") {
+      formData.travel_date_to = "";
     }
 
     switch (name) {
-      case 'phone_no':
-        filteredValue = value.replace(/[^0-9]/g, '')
-        break
+      case "phone_no":
+        filteredValue = value.replace(/[^0-9]/g, "");
+        break;
 
       default:
-        filteredValue = value
-        break
+        filteredValue = value;
+        break;
     }
 
-    setFormData((prev) => ({ ...prev, [name]: filteredValue }))
-  }
+    setFormData((prev) => ({ ...prev, [name]: filteredValue }));
+  };
 
   // Handle Nested Data Change
   const handleNestedDataChange = ({ currentTarget }, infoType, index) => {
-    setToSubmit(false)
+    setToSubmit(false);
 
-    const { name, value } = currentTarget
-    const data = { ...formData }
+    const { name, value } = currentTarget;
+    const data = { ...formData };
 
-    if (infoType === 'hotel_info') {
+    if (infoType === "hotel_info") {
       switch (name) {
-        case 'check_in':
-          data.hotel_info[index].check_out = ''
-          break
+        case "check_in":
+          data.hotel_info[index].check_out = "";
+          break;
 
         // to do
-        case 'destination_id':
-          data.hotel_info[index].hotel_id = ''
-          data.hotel_info[index].ex_adult_cost = ''
-          data.hotel_info[index].ex_children_cost = ''
-          data.hotel_info[index].room_type = ''
-          data.hotel_info[index].room_type_cost = ''
-          break
+        case "destination_id":
+          data.hotel_info[index].hotel_id = "";
+          data.hotel_info[index].ex_adult_cost = "";
+          data.hotel_info[index].ex_children_cost = "";
+          data.hotel_info[index].room_type = "";
+          data.hotel_info[index].room_type_cost = "";
+          break;
 
-        case 'hotel_id':
-          data.hotel_info[index].ex_adult_cost = ''
-          data.hotel_info[index].ex_children_cost = ''
-          data.hotel_info[index].room_type = ''
-          data.hotel_info[index].room_type_cost = ''
-          data.hotel_info[index].meals = []
+        case "hotel_id":
+          data.hotel_info[index].ex_adult_cost = "";
+          data.hotel_info[index].ex_children_cost = "";
+          data.hotel_info[index].room_type = "";
+          data.hotel_info[index].room_type_cost = "";
+          data.hotel_info[index].meals = [];
 
           // Select Hotel
           const s_hotel = hotelsData.data?.data?.find(
             (hotel) => hotel.id == value
-          )
+          );
           // Assign rate
-          data.hotel_info[index].ex_adult_cost = s_hotel?.ex_adult_rate
-          data.hotel_info[index].ex_children_cost = s_hotel?.ex_child_rate
+          data.hotel_info[index].ex_adult_cost = s_hotel?.ex_adult_rate;
+          data.hotel_info[index].ex_children_cost = s_hotel?.ex_child_rate;
 
           // Assign Meals
           s_hotel?.meals?.forEach((meal) => {
@@ -313,117 +316,117 @@ const EditCalculator = () => {
                 isChecked: false,
                 rate: meal.rate,
               },
-            ]
-          })
+            ];
+          });
 
-          break
+          break;
 
-        case 'room_type':
+        case "room_type":
           // Select Hotel
           const selectedHotel = hotelsData.data?.data?.find(
             (hotel) => hotel.id == data.hotel_info[index].hotel_id
-          )
+          );
           // Select Room Type
           const selectedRoomType = selectedHotel?.room_types.find(
             (room_type) => room_type.type == value
-          )
+          );
           // Assign rate
-          data.hotel_info[index].room_type_cost = selectedRoomType?.rate
-          break
+          data.hotel_info[index].room_type_cost = selectedRoomType?.rate;
+          break;
       }
-    } else if (infoType === 'transport_info') {
+    } else if (infoType === "transport_info") {
       switch (name) {
-        case 'destination_id':
-          data.transport_info[index].transport_id = ''
-          data.transport_info[index].v_type = ''
-          data.transport_info[index].transport_cost = ''
-          break
-        case 'transport_id':
-          data.transport_info[index].v_type = ''
-          data.transport_info[index].transport_cost = ''
-          break
-        case 'v_type':
+        case "destination_id":
+          data.transport_info[index].transport_id = "";
+          data.transport_info[index].v_type = "";
+          data.transport_info[index].transport_cost = "";
+          break;
+        case "transport_id":
+          data.transport_info[index].v_type = "";
+          data.transport_info[index].transport_cost = "";
+          break;
+        case "v_type":
           // Select Transport
           const selectedTransport = transportData.data?.data?.find(
             (transport) =>
               transport.id == data.transport_info[index].transport_id
-          )
+          );
           // Select Transport Type
           const selectedType = selectedTransport?.options.find(
             (v_type) => v_type.type == value
-          )
+          );
           // Assign rate
-          data.transport_info[index].transport_cost = selectedType?.rate
-          break
+          data.transport_info[index].transport_cost = selectedType?.rate;
+          break;
       }
-    } else if (infoType === 'sightseeing_info') {
+    } else if (infoType === "sightseeing_info") {
       switch (name) {
-        case 'destination_id':
-          data.sightseeing_info[index].sightseeing_id = ''
-          data.sightseeing_info[index].adult_cost = 0
-          data.sightseeing_info[index].children_cost = 0
-          break
-        case 'sightseeing_id':
+        case "destination_id":
+          data.sightseeing_info[index].sightseeing_id = "";
+          data.sightseeing_info[index].adult_cost = 0;
+          data.sightseeing_info[index].children_cost = 0;
+          break;
+        case "sightseeing_id":
           // Select Sightseeing
           const selectedSightseeing = sightseeingData.data?.data?.find(
             (sightseeing) => sightseeing.id == value
-          )
+          );
 
           data.sightseeing_info[index].adult_cost =
-            selectedSightseeing?.rate_adult
+            selectedSightseeing?.rate_adult;
           data.sightseeing_info[index].children_cost =
-            selectedSightseeing?.rate_child
+            selectedSightseeing?.rate_child;
 
-          break
+          break;
       }
     }
 
-    data[infoType][index][name] = value
+    data[infoType][index][name] = value;
 
-    setFormData(data)
-  }
+    setFormData(data);
+  };
 
   // Handle Meals
   const handleMealsChange = ({ currentTarget }, index) => {
-    setToSubmit(false)
+    setToSubmit(false);
 
-    const { name } = currentTarget
-    const data = { ...formData }
+    const { name } = currentTarget;
+    const data = { ...formData };
 
     const foundMeal = data.hotel_info[index].meals.find(
       (item) => item.name == name
-    )
+    );
 
-    foundMeal.isChecked = foundMeal.isChecked ? false : true
+    foundMeal.isChecked = foundMeal.isChecked ? false : true;
 
-    setFormData(data)
-  }
+    setFormData(data);
+  };
 
   // Handle Cost Calculation
   const handleCalculate = () => {
     if (!formData.customer_name) {
-      setErr('Customer name field is required!')
-      setSuccess(false)
-      setPopUp(true)
-      return
+      setErr("Customer name field is required!");
+      setSuccess(false);
+      setPopUp(true);
+      return;
     }
     if (!formData.phone_no) {
-      setErr('Phone Number field is required!')
-      setSuccess(false)
-      setPopUp(true)
-      return
+      setErr("Phone Number field is required!");
+      setSuccess(false);
+      setPopUp(true);
+      return;
     }
     if (!formData.travel_date_from || !formData.travel_date_to) {
-      setErr('Travelling dates are required!')
-      setSuccess(false)
-      setPopUp(true)
-      return
+      setErr("Travelling dates are required!");
+      setSuccess(false);
+      setPopUp(true);
+      return;
     }
     if (formData.no_adults < 1) {
-      setErr('At least 1 adult is required!')
-      setSuccess(false)
-      setPopUp(true)
-      return
+      setErr("At least 1 adult is required!");
+      setSuccess(false);
+      setPopUp(true);
+      return;
     }
 
     let total = 0,
@@ -432,94 +435,94 @@ const EditCalculator = () => {
       perAdult = 0,
       perChild = 0,
       taxAmount = 0,
-      finalAmount = 0
+      finalAmount = 0;
 
     let hotelInfoAdults = 0,
       transportInfoAdults = 0,
-      sightseeingInfoAdults = 0
+      sightseeingInfoAdults = 0;
     let hotelInfoChildren = 0,
       transportInfoChildren = 0,
-      sightseeingInfoChildren = 0
+      sightseeingInfoChildren = 0;
 
     formData.hotel_info.forEach((hotel) => {
       const checkInOutDays = getDaysBetweenDates(
         hotel.check_in,
         hotel.check_out
-      )
-      let mealsCost = 0
+      );
+      let mealsCost = 0;
       let adultAmountRoom = 0,
-        adultAmountFood = 0
+        adultAmountFood = 0;
       let childrenAmountRoom = 0,
-        childrenAmountFood = 0
+        childrenAmountFood = 0;
 
       // Cost for Adult's room
       adultAmountRoom +=
         Number(hotel.rooms) *
           Number(hotel.room_type_cost || 0) *
           checkInOutDays +
-        checkInOutDays * Number(hotel.ex_adult_cost) * Number(hotel.ex_adults)
+        checkInOutDays * Number(hotel.ex_adult_cost) * Number(hotel.ex_adults);
 
       // Children rooms cost
       childrenAmountRoom +=
         checkInOutDays *
         Number(hotel.ex_children_cost) *
-        Number(hotel.ex_children)
+        Number(hotel.ex_children);
 
       // Per hotel meals cost
       hotel.meals
         .filter((meal) => meal.isChecked)
         .forEach((meal) => {
-          mealsCost += Number(meal.rate)
-        })
+          mealsCost += Number(meal.rate);
+        });
 
       // Adult Meals cost
       adultAmountFood +=
         mealsCost *
         (Number(formData.no_adults) + Number(hotel.ex_adults)) *
-        checkInOutDays
+        checkInOutDays;
 
       // Children Meals cost
       childrenAmountFood +=
         mealsCost *
         (Number(formData.no_children) + Number(hotel.ex_children)) *
-        checkInOutDays
+        checkInOutDays;
 
       // Total Adult Hotel Cost
-      hotelInfoAdults += adultAmountRoom + adultAmountFood
-      hotelInfoChildren += childrenAmountRoom + childrenAmountFood
-    })
+      hotelInfoAdults += adultAmountRoom + adultAmountFood;
+      hotelInfoChildren += childrenAmountRoom + childrenAmountFood;
+    });
 
     formData.transport_info.forEach((transport) => {
-      transportInfoAdults += Number(transport.transport_cost)
-    })
+      transportInfoAdults += Number(transport.transport_cost);
+    });
 
     formData.sightseeing_info.forEach((sight) => {
-      const adultCost = sight.adult_cost
-      const childrenCost = sight.children_cost
+      const adultCost = sight.adult_cost;
+      const childrenCost = sight.children_cost;
 
-      sightseeingInfoAdults += adultCost * sight.adults
-      sightseeingInfoChildren += childrenCost * sight.children
-    })
+      sightseeingInfoAdults += adultCost * sight.adults;
+      sightseeingInfoChildren += childrenCost * sight.children;
+    });
 
     // Totalling
     // adults
-    adultsTotal = hotelInfoAdults + transportInfoAdults + sightseeingInfoAdults
+    adultsTotal = hotelInfoAdults + transportInfoAdults + sightseeingInfoAdults;
     // Per adult
     perAdult =
       Math.round(
         (hotelInfoAdults + transportInfoAdults + sightseeingInfoAdults) /
           Number(formData.no_adults)
-      ) || 0
+      ) || 0;
 
     // Children
     childrenTotal =
-      hotelInfoChildren + transportInfoChildren + sightseeingInfoChildren
+      hotelInfoChildren + transportInfoChildren + sightseeingInfoChildren;
     // Per child
     perChild =
       Math.round(
         (hotelInfoChildren + transportInfoChildren + sightseeingInfoChildren) /
           Number(formData.no_children)
-      ) || 0
+      ) || 0;
 
     // Total
     total =
@@ -528,14 +531,14 @@ const EditCalculator = () => {
         sightseeingInfoAdults +
         hotelInfoChildren +
         transportInfoChildren +
-        sightseeingInfoChildren || 0
+        sightseeingInfoChildren || 0;
 
     // Taxes
     formData.taxes.forEach((tax) => {
-      taxAmount += total * (tax.tax_value / 100)
-    })
+      taxAmount += total * (tax.tax_value / 100);
+    });
 
-    finalAmount = total + taxAmount
+    finalAmount = total + taxAmount;
 
     // Update State
     setCalc((prev) => ({
@@ -547,66 +550,70 @@ const EditCalculator = () => {
       total: total,
       taxAmount: taxAmount,
       finalAmount: finalAmount,
-    }))
+    }));
 
     // Set for Submission
-    setToSubmit(true)
-  }
+    setToSubmit(true);
+  };
 
   // Submit
   const handleSubmit = (e) => {
-    e.preventDefault()
+    e.preventDefault();
 
     if (!(Number(calc.finalAmount) >= 1)) {
-      setErr('Please make an appropriate package')
-      setSuccess(false)
-      setPopUp(true)
-      return
+      setErr("Please make an appropriate package");
+      setSuccess(false);
+      setPopUp(true);
+      return;
     }
 
-    const data = { ...formData }
-    data.final_payment = Number(calc.finalAmount)
-    data.total_per_adult = Number(calc.perAdult)
-    data.total_per_child = Number(calc.perChild)
+    const data = { ...formData };
+    data.final_payment = Number(calc.finalAmount);
+    data.total_per_adult = Number(calc.perAdult);
+    data.total_per_child = Number(calc.perChild);
 
-    subFormData.sendData(data)
-  }
+    subFormData.sendData(data);
+  };
 
   useEffect(() => {
     if (!subFormData.loading && subFormData.response) {
-      setSuccess(subFormData.response?.success)
+      setSuccess(subFormData.response?.success);
 
       if (subFormData.response?.success) {
-        setToSubmit(false)
-        setErr(subFormData.response?.message)
+        setToSubmit(false);
+        setErr(subFormData.response?.message);
         // setFormData({ ...defaultForm })
       } else {
-        setErr(subFormData.response?.error)
+        setErr(subFormData.response?.error);
       }
 
-      setPopUp(true)
+      setPopUp(true);
     }
-  }, [subFormData.loading])
+  }, [subFormData.loading]);
 
   // Function -> Number of days
   function getDaysBetweenDates(date1, date2) {
-    const startDate = new Date(date1)
-    const endDate = new Date(date2)
-    const differenceInMillis = endDate - startDate
+    const startDate = new Date(date1);
+    const endDate = new Date(date2);
+    const differenceInMillis = endDate - startDate;
 
-    return differenceInMillis / (1000 * 60 * 60 * 24) || 0 // Convert milliseconds to days
+    return differenceInMillis / (1000 * 60 * 60 * 24) || 0; // Convert milliseconds to days
   }
 
   if (bookingData.loading) {
-    return <p><Loader /></p>
+    return (
+      <p>
+        <Loader />
+      </p>
+    );
   }
 
   if (!bookingRecord) {
-    return <p className="title text-center">No records found for the agent!</p>
+    return <p className="title text-center">No records found for the agent!</p>;
   }
 
-  if (bookingRecord.customer_status != 'pending') {
-    return <p className="title text-center">This customer can't be updated!</p>
+  if (bookingRecord.customer_status != "pending") {
+    return <p className="title text-center">This customer can't be updated!</p>;
   }
 
   return (
@@ -614,7 +621,7 @@ const EditCalculator = () => {
       <Alert
         open={popUp}
         handleClose={() => {
-          setPopUp(false)
+          setPopUp(false);
         }}
         success={success}
       >
@@ -760,7 +767,7 @@ const EditCalculator = () => {
                       <button
                         className="btn btn-danger rounded-circle"
                         onClick={() => {
-                          handleDeleteInfo('hotel_info', index)
+                          handleDeleteInfo("hotel_info", index);
                         }}
                       >
                         <i className="fa-regular fa-trash-can"></i>
@@ -778,7 +785,7 @@ const EditCalculator = () => {
                         name="destination_id"
                         value={item.destination_id}
                         onChange={(e) => {
-                          handleNestedDataChange(e, 'hotel_info', index)
+                          handleNestedDataChange(e, "hotel_info", index);
                         }}
                         disabled={
                           !formData.travel_date_from ||
@@ -792,7 +799,7 @@ const EditCalculator = () => {
                             <option key={item.id} value={item.id}>
                               {countriesData.data?.cities.find(
                                 (city) => city.id === item.city_id
-                              )?.name || 'N/A'}
+                              )?.name || "N/A"}
                             </option>
                           ))}
                       </select>
@@ -808,7 +815,7 @@ const EditCalculator = () => {
                         name="hotel_id"
                         value={item.hotel_id}
                         onChange={(e) => {
-                          handleNestedDataChange(e, 'hotel_info', index)
+                          handleNestedDataChange(e, "hotel_info", index);
                         }}
                         disabled={!item.destination_id}
                       >
@@ -820,7 +827,7 @@ const EditCalculator = () => {
                           )
                           .map((hotel) => (
                             <option key={hotel.id} value={hotel.id}>
-                              {hotel.name || 'N/A'}
+                              {hotel.name || "N/A"}
                             </option>
                           ))}
                       </select>
@@ -836,7 +843,7 @@ const EditCalculator = () => {
                         name="room_type"
                         value={item.room_type}
                         onChange={(e) => {
-                          handleNestedDataChange(e, 'hotel_info', index)
+                          handleNestedDataChange(e, "hotel_info", index);
                         }}
                         disabled={!item.hotel_id}
                       >
@@ -845,7 +852,7 @@ const EditCalculator = () => {
                           ?.find((hotel) => hotel.id == item.hotel_id)
                           ?.room_types.map((room_type, i) => (
                             <option key={i} value={room_type.type}>
-                              {room_type.type || 'N/A'}
+                              {room_type.type || "N/A"}
                             </option>
                           ))}
                       </select>
@@ -861,7 +868,7 @@ const EditCalculator = () => {
                         name="rooms"
                         value={item.rooms}
                         onChange={(e) => {
-                          handleNestedDataChange(e, 'hotel_info', index)
+                          handleNestedDataChange(e, "hotel_info", index);
                         }}
                         disabled={!item.room_type}
                       >
@@ -889,7 +896,7 @@ const EditCalculator = () => {
                         name="ex_adults"
                         value={item.ex_adults}
                         onChange={(e) => {
-                          handleNestedDataChange(e, 'hotel_info', index)
+                          handleNestedDataChange(e, "hotel_info", index);
                         }}
                       >
                         <option value={0}>0</option>
@@ -916,7 +923,7 @@ const EditCalculator = () => {
                         name="ex_children"
                         value={item.ex_children}
                         onChange={(e) => {
-                          handleNestedDataChange(e, 'hotel_info', index)
+                          handleNestedDataChange(e, "hotel_info", index);
                         }}
                       >
                         <option value={0}>0</option>
@@ -946,7 +953,7 @@ const EditCalculator = () => {
                         max={formData.travel_date_to}
                         value={item.check_in}
                         onChange={(e) => {
-                          handleNestedDataChange(e, 'hotel_info', index)
+                          handleNestedDataChange(e, "hotel_info", index);
                         }}
                         disabled={
                           !formData.travel_date_from || !formData.travel_date_to
@@ -970,7 +977,7 @@ const EditCalculator = () => {
                         max={formData.travel_date_to}
                         value={item.check_out}
                         onChange={(e) => {
-                          handleNestedDataChange(e, 'hotel_info', index)
+                          handleNestedDataChange(e, "hotel_info", index);
                         }}
                         disabled={
                           !formData.travel_date_from || !formData.travel_date_to
@@ -990,7 +997,7 @@ const EditCalculator = () => {
                                 id={`checkbox-${index}-${meal.name}`}
                                 name={meal.name}
                                 onChange={(e) => {
-                                  handleMealsChange(e, index)
+                                  handleMealsChange(e, index);
                                 }}
                                 checked={meal.isChecked}
                               />
@@ -1013,7 +1020,7 @@ const EditCalculator = () => {
               <button
                 className="btn btn-info"
                 onClick={() => {
-                  handleAddInfo('hotel')
+                  handleAddInfo("hotel");
                 }}
               >
                 Add Hotel
@@ -1033,7 +1040,7 @@ const EditCalculator = () => {
                       <button
                         className="btn btn-danger rounded-circle"
                         onClick={() => {
-                          handleDeleteInfo('transport_info', index)
+                          handleDeleteInfo("transport_info", index);
                         }}
                       >
                         <i className="fa-regular fa-trash-can"></i>
@@ -1051,7 +1058,7 @@ const EditCalculator = () => {
                         name="destination_id"
                         value={item.destination_id}
                         onChange={(e) => {
-                          handleNestedDataChange(e, 'transport_info', index)
+                          handleNestedDataChange(e, "transport_info", index);
                         }}
                         disabled={
                           !formData.travel_date_from ||
@@ -1065,7 +1072,7 @@ const EditCalculator = () => {
                             <option key={item.id} value={item.id}>
                               {countriesData.data?.cities.find(
                                 (city) => city.id === item.city_id
-                              )?.name || 'N/A'}
+                              )?.name || "N/A"}
                             </option>
                           ))}
                       </select>
@@ -1081,7 +1088,7 @@ const EditCalculator = () => {
                         name="transport_id"
                         value={item.transport_id}
                         onChange={(e) => {
-                          handleNestedDataChange(e, 'transport_info', index)
+                          handleNestedDataChange(e, "transport_info", index);
                         }}
                         disabled={!item.destination_id}
                       >
@@ -1093,7 +1100,7 @@ const EditCalculator = () => {
                           )
                           .map((transport) => (
                             <option key={transport.id} value={transport.id}>
-                              {transport.transport || 'N/A'}
+                              {transport.transport || "N/A"}
                             </option>
                           ))}
                       </select>
@@ -1109,7 +1116,7 @@ const EditCalculator = () => {
                         name="v_type"
                         value={item.v_type}
                         onChange={(e) => {
-                          handleNestedDataChange(e, 'transport_info', index)
+                          handleNestedDataChange(e, "transport_info", index);
                         }}
                         disabled={!item.transport_id}
                       >
@@ -1120,7 +1127,7 @@ const EditCalculator = () => {
                           )
                           ?.options.map((option, i) => (
                             <option key={i} value={option.type}>
-                              {option.type || 'N/A'}
+                              {option.type || "N/A"}
                             </option>
                           ))}
                       </select>
@@ -1139,7 +1146,7 @@ const EditCalculator = () => {
                         name="date"
                         value={item.date}
                         onChange={(e) => {
-                          handleNestedDataChange(e, 'transport_info', index)
+                          handleNestedDataChange(e, "transport_info", index);
                         }}
                         disabled={
                           !formData.travel_date_from || !formData.travel_date_to
@@ -1152,7 +1159,7 @@ const EditCalculator = () => {
               <button
                 className="btn btn-info"
                 onClick={() => {
-                  handleAddInfo('transport')
+                  handleAddInfo("transport");
                 }}
               >
                 Add Transport
@@ -1173,7 +1180,7 @@ const EditCalculator = () => {
                       <button
                         className="btn btn-danger rounded-circle"
                         onClick={() => {
-                          handleDeleteInfo('sightseeing_info', index)
+                          handleDeleteInfo("sightseeing_info", index);
                         }}
                       >
                         <i className="fa-regular fa-trash-can"></i>
@@ -1191,7 +1198,7 @@ const EditCalculator = () => {
                         name="destination_id"
                         value={item.destination_id}
                         onChange={(e) => {
-                          handleNestedDataChange(e, 'sightseeing_info', index)
+                          handleNestedDataChange(e, "sightseeing_info", index);
                         }}
                         disabled={
                           !formData.travel_date_from ||
@@ -1205,7 +1212,7 @@ const EditCalculator = () => {
                             <option key={item.id} value={item.id}>
                               {countriesData.data?.cities.find(
                                 (city) => city.id === item.city_id
-                              )?.name || 'N/A'}
+                              )?.name || "N/A"}
                             </option>
                           ))}
                       </select>
@@ -1221,7 +1228,7 @@ const EditCalculator = () => {
                         name="sightseeing_id"
                         value={item.sightseeing_id}
                         onChange={(e) => {
-                          handleNestedDataChange(e, 'sightseeing_info', index)
+                          handleNestedDataChange(e, "sightseeing_info", index);
                         }}
                         disabled={!item.destination_id}
                       >
@@ -1233,7 +1240,7 @@ const EditCalculator = () => {
                           )
                           .map((sightseeing) => (
                             <option key={sightseeing.id} value={sightseeing.id}>
-                              {sightseeing.description || 'N/A'}
+                              {sightseeing.description || "N/A"}
                             </option>
                           ))}
                       </select>
@@ -1249,7 +1256,7 @@ const EditCalculator = () => {
                         name="adults"
                         value={item.adults}
                         onChange={(e) => {
-                          handleNestedDataChange(e, 'sightseeing_info', index)
+                          handleNestedDataChange(e, "sightseeing_info", index);
                         }}
                         disabled={!item.sightseeing_id}
                       >
@@ -1277,7 +1284,7 @@ const EditCalculator = () => {
                         name="children"
                         value={item.children}
                         onChange={(e) => {
-                          handleNestedDataChange(e, 'sightseeing_info', index)
+                          handleNestedDataChange(e, "sightseeing_info", index);
                         }}
                         disabled={!item.destination_id}
                       >
@@ -1308,7 +1315,7 @@ const EditCalculator = () => {
                         name="date"
                         value={item.date}
                         onChange={(e) => {
-                          handleNestedDataChange(e, 'sightseeing_info', index)
+                          handleNestedDataChange(e, "sightseeing_info", index);
                         }}
                         disabled={
                           !formData.travel_date_from || !formData.travel_date_to
@@ -1321,7 +1328,7 @@ const EditCalculator = () => {
               <button
                 className="btn btn-info"
                 onClick={() => {
-                  handleAddInfo('sightseeing')
+                  handleAddInfo("sightseeing");
                 }}
               >
                 Add Sightseeing
@@ -1337,7 +1344,7 @@ const EditCalculator = () => {
                   </label>
                   <textarea
                     className="form-control"
-                    style={{ resize: 'vertical' }}
+                    style={{ resize: "vertical" }}
                     id="remarks"
                     name="remarks"
                     value={formData.remarks}
@@ -1424,6 +1431,6 @@ const EditCalculator = () => {
         </section>
       </>
     </>
-  )
-}
-export default EditCalculator
+  );
+};
+export default EditCalculator;

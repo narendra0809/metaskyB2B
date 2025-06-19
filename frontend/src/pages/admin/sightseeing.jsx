@@ -1,115 +1,116 @@
-import { useState, useRef } from 'react'
-import Modal from '../../components/modal'
-import useApiData from '../../hooks/useApiData'
-import './common.css'
-import useSendFile from '../../hooks/useSendFile'
-import { useAuth } from '../../context/authContext'
-import Confirm from '../../components/confirm'
-import Loader from '../../Loader'
-import '../../Loader.css'
-
+import { useState, useRef } from "react";
+import Modal from "../../components/Modal";
+import useApiData from "../../hooks/useApiData";
+import "./common.css";
+import useSendFile from "../../hooks/useSendFile";
+import { useAuth } from "../../context/AuthContext";
+import Confirm from "../../components/Confirm";
+import Loader from "../../Loader";
+import "../../Loader.css";
 
 const Sightseeing = () => {
-  const base_url = process.env.REACT_APP_API_URL
-  const { authToken: token } = useAuth()
+  const base_url = import.meta.env.VITE_API_URL;
+  const { authToken: token } = useAuth();
 
   // Fetch destination and country data
-  const mainData = useApiData(`${base_url}/api/sightseeings`, token)
+  const mainData = useApiData(`${base_url}/api/sightseeings`, token);
 
-  const countriesData = useApiData(`${base_url}/api/countries`, token)
-  const destinationsData = useApiData(`${base_url}/api/getdestinations`, token)
+  const countriesData = useApiData(`${base_url}/api/countries`, token);
+  const destinationsData = useApiData(`${base_url}/api/getdestinations`, token);
 
   // State variables for search and pagination
-  const [searchValue, setSearchValue] = useState('')
-  const [perPage, setPerPage] = useState(10)
-  const [currPageNo, setCurrPageNo] = useState(0)
+  const [searchValue, setSearchValue] = useState("");
+  const [perPage, setPerPage] = useState(10);
+  const [currPageNo, setCurrPageNo] = useState(0);
 
   // Form Data state
   const addForm = useSendFile(
     `${base_url}/api/sightseeing`, // URL to send data to
     token // Auth token
-  )
+  );
 
-  const [editRes, setEditRes] = useState(null)
-  const [editLoading, setEditLoading] = useState(false)
+  const [editRes, setEditRes] = useState(null);
+  const [editLoading, setEditLoading] = useState(false);
 
   // Modal state
   const [modals, setModals] = useState({
     addModalOpen: false,
     editModalOpen: false,
-  })
+  });
 
   // Form data for add/edit
-  const inputDocs = useRef()
+  const inputDocs = useRef();
   const [formData, setFormData] = useState({
     addFormData: {
-      destination_id: '',
-      company_name: '',
-      address: '',
+      destination_id: "",
+      company_name: "",
+      address: "",
       scompany_document: null,
-      contact_no: '',
-      email: '',
-      description: '',
-      rate_adult: '',
-      rate_child: '',
+      contact_no: "",
+      email: "",
+      description: "",
+      rate_adult: "",
+      rate_child: "",
     },
     editFormData: {
       id: null,
-      destination_id: '',
-      company_name: '',
-      address: '',
+      destination_id: "",
+      company_name: "",
+      address: "",
       scompany_document: null,
-      contact_no: '',
-      email: '',
-      description: '',
-      rate_adult: '',
-      rate_child: '',
+      contact_no: "",
+      email: "",
+      description: "",
+      rate_adult: "",
+      rate_child: "",
     },
-  })
+  });
 
   // Handle search input change
   const handleSearch = (e) => {
-    setSearchValue(e.target.value)
-    setCurrPageNo(0)
-  }
+    setSearchValue(e.target.value);
+    setCurrPageNo(0);
+  };
 
   // Handle page change
   const handlePageChange = (increment) => {
-    const newPageNo = currPageNo + increment
+    const newPageNo = currPageNo + increment;
     if (
       newPageNo >= 0 &&
       newPageNo < Math.ceil(filteredData.length / perPage)
     ) {
-      setCurrPageNo(newPageNo)
+      setCurrPageNo(newPageNo);
     }
-  }
+  };
 
   // Filter destinations based on search value
   const filteredData =
     mainData.data?.data?.filter((item) =>
       item.company_name.toLowerCase().includes(searchValue.toLowerCase())
-    ) || []
+    ) || [];
 
   // Paginated data
   const paginatedData = filteredData.slice(
     perPage * currPageNo,
     perPage * currPageNo + perPage
-  )
+  );
 
   // Handle form data changes
   const handleFormDataChange = (formType) => (e) => {
-    const { name, value, type } = e.target
-    let filteredValue = value
+    const { name, value, type } = e.target;
+    let filteredValue = value;
 
     switch (name) {
-      case 'rate_adult':
-      case 'rate_child':
-        filteredValue = value.replace(/[^0-9.]/g, '').replace(/(\..*)\./g, '$1')
-        break
+      case "rate_adult":
+      case "rate_child":
+        filteredValue = value
+          .replace(/[^0-9.]/g, "")
+          .replace(/(\..*)\./g, "$1");
+        break;
 
       default:
-        filteredValue = value
-        break
+        filteredValue = value;
+        break;
     }
 
     setFormData((prev) => {
@@ -117,104 +118,104 @@ const Sightseeing = () => {
         ...prev,
         [formType]: {
           ...prev[formType],
-          [name]: type == 'file' ? e.target.files[0] : filteredValue,
+          [name]: type == "file" ? e.target.files[0] : filteredValue,
         },
-      }
-    })
-  }
+      };
+    });
+  };
 
   // Handle modal open/close
   const toggleModal = (modalType, isOpen) => {
-    setEditRes(null)
-    setModals((prev) => ({ ...prev, [modalType]: isOpen }))
-  }
+    setEditRes(null);
+    setModals((prev) => ({ ...prev, [modalType]: isOpen }));
+  };
 
   // submit form
   const submitFormData = async (formType) => {
-    const submitData = new FormData()
+    const submitData = new FormData();
 
     Object.entries(formData[formType]).forEach(([key, value]) => {
-      if (key === 'options') {
+      if (key === "options") {
         // If the key is 'options', iterate through each option and append it separately
         value.forEach((option, index) => {
-          submitData.append(`options[${index}][type]`, option.type)
-          submitData.append(`options[${index}][rate]`, option.rate)
-        })
+          submitData.append(`options[${index}][type]`, option.type);
+          submitData.append(`options[${index}][rate]`, option.rate);
+        });
       } else {
-        submitData.append(key, value)
+        submitData.append(key, value);
       }
-    })
+    });
 
     switch (formType) {
-      case 'addFormData':
-        await addForm.sendData(submitData)
+      case "addFormData":
+        await addForm.sendData(submitData);
 
         setFormData((item) => ({
           ...item,
           [formType]: {
-            ...(formType === 'editFormData' && { id: null }),
-            destination_id: '',
-            company_name: '',
-            address: '',
+            ...(formType === "editFormData" && { id: null }),
+            destination_id: "",
+            company_name: "",
+            address: "",
             scompany_document: null,
-            contact_no: '',
-            email: '',
-            description: '',
-            rate_adult: '',
-            rate_child: '',
+            contact_no: "",
+            email: "",
+            description: "",
+            rate_adult: "",
+            rate_child: "",
           },
-        }))
-        break
-      case 'editFormData':
-        setEditLoading(true)
+        }));
+        break;
+      case "editFormData":
+        setEditLoading(true);
         const res = await fetch(
           `${base_url}/api/updatesightseeing/${formData.editFormData.id}`,
           {
-            method: 'POST',
+            method: "POST",
             headers: {
               Authorization: `Bearer ${token}`,
             },
             body: submitData,
           }
-        )
+        );
 
-        const result = await res.json()
+        const result = await res.json();
 
-        setEditRes(result)
-        setEditLoading(false)
-        break
+        setEditRes(result);
+        setEditLoading(false);
+        break;
     }
 
-    mainData.refetch()
-  }
+    mainData.refetch();
+  };
 
   // Confirmation
-  const [isConfirm, setIsConfirm] = useState(false)
-  const [recordToDelete, setRecordToDelete] = useState(null)
+  const [isConfirm, setIsConfirm] = useState(false);
+  const [recordToDelete, setRecordToDelete] = useState(null);
 
   const handleDeleteClick = (id, name) => {
-    setRecordToDelete((prev) => ({ id, name }))
-    setIsConfirm(true)
-  }
+    setRecordToDelete((prev) => ({ id, name }));
+    setIsConfirm(true);
+  };
 
   const handleConfirm = (confirm, id = null) => {
     if (confirm) {
-      ;(async () => {
+      (async () => {
         const res = await fetch(`${base_url}/api/deletesightseeing/${id}`, {
-          method: 'DELETE',
+          method: "DELETE",
           headers: {
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
-        })
+        });
 
-        mainData.refetch()
-      })()
+        mainData.refetch();
+      })();
     } else {
-      setRecordToDelete(null)
+      setRecordToDelete(null);
     }
-    setIsConfirm(false)
-  }
+    setIsConfirm(false);
+  };
 
   return (
     <>
@@ -222,7 +223,7 @@ const Sightseeing = () => {
         {/* Add Modal */}
         <Modal
           open={modals.addModalOpen}
-          handleClose={() => toggleModal('addModalOpen', false)}
+          handleClose={() => toggleModal("addModalOpen", false)}
           title="Add Sightseeing"
         >
           {/* Modal content */}
@@ -241,7 +242,7 @@ const Sightseeing = () => {
                   placeholder="Company name..."
                   name="company_name"
                   value={formData.addFormData.company_name}
-                  onChange={handleFormDataChange('addFormData')}
+                  onChange={handleFormDataChange("addFormData")}
                 />
               </div>
               <div className="mb-3">
@@ -255,7 +256,7 @@ const Sightseeing = () => {
                   placeholder="Company Documents..."
                   name="scompany_document"
                   ref={inputDocs}
-                  onChange={handleFormDataChange('addFormData')}
+                  onChange={handleFormDataChange("addFormData")}
                 />
               </div>
               <div className="mb-3">
@@ -269,7 +270,7 @@ const Sightseeing = () => {
                   placeholder="Email..."
                   name="email"
                   value={formData.addFormData.email}
-                  onChange={handleFormDataChange('addFormData')}
+                  onChange={handleFormDataChange("addFormData")}
                 />
               </div>
               <div className="mb-3">
@@ -284,7 +285,7 @@ const Sightseeing = () => {
                   name="contact_no"
                   maxLength={10}
                   value={formData.addFormData.contact_no}
-                  onChange={handleFormDataChange('addFormData')}
+                  onChange={handleFormDataChange("addFormData")}
                 />
               </div>
               <div className="mb-3">
@@ -298,7 +299,7 @@ const Sightseeing = () => {
                   placeholder="Transport Address..."
                   name="address"
                   value={formData.addFormData.address}
-                  onChange={handleFormDataChange('addFormData')}
+                  onChange={handleFormDataChange("addFormData")}
                 />
               </div>
               <div className="mb-3">
@@ -310,14 +311,14 @@ const Sightseeing = () => {
                   name="destination_id"
                   id="destination_id"
                   value={formData.addFormData.destination_id}
-                  onChange={handleFormDataChange('addFormData')}
+                  onChange={handleFormDataChange("addFormData")}
                 >
                   <option value="">-- select --</option>
                   {destinationsData.data?.destinations?.map((item) => (
                     <option key={item.id} value={item.id}>
                       {countriesData.data?.cities.find(
                         (city) => city.id === item.city_id
-                      )?.name || 'N/A'}
+                      )?.name || "N/A"}
                     </option>
                   ))}
                 </select>
@@ -333,7 +334,7 @@ const Sightseeing = () => {
                   placeholder="Description..."
                   name="description"
                   value={formData.addFormData.description}
-                  onChange={handleFormDataChange('addFormData')}
+                  onChange={handleFormDataChange("addFormData")}
                 />
               </div>
               <div className="mb-3">
@@ -347,7 +348,7 @@ const Sightseeing = () => {
                   placeholder="Rate Adult..."
                   name="rate_adult"
                   value={formData.addFormData.rate_adult}
-                  onChange={handleFormDataChange('addFormData')}
+                  onChange={handleFormDataChange("addFormData")}
                 />
               </div>
               <div className="mb-3">
@@ -361,7 +362,7 @@ const Sightseeing = () => {
                   placeholder="Rate Child..."
                   name="rate_child"
                   value={formData.addFormData.rate_child}
-                  onChange={handleFormDataChange('addFormData')}
+                  onChange={handleFormDataChange("addFormData")}
                 />
               </div>
               {addForm.response &&
@@ -371,7 +372,7 @@ const Sightseeing = () => {
                   </div>
                 ) : (
                   <div className="alert alert-danger">
-                    {typeof addForm.response.errors === 'object'
+                    {typeof addForm.response.errors === "object"
                       ? Object.values(addForm.response.errors)[0]
                       : addForm.response.errors}
                   </div>
@@ -381,9 +382,9 @@ const Sightseeing = () => {
               <button
                 className="btn btn-primary"
                 type="submit"
-                onClick={() => submitFormData('addFormData')}
+                onClick={() => submitFormData("addFormData")}
               >
-                {addForm.loading ? 'Processing...' : 'Add'}
+                {addForm.loading ? "Processing..." : "Add"}
               </button>
             </div>
           </div>
@@ -392,7 +393,7 @@ const Sightseeing = () => {
         {/* Edit Modal */}
         <Modal
           open={modals.editModalOpen}
-          handleClose={() => toggleModal('editModalOpen', false)}
+          handleClose={() => toggleModal("editModalOpen", false)}
           title="Edit Sightseeing"
         >
           {/* Modal content */}
@@ -410,7 +411,7 @@ const Sightseeing = () => {
                   placeholder="Company name..."
                   name="company_name"
                   value={formData.editFormData.company_name}
-                  onChange={handleFormDataChange('editFormData')}
+                  onChange={handleFormDataChange("editFormData")}
                 />
               </div>
               <div className="mb-3">
@@ -424,7 +425,7 @@ const Sightseeing = () => {
                   placeholder="Company Documents..."
                   name="scompany_document"
                   ref={inputDocs}
-                  onChange={handleFormDataChange('editFormData')}
+                  onChange={handleFormDataChange("editFormData")}
                 />
               </div>
               <div className="mb-3">
@@ -438,7 +439,7 @@ const Sightseeing = () => {
                   placeholder="Email..."
                   name="email"
                   value={formData.editFormData.email}
-                  onChange={handleFormDataChange('editFormData')}
+                  onChange={handleFormDataChange("editFormData")}
                 />
               </div>
               <div className="mb-3">
@@ -453,7 +454,7 @@ const Sightseeing = () => {
                   name="contact_no"
                   maxLength={10}
                   value={formData.editFormData.contact_no}
-                  onChange={handleFormDataChange('editFormData')}
+                  onChange={handleFormDataChange("editFormData")}
                 />
               </div>
               <div className="mb-3">
@@ -467,7 +468,7 @@ const Sightseeing = () => {
                   placeholder="Transport Address..."
                   name="address"
                   value={formData.editFormData.address}
-                  onChange={handleFormDataChange('editFormData')}
+                  onChange={handleFormDataChange("editFormData")}
                 />
               </div>
               <div className="mb-3">
@@ -479,14 +480,14 @@ const Sightseeing = () => {
                   name="destination_id"
                   id="destination_id"
                   value={formData.editFormData.destination_id}
-                  onChange={handleFormDataChange('editFormData')}
+                  onChange={handleFormDataChange("editFormData")}
                 >
                   <option value="">-- select --</option>
                   {destinationsData.data?.destinations?.map((item) => (
                     <option key={item.id} value={item.id}>
                       {countriesData.data?.cities.find(
                         (city) => city.id === item.city_id
-                      )?.name || 'N/A'}
+                      )?.name || "N/A"}
                     </option>
                   ))}
                 </select>
@@ -502,7 +503,7 @@ const Sightseeing = () => {
                   placeholder="Description..."
                   name="description"
                   value={formData.editFormData.description}
-                  onChange={handleFormDataChange('editFormData')}
+                  onChange={handleFormDataChange("editFormData")}
                 />
               </div>
               <div className="mb-3">
@@ -516,7 +517,7 @@ const Sightseeing = () => {
                   placeholder="Rate Adult..."
                   name="rate_adult"
                   value={formData.editFormData.rate_adult}
-                  onChange={handleFormDataChange('editFormData')}
+                  onChange={handleFormDataChange("editFormData")}
                 />
               </div>
               <div className="mb-3">
@@ -530,7 +531,7 @@ const Sightseeing = () => {
                   placeholder="Rate Child..."
                   name="rate_child"
                   value={formData.editFormData.rate_child}
-                  onChange={handleFormDataChange('editFormData')}
+                  onChange={handleFormDataChange("editFormData")}
                 />
               </div>
               {editRes &&
@@ -538,7 +539,7 @@ const Sightseeing = () => {
                   <div className="alert alert-success">{editRes?.message}</div>
                 ) : (
                   <div className="alert alert-danger">
-                    {typeof editRes.errors === 'object'
+                    {typeof editRes.errors === "object"
                       ? Object.values(editRes.errors)[0]
                       : editRes.errors}
                   </div>
@@ -548,9 +549,9 @@ const Sightseeing = () => {
               <button
                 className="btn btn-warning"
                 type="submit"
-                onClick={() => submitFormData('editFormData')}
+                onClick={() => submitFormData("editFormData")}
               >
-                {editLoading ? 'Processing...' : 'Update'}
+                {editLoading ? "Processing..." : "Update"}
               </button>
             </div>
           </div>
@@ -560,10 +561,10 @@ const Sightseeing = () => {
         <Confirm
           open={isConfirm}
           handleConfirm={() => {
-            handleConfirm(true, recordToDelete?.id)
+            handleConfirm(true, recordToDelete?.id);
           }}
           handleClose={() => {
-            handleConfirm(false)
+            handleConfirm(false);
           }}
         >
           Are you sure you want to delete {recordToDelete?.name}?
@@ -579,13 +580,13 @@ const Sightseeing = () => {
           />
           <button
             className="btn btn-sm btn-primary"
-            onClick={() => toggleModal('addModalOpen', true)}
+            onClick={() => toggleModal("addModalOpen", true)}
           >
             Add Sightseeing
           </button>
         </div>
 
-        <div style={{ display: 'grid' }}>
+        <div style={{ display: "grid" }}>
           <div className="table-responsive">
             <table className="table table-bordered table-hover">
               <thead className="table-dark">
@@ -595,7 +596,7 @@ const Sightseeing = () => {
                   <th>Contact</th>
                   <th>Address</th>
                   <th>Destination</th>
-                  <th style={{ width: '1%' }}>Action</th>
+                  <th style={{ width: "1%" }}>Action</th>
                 </tr>
               </thead>
               <tbody>
@@ -630,10 +631,10 @@ const Sightseeing = () => {
                             destinationsData.data?.destinations?.find(
                               (des) => des.id === item.destination_id
                             ).city_id
-                        )?.name || 'N/A'}
+                        )?.name || "N/A"}
                       </td>
 
-                      <td style={{ width: '1%' }}>
+                      <td style={{ width: "1%" }}>
                         <div className="d-flex">
                           <button
                             className="btn flex-shrink-0"
@@ -641,9 +642,9 @@ const Sightseeing = () => {
                               setFormData((prev) => ({
                                 ...prev,
                                 editFormData: { ...item, id: item.id },
-                              }))
+                              }));
 
-                              toggleModal('editModalOpen', true)
+                              toggleModal("editModalOpen", true);
                             }}
                           >
                             <i className="fa-solid fa-pencil text-warning"></i>
@@ -651,7 +652,7 @@ const Sightseeing = () => {
                           <button
                             className="btn flex-shrink-0"
                             onClick={() => {
-                              handleDeleteClick(item.id, item.company_name)
+                              handleDeleteClick(item.id, item.company_name);
                             }}
                           >
                             <i className="fa-solid fa-trash-can text-danger"></i>
@@ -675,7 +676,7 @@ const Sightseeing = () => {
             <ul className="pagination mt-4">
               <li className="page-item">
                 <button
-                  className={`page-link ${currPageNo <= 0 && 'disabled'}`}
+                  className={`page-link ${currPageNo <= 0 && "disabled"}`}
                   onClick={() => handlePageChange(-1)}
                 >
                   Prev
@@ -685,7 +686,7 @@ const Sightseeing = () => {
                 <button
                   className={`page-link ${
                     currPageNo + 1 >=
-                      Math.ceil(filteredData.length / perPage) && 'disabled'
+                      Math.ceil(filteredData.length / perPage) && "disabled"
                   }`}
                   onClick={() => handlePageChange(1)}
                 >
@@ -697,7 +698,7 @@ const Sightseeing = () => {
         </div>
       </section>
     </>
-  )
-}
+  );
+};
 
-export default Sightseeing
+export default Sightseeing;

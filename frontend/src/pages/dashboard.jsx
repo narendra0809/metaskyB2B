@@ -1,149 +1,157 @@
-import { Link } from 'react-router-dom';
-import Loader from '../Loader';
-import '../Loader.css';
-
+import { Link } from "react-router-dom";
+import Loader from "../Loader";
+import "../Loader.css";
+import unpaidLogo from "../public/images/unpaid.png";
+import paidBookingLogo from "../public/images/paidBooking.png";
+import confirmationBookingLogo from "../public/images/confirmationBooking.png";
+import destinationLogo from "../public/images/destination.png";
+import agentLogo from "../public/images/agent.png";
+import staffLogo from "../public/images/Staff.png";
+import hotelsLogo from "../public/images/hotels.png";
+import sightseeingLogo from "../public/images/SightSeeing.png";
+import transportationLogo from "../public/images/transportation.png";
 /* -- components -- */
-import './dashboard.css'
-import useApiData from '../hooks/useApiData'
-import { useAuth } from '../context/authContext'
-import { useEffect, useState } from 'react'
-import { colors } from '@mui/material';
+import "./dashboard.css";
+import useApiData from "../hooks/useApiData";
+import { useAuth } from "../context/AuthContext";
+import { useEffect, useState } from "react";
+import { colors } from "@mui/material";
 
 const Dashboard = () => {
-  const base_url = process.env.REACT_APP_API_URL
-  const { authUser, authToken } = useAuth()
-  const agentRole = 'agent'
-  const adminRole = 'admin'
+  const base_url = import.meta.env.VITE_API_URL;
+  const { authUser, authToken } = useAuth();
+  const agentRole = "agent";
+  const adminRole = "admin";
 
   /* -- variables -- */
-  let output, outputData, filteredData
-  let totalPageNo = 0
+  let output, outputData, filteredData;
+  let totalPageNo = 0;
 
   /* -- API URLs -- */
   const mainData = useApiData(
     `${base_url}/api/${
       authUser?.role === adminRole
-        ? 'showbookings'
+        ? "showbookings"
         : `showbooking/${authUser?.id}`
     }`,
     authToken
-  )
+  );
 
   // For cards
-  const data = mainData?.data?.data
+  const data = mainData?.data?.data;
 
   const unpaid = data?.filter((item) => {
-    const thisData = authUser?.role === adminRole ? item : item.booking
+    const thisData = authUser?.role === adminRole ? item : item.booking;
 
     return (
-      thisData.payment_status.toLowerCase() === 'unpaid' &&
-      thisData.customer_status?.toLowerCase() !== 'cancelled'
-    )
-  })
+      thisData.payment_status.toLowerCase() === "unpaid" &&
+      thisData.customer_status?.toLowerCase() !== "cancelled"
+    );
+  });
   const paid = data?.filter((item) => {
-    const thisData = authUser?.role === adminRole ? item : item.booking
-    return thisData.payment_status?.toLowerCase() === 'paid'
-  })
+    const thisData = authUser?.role === adminRole ? item : item.booking;
+    return thisData.payment_status?.toLowerCase() === "paid";
+  });
   const confirmed = data?.filter((item) => {
-    const thisData = authUser?.role === adminRole ? item : item.booking
-    return thisData.customer_status?.toLowerCase() === 'confirmed'
-  })
+    const thisData = authUser?.role === adminRole ? item : item.booking;
+    return thisData.customer_status?.toLowerCase() === "confirmed";
+  });
 
   // user data states
-  const [userDataLoading, setUserDataLoading] = useState(false)
-  const [userData, setUserData] = useState(null)
-  const [userDataError, setUserDataError] = useState(null)
+  const [userDataLoading, setUserDataLoading] = useState(false);
+  const [userData, setUserData] = useState(null);
+  const [userDataError, setUserDataError] = useState(null);
 
   useEffect(() => {
-    ;(async () => {
+    (async () => {
       if (authUser?.role === adminRole) {
-        setUserDataLoading(true)
+        setUserDataLoading(true);
         try {
           const res = await fetch(`${base_url}/api/agent`, {
-            method: 'GET',
+            method: "GET",
             headers: {
               Authorization: `Bearer ${authToken}`,
-              'Content-Type': 'application/json',
-              'ngrok-skip-browser-warning': true,
+              "Content-Type": "application/json",
+              "ngrok-skip-browser-warning": true,
             },
-          })
+          });
 
-          const resData = await res.json()
+          const resData = await res.json();
 
           if (resData) {
-            setUserData(resData)
+            setUserData(resData);
           }
         } catch (error) {
-          setUserDataError(error)
+          setUserDataError(error);
         } finally {
-          setUserDataLoading(false)
+          setUserDataLoading(false);
         }
       } else {
-        setUserDataLoading(true)
+        setUserDataLoading(true);
         try {
           const res = await fetch(`${base_url}/api/showuser/${authUser?.id}`, {
-            method: 'GET',
+            method: "GET",
             headers: {
               Authorization: `Bearer ${authToken}`,
-              'Content-Type': 'application/json',
-              'ngrok-skip-browser-warning': true,
+              "Content-Type": "application/json",
+              "ngrok-skip-browser-warning": true,
             },
-          })
+          });
 
-          const resData = await res.json()
+          const resData = await res.json();
 
           if (resData) {
-            setUserData(resData)
+            setUserData(resData);
           }
         } catch (error) {
-          setUserDataError(error)
+          setUserDataError(error);
         } finally {
-          setUserDataLoading(false)
+          setUserDataLoading(false);
         }
       }
-    })()
-  }, [])
+    })();
+  }, []);
 
   /* -- state variables -- */
   const [filterValue, setFilterValue] = useState({
-    search: '',
-  })
-  let [perPage, setPerPage] = useState(10)
-  let [currPageNo, setCurrPageNo] = useState(0)
-  let [sortOrder, setSortOrder] = useState('asc')
-  let [sortKey, setSortKey] = useState('travel_date_from')
+    search: "",
+  });
+  let [perPage, setPerPage] = useState(10);
+  let [currPageNo, setCurrPageNo] = useState(0);
+  let [sortOrder, setSortOrder] = useState("asc");
+  let [sortKey, setSortKey] = useState("travel_date_from");
 
-  const [err, setErr] = useState(null)
-  const [success, setSuccess] = useState(false)
-  const [popUp, setPopUp] = useState(false)
+  const [err, setErr] = useState(null);
+  const [success, setSuccess] = useState(false);
+  const [popUp, setPopUp] = useState(false);
 
   /* -- render data -- */
   if (!mainData.loading && mainData.data?.data) {
     // filtering
 
-    const rawData = [...mainData.data?.data]
+    const rawData = [...mainData.data?.data];
 
-    let data
+    let data;
     if (authUser?.role === adminRole) {
       data = rawData.filter((item) => {
-        const today = new Date()
-        const travelDate = new Date(item.travel_date_from.split('T')[0])
+        const today = new Date();
+        const travelDate = new Date(item.travel_date_from.split("T")[0]);
 
-        return travelDate > today
-      })
+        return travelDate > today;
+      });
     } else {
       data = rawData.filter((item) => {
-        const today = new Date()
+        const today = new Date();
         const travelDate = new Date(
-          item.booking?.travel_date_from.split('T')[0]
-        )
+          item.booking?.travel_date_from.split("T")[0]
+        );
 
-        return travelDate > today
-      })
+        return travelDate > today;
+      });
     }
 
     filteredData = data?.filter((item) => {
-      const cusData = authUser?.role === adminRole ? item : item.booking
+      const cusData = authUser?.role === adminRole ? item : item.booking;
       return (
         cusData.customer_name
           .toLowerCase()
@@ -151,28 +159,28 @@ const Dashboard = () => {
         cusData.userData
           ?.find((user) => user.id === cusData.user_id)
           ?.email.includes(filterValue.search.toLowerCase())
-      )
-    })
+      );
+    });
 
     // Sort filtered data based on sortKey and sortOrder
     filteredData = filteredData.sort((a, b) => {
-      const dateA = new Date(a[sortKey])
-      const dateB = new Date(b[sortKey])
+      const dateA = new Date(a[sortKey]);
+      const dateB = new Date(b[sortKey]);
 
-      if (sortOrder === 'desc') {
-        return dateB - dateA // Descending order
+      if (sortOrder === "desc") {
+        return dateB - dateA; // Descending order
       } else {
-        return dateA - dateB // Ascending order
+        return dateA - dateB; // Ascending order
       }
-    })
+    });
 
-    totalPageNo = Math.ceil(filteredData.length / perPage)
+    totalPageNo = Math.ceil(filteredData.length / perPage);
 
     // pagination
     outputData = filteredData.slice(
       perPage * currPageNo,
       perPage * currPageNo + perPage
-    )
+    );
 
     // render
     output = outputData.map((item) =>
@@ -189,8 +197,8 @@ const Dashboard = () => {
             {item.no_children > 0 && ` + ${item.no_children}`}
           </td>
           <td>{item.final_payment}</td>
-          <td>{item.travel_date_from.split('T')[0]}</td>
-          <td>{item.created_date.split('T')[0]}</td>
+          <td>{item.travel_date_from.split("T")[0]}</td>
+          <td>{item.created_date.split("T")[0]}</td>
           <td>
             <div className="d-flex">
               <Link to={`/itinerary/${item.id}`} className="btn flex-shrink-0">
@@ -210,8 +218,8 @@ const Dashboard = () => {
             {item.booking?.no_children > 0 && ` + ${item.booking?.no_children}`}
           </td>
           <td>{item.booking?.final_payment}</td>
-          <td>{item.booking?.travel_date_from.split('T')[0]}</td>
-          <td>{item.booking?.created_date.split('T')[0]}</td>
+          <td>{item.booking?.travel_date_from.split("T")[0]}</td>
+          <td>{item.booking?.created_date.split("T")[0]}</td>
           <td>
             <div className="d-flex">
               <Link
@@ -224,49 +232,51 @@ const Dashboard = () => {
           </td>
         </tr>
       )
-    )
+    );
   } else {
     output = (
       <tr>
-        <td><Loader /></td>
+        <td>
+          <Loader />
+        </td>
       </tr>
-    )
+    );
   }
 
   /* -- functions -- */
   const handlePerPage = (e) => {
-    setPerPage(e.target.value)
-    setCurrPageNo(0)
-  }
+    setPerPage(e.target.value);
+    setCurrPageNo(0);
+  };
 
   const handleSort = (key) => {
     // Toggle sort order
     if (key === sortKey) {
-      setSortOrder((prevOrder) => (prevOrder === 'desc' ? 'asc' : 'desc'))
+      setSortOrder((prevOrder) => (prevOrder === "desc" ? "asc" : "desc"));
     } else {
-      setSortKey(key)
-      setSortOrder('desc') // Default to descending when changing column
+      setSortKey(key);
+      setSortOrder("desc"); // Default to descending when changing column
     }
-  }
+  };
 
   const handleFilter = ({ currentTarget }) => {
     setFilterValue((item) => ({
       ...item,
       [currentTarget.name]: currentTarget.value,
-    }))
-    setCurrPageNo(0)
-  }
+    }));
+    setCurrPageNo(0);
+  };
 
   const handlePageInc = () => {
     if (currPageNo + 1 < totalPageNo) {
-      setCurrPageNo((item) => item + 1)
+      setCurrPageNo((item) => item + 1);
     }
-  }
+  };
   const handlePageDec = () => {
     if (currPageNo > 0) {
-      setCurrPageNo((item) => item - 1)
+      setCurrPageNo((item) => item - 1);
     }
-  }
+  };
 
   return (
     <div className="dashboard">
@@ -275,7 +285,7 @@ const Dashboard = () => {
           Lorem ipsum, dolor sit amet consectetur adipisicing elit.
         </div>
       </div>
-    
+
       <section className="dashboard-section">
         <h1 className="dashboard-title">Dashboard</h1>
         <div className="dashboard-grid-container">
@@ -283,131 +293,142 @@ const Dashboard = () => {
             {/* Top row - 3 boxes */}
             <div className="dashboard-grid-row1">
               <article className="dashboard-grid-card" id="box1">
-                <img
-                  src="/images/unpaid.png" 
-                  alt="UnPaid booking"
-                />
+                <img src={unpaidLogo} alt="UnPaid booking" />
                 <div className="card-content">
-                  <span className="nums">{data ? unpaid?.length : '...'}</span>
+                  <span className="nums">{data ? unpaid?.length : "..."}</span>
                   <small>Unpaid Booking</small>
                 </div>
               </article>
-              
+
               <article className="dashboard-grid-card" id="box2">
-                <img
-                  src="/images/paidBooking.png" 
-                  alt="Paid booking"
-                />
+                <img src={paidBookingLogo} alt="Paid booking" />
                 <div className="card-content">
-                  <span className="nums">{data ? paid?.length : '...'}</span>
+                  <span className="nums">{data ? paid?.length : "..."}</span>
                   <small>Paid Booking</small>
                 </div>
               </article>
-              
+
               <article className="dashboard-grid-card" id="box3">
-                <img
-                  src="/images/confirmationBooking.png"
-                  alt="Confirmed booking"
-                />
+                <img src={confirmationBookingLogo} alt="Confirmed booking" />
                 <div className="card-content">
-                  <span className="nums">{data ? confirmed?.length : '...'}</span>
+                  <span className="nums">
+                    {data ? confirmed?.length : "..."}
+                  </span>
                   <small>Confirmed Booking</small>
                 </div>
               </article>
             </div>
-            
+
             {/* Bottom row - 6 boxes for admin, 4 boxes for customers */}
-            <div className={`dashboard-grid-row2 ${authUser?.role !== adminRole ? 'customer-view' : ''}`}>
-              <article className="dashboard-grid-card vertical-layout" id="box4">
+            <div
+              className={`dashboard-grid-row2 ${
+                authUser?.role !== adminRole ? "customer-view" : ""
+              }`}
+            >
+              <article
+                className="dashboard-grid-card vertical-layout"
+                id="box4"
+              >
                 <div className="card-img-container">
                   <img
-                    src="/images/destination.png" 
+                    src={destinationLogo}
                     alt="Destinations"
                     className="card-icon"
                   />
                 </div>
                 <div className="card-content-vertical">
-                  <span className="nums">{data ? confirmed?.length : '...'}</span>
+                  <span className="nums">
+                    {data ? confirmed?.length : "..."}
+                  </span>
                   <small>Destinations</small>
                 </div>
               </article>
-              
-              <article className="dashboard-grid-card vertical-layout" id="box5">
+
+              <article
+                className="dashboard-grid-card vertical-layout"
+                id="box5"
+              >
                 <div className="card-img-container">
-                  <img
-                    src="/images/hotels.png" 
-                    alt="Hotels"
-                    className="card-icon"
-                  />
+                  <img src={hotelsLogo} alt="Hotels" className="card-icon" />
                 </div>
                 <div className="card-content-vertical">
-                  <span className="nums">{data ? confirmed?.length : '...'}</span>
+                  <span className="nums">
+                    {data ? confirmed?.length : "..."}
+                  </span>
                   <small>Hotels</small>
                 </div>
               </article>
-              
-              <article className="dashboard-grid-card vertical-layout" id="box6">
+
+              <article
+                className="dashboard-grid-card vertical-layout"
+                id="box6"
+              >
                 <div className="card-img-container">
                   <img
-                    src="/images/SightSeeing.png" 
+                    src={sightseeingLogo}
                     alt="SightSeeings"
                     className="card-icon"
                   />
                 </div>
                 <div className="card-content-vertical">
-                  <span className="nums">{data ? confirmed?.length : '...'}</span>
+                  <span className="nums">
+                    {data ? confirmed?.length : "..."}
+                  </span>
                   <small>Sightseeings</small>
                 </div>
               </article>
-              
-              <article className="dashboard-grid-card vertical-layout" id="box7">
+
+              <article
+                className="dashboard-grid-card vertical-layout"
+                id="box7"
+              >
                 <div className="card-img-container">
                   <img
-                    src="/images/transportation.png" 
+                    src={transportationLogo}
                     alt="Transportation"
                     className="card-icon"
                   />
                 </div>
                 <div className="card-content-vertical">
-                  <span className="nums">{data ? confirmed?.length : '...'}</span>
+                  <span className="nums">
+                    {data ? confirmed?.length : "..."}
+                  </span>
                   <small>Transportation</small>
                 </div>
               </article>
-              
+
               {/* Only show these boxes for admin users */}
               {authUser?.role === adminRole && (
                 <>
-                  <article className="dashboard-grid-card vertical-layout" id="box8">
+                  <article
+                    className="dashboard-grid-card vertical-layout"
+                    id="box8"
+                  >
                     <div className="card-img-container">
-                      <img
-                        src="/images/agent.png" 
-                        alt="Agent"
-                        className="card-icon"
-                      />
+                      <img src={agentLogo} alt="Agent" className="card-icon" />
                     </div>
                     <div className="card-content-vertical">
-                      <span className="nums">{userData?.length || '...'}</span>
+                      <span className="nums">{userData?.length || "..."}</span>
                       <small>Agent</small>
                     </div>
                   </article>
-                  
-                  <article className="dashboard-grid-card vertical-layout" id="box9">
+
+                  <article
+                    className="dashboard-grid-card vertical-layout"
+                    id="box9"
+                  >
                     <div className="card-img-container">
-                      <img
-                        src="/images/staff.png" 
-                        alt="Staff"
-                        className="card-icon"
-                      />
+                      <img src={staffLogo} alt="Staff" className="card-icon" />
                     </div>
                     <div className="card-content-vertical">
-                      <span className="nums">{userData?.length || '...'}</span>
+                      <span className="nums">{userData?.length || "..."}</span>
                       <small>Staff</small>
                     </div>
                   </article>
                 </>
               )}
             </div>
-            
+
             {/* Banner row */}
             <div className="dashboard-grid-row3">
               <article className="dashboard-grid-banner">
@@ -417,7 +438,7 @@ const Dashboard = () => {
                   <span>The World</span>
                 </p>
                 <Link
-                  to={'/calculator'}
+                  to={"/calculator"}
                   className="btn btn-responsive rounded-4 bg-[#1cb3be] text-white py-2 px-4"
                 >
                   Get Quotation
@@ -476,7 +497,7 @@ const Dashboard = () => {
               </div>
             </div>
 
-            <div style={{ display: 'grid' }}>
+            <div style={{ display: "grid" }}>
               <div className="table-responsive mt-4">
                 <table className="table table-hover text-center">
                   <thead>
@@ -509,16 +530,16 @@ const Dashboard = () => {
               </div>
               <div className="d-flex justify-content-between align-items-center">
                 <small>
-                  Showing {(currPageNo + 1) * perPage - (perPage - 1)} to{' '}
+                  Showing {(currPageNo + 1) * perPage - (perPage - 1)} to{" "}
                   {(currPageNo + 1) * perPage < filteredData?.length
                     ? (currPageNo + 1) * perPage
-                    : filteredData?.length}{' '}
+                    : filteredData?.length}{" "}
                   of {filteredData?.length} entries
                 </small>
                 <ul className="pagination mt-4">
                   <li className="page-item">
                     <button
-                      className={`page-link ${currPageNo <= 0 && 'disabled'}`}
+                      className={`page-link ${currPageNo <= 0 && "disabled"}`}
                       onClick={handlePageDec}
                     >
                       Prev
@@ -527,7 +548,7 @@ const Dashboard = () => {
                   <li className="page-item">
                     <button
                       className={`page-link ${
-                        currPageNo + 1 >= totalPageNo && 'disabled'
+                        currPageNo + 1 >= totalPageNo && "disabled"
                       }`}
                       onClick={handlePageInc}
                     >
@@ -541,7 +562,7 @@ const Dashboard = () => {
         </div>
       </section>
     </div>
-  )
-}
+  );
+};
 
-export default Dashboard
+export default Dashboard;

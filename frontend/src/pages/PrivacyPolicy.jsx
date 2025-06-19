@@ -1,5 +1,5 @@
-import { Link } from 'react-router-dom'
-import Footer from '../components/footer'
+import { Link } from "react-router-dom";
+import Footer from "../components/Footer";
 
 const PrivacyPolicy = () => {
   return (
@@ -114,7 +114,7 @@ const PrivacyPolicy = () => {
       </div>
       <Footer />
     </>
-  )
-}
+  );
+};
 
-export default PrivacyPolicy
+export default PrivacyPolicy;

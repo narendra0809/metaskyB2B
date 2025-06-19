@@ -1,78 +1,78 @@
-import { useState, useEffect } from 'react'
-import { Link } from 'react-router-dom'
+import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 
 /* -- components -- */
-import useApiData from '../hooks/useApiData'
-import { useAuth } from '../context/authContext'
-import Loader from '../Loader';
-import '../Loader.css';
-import Modal from '../components/modal'
+import useApiData from "../hooks/useApiData";
+import Loader from "../Loader";
+import "../Loader.css";
+import Modal from "../components/Modal";
+import { useAuth } from "../context/AuthContext";
 
 const Payments = () => {
-  const base_url = process.env.REACT_APP_API_URL
-  const { authUser, authToken } = useAuth()
-  const agentRole = 'agent'
-  const adminRole = 'admin'
+  const base_url = import.meta.env.VITE_API_URL;
+  const { authUser, authToken } = useAuth();
+  const agentRole = "agent";
+  const adminRole = "admin";
 
   /* -- variables -- */
-  let output, outputData, filteredData
-  let totalPageNo = 0
+  let output, outputData, filteredData;
+  let totalPageNo = 0;
 
   /* -- state variables -- */
   const [filterValue, setFilterValue] = useState({
-    name: '',
-    status: '',
-    date: '',
-    mode: '',
-  })
-  const [statusId, setStatusId] = useState({ id: '', status: '' })
+    name: "",
+    status: "",
+    date: "",
+    mode: "",
+  });
+  const [statusId, setStatusId] = useState({ id: "", status: "" });
   const [modals, setModals] = useState({
     editModalOpen: false,
-  })
-  let [perPage, setPerPage] = useState(10)
-  let [currPageNo, setCurrPageNo] = useState(0)
-  let [sortOrder, setSortOrder] = useState('desc')
-  let [sortKey, setSortKey] = useState('created_at')
+  });
+  let [perPage, setPerPage] = useState(10);
+  let [currPageNo, setCurrPageNo] = useState(0);
+  let [sortOrder, setSortOrder] = useState("desc");
+  let [sortKey, setSortKey] = useState("created_at");
 
-  const [userDataLoading, setUserDataLoading] = useState(false)
-  const [userData, setUserData] = useState(null)
-  const [userDataError, setUserDataError] = useState(null)
+  const [userDataLoading, setUserDataLoading] = useState(false);
+  const [userData, setUserData] = useState(null);
+  const [userDataError, setUserDataError] = useState(null);
 
   useEffect(() => {
-    ;(async () => {
+    (async () => {
       if (authUser.role === adminRole) {
-        setUserDataLoading(true)
+        setUserDataLoading(true);
         try {
           const res = await fetch(`${base_url}/api/agent`, {
-            method: 'GET',
+            method: "GET",
             headers: {
               Authorization: `Bearer ${authToken}`,
-              'Content-Type': 'application/json',
-              'ngrok-skip-browser-warning': true,
+              "Content-Type": "application/json",
+              "ngrok-skip-browser-warning": true,
             },
-          })
+          });
 
-          const resData = await res.json()
+          const resData = await res.json();
 
           if (resData) {
-            setUserData(resData)
+            setUserData(resData);
           }
         } catch (error) {
-          setUserDataError(error)
+          setUserDataError(error);
         } finally {
-          setUserDataLoading(false)
+          setUserDataLoading(false);
         }
       }
-    })()
-  }, [])
+    })();
+  }, []);
 
   /* -- API URLs -- */
   const mainData = useApiData(
     `${base_url}/api/${
-      authUser.role === adminRole ? 'getpayment' : 'getuserpayment'
+      authUser.role === adminRole ? "getpayment" : "getuserpayment"
     }`,
     authToken
-  )
+  );
 
   /* -- render data -- */
   if (mainData?.data && !mainData?.loading && !userDataLoading) {
@@ -84,27 +84,27 @@ const Payments = () => {
           .toLowerCase()
           .includes(filterValue.date.toLowerCase()) &&
         item.mode.toLowerCase().includes(filterValue.mode.toLowerCase())
-    )
+    );
 
     // Sort filtered data based on sortKey and sortOrder
     filteredData = filteredData.sort((a, b) => {
-      const dateA = new Date(a[sortKey])
-      const dateB = new Date(b[sortKey])
+      const dateA = new Date(a[sortKey]);
+      const dateB = new Date(b[sortKey]);
 
-      if (sortOrder === 'desc') {
-        return dateB - dateA // Descending order
+      if (sortOrder === "desc") {
+        return dateB - dateA; // Descending order
       } else {
-        return dateA - dateB // Ascending order
+        return dateA - dateB; // Ascending order
       }
-    })
+    });
 
-    totalPageNo = Math.ceil(filteredData.length / perPage)
+    totalPageNo = Math.ceil(filteredData.length / perPage);
 
     // pagination
     outputData = filteredData.slice(
       perPage * currPageNo,
       perPage * currPageNo + perPage
-    )
+    );
 
     // render
     output = outputData.map((item) => (
@@ -118,7 +118,7 @@ const Payments = () => {
         <td>{item.payment_date}</td>
         <td>{item.amount}</td>
         <td className="text-capitalize">{item.mode}</td>
-        <td>{item.created_at.split('T')[0]}</td>
+        <td>{item.created_at.split("T")[0]}</td>
         <td>
           {authUser.role === adminRole ? (
             <button
@@ -128,15 +128,15 @@ const Payments = () => {
                   ...prev,
                   id: item.id,
                   status: item.status,
-                }))
-                toggleModal('editModalOpen', true)
+                }));
+                toggleModal("editModalOpen", true);
               }}
             >
-              {item.status === 'pending' ? (
+              {item.status === "pending" ? (
                 <span className="bg-warning text-dark rounded-pill px-2 py-1">
                   Pending
                 </span>
-              ) : item.status === 'approved' ? (
+              ) : item.status === "approved" ? (
                 <span className="bg-success text-light rounded-pill px-2 py-1">
                   Accepted
                 </span>
@@ -146,11 +146,11 @@ const Payments = () => {
                 </span>
               )}
             </button>
-          ) : item.status === 'pending' ? (
+          ) : item.status === "pending" ? (
             <span className="bg-warning text-dark rounded-pill px-2 py-1">
               Pending
             </span>
-          ) : item.status === 'approved' ? (
+          ) : item.status === "approved" ? (
             <span className="bg-success text-light rounded-pill px-2 py-1">
               Accepted
             </span>
@@ -161,87 +161,89 @@ const Payments = () => {
           )}
         </td>
       </tr>
-    ))
+    ));
   } else {
     output = (
       <tr>
-        <td colSpan="6"><Loader /></td>
+        <td colSpan="6">
+          <Loader />
+        </td>
       </tr>
-    )
+    );
   }
 
   /* -- functions -- */
   const handlePerPage = (e) => {
-    setPerPage(e.target.value)
-    setCurrPageNo(0)
-  }
+    setPerPage(e.target.value);
+    setCurrPageNo(0);
+  };
 
   const handleSort = (key) => {
     // Toggle sort order
     if (key === sortKey) {
-      setSortOrder((prevOrder) => (prevOrder === 'desc' ? 'asc' : 'desc'))
+      setSortOrder((prevOrder) => (prevOrder === "desc" ? "asc" : "desc"));
     } else {
-      setSortKey(key)
-      setSortOrder('desc') // Default to descending when changing column
+      setSortKey(key);
+      setSortOrder("desc"); // Default to descending when changing column
     }
-  }
+  };
 
   const handleFilter = ({ currentTarget }) => {
     setFilterValue((item) => ({
       ...item,
       [currentTarget.name]: currentTarget.value,
-    }))
-    setCurrPageNo(0)
-  }
+    }));
+    setCurrPageNo(0);
+  };
 
   const handlePageInc = () => {
     if (currPageNo + 1 < totalPageNo) {
-      setCurrPageNo((item) => item + 1)
+      setCurrPageNo((item) => item + 1);
     }
-  }
+  };
   const handlePageDec = () => {
     if (currPageNo > 0) {
-      setCurrPageNo((item) => item - 1)
+      setCurrPageNo((item) => item - 1);
     }
-  }
+  };
 
   const toggleModal = (modalType, isOpen) => {
     if (authUser.role != adminRole) {
-      return
+      return;
     }
-    setModals((prev) => ({ ...prev, [modalType]: isOpen }))
-  }
+    setModals((prev) => ({ ...prev, [modalType]: isOpen }));
+  };
 
   const handlePaymentStatus = async (status) => {
-    toggleModal('editModalOpen', false)
+    toggleModal("editModalOpen", false);
     if (authUser.role != adminRole) {
-      return
+      return;
     }
     const res = await fetch(`${base_url}/api/approvepayment/${statusId.id}`, {
-      method: 'POST',
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
         Authorization: `Bearer ${authToken}`,
       },
       body: JSON.stringify({
         status: status,
       }),
-    })
+    });
 
-    mainData.refetch()
-  }
+    mainData.refetch();
+  };
 
   return (
     <>
       {authUser.role === adminRole && (
         <Modal
           open={modals.editModalOpen}
-          handleClose={() => toggleModal('editModalOpen', false)}
+          handleClose={() => toggleModal("editModalOpen", false)}
           title="Payment Stauts"
         >
           {/* Modal content */}
           <div className="container p-3">
-            {statusId.status === 'pending' ? (
+            {statusId.status === "pending" ? (
               <>
                 <div className="container border-bottom border-light-subtle">
                   <p>Actions to perform</p>
@@ -250,7 +252,7 @@ const Payments = () => {
                   <button
                     className="btn btn-success me-3"
                     onClick={() => {
-                      handlePaymentStatus('approved')
+                      handlePaymentStatus("approved");
                     }}
                   >
                     Accept
@@ -258,7 +260,7 @@ const Payments = () => {
                   <button
                     className="btn btn-danger"
                     onClick={() => {
-                      handlePaymentStatus('denied')
+                      handlePaymentStatus("denied");
                     }}
                   >
                     Deny
@@ -267,8 +269,8 @@ const Payments = () => {
               </>
             ) : (
               <p>
-                The transaction has already been{' '}
-                {statusId.status === 'approved' ? 'Accepted' : 'Denied'}
+                The transaction has already been{" "}
+                {statusId.status === "approved" ? "Accepted" : "Denied"}
               </p>
             )}
           </div>
@@ -353,7 +355,7 @@ const Payments = () => {
               </div>
             </div>
 
-            <div style={{ display: 'grid' }}>
+            <div style={{ display: "grid" }}>
               <div className="table-responsive mt-4">
                 <table className="table table-hover text-center">
                   <thead>
@@ -363,7 +365,7 @@ const Payments = () => {
                       <th>
                         <button
                           className="th-btn"
-                          onClick={() => handleSort('payment_date')}
+                          onClick={() => handleSort("payment_date")}
                         >
                           Payment Date
                           <i className="fa-solid fa-arrow-down-wide-short ms-2"></i>
@@ -374,7 +376,7 @@ const Payments = () => {
                       <th>
                         <button
                           className="th-btn"
-                          onClick={() => handleSort('created_at')}
+                          onClick={() => handleSort("created_at")}
                         >
                           Created At
                           <i className="fa-solid fa-arrow-down-wide-short ms-2"></i>
@@ -396,16 +398,16 @@ const Payments = () => {
               </div>
               <div className="d-flex justify-content-between align-items-center">
                 <small>
-                  Showing {(currPageNo + 1) * perPage - (perPage - 1)} to{' '}
+                  Showing {(currPageNo + 1) * perPage - (perPage - 1)} to{" "}
                   {(currPageNo + 1) * perPage < filteredData?.length
                     ? (currPageNo + 1) * perPage
-                    : filteredData?.length}{' '}
+                    : filteredData?.length}{" "}
                   of {filteredData?.length} entries
                 </small>
                 <ul className="pagination mt-4">
                   <li className="page-item">
                     <button
-                      className={`page-link ${currPageNo <= 0 && 'disabled'}`}
+                      className={`page-link ${currPageNo <= 0 && "disabled"}`}
                       onClick={handlePageDec}
                     >
                       Prev
@@ -414,7 +416,7 @@ const Payments = () => {
                   <li className="page-item">
                     <button
                       className={`page-link ${
-                        currPageNo + 1 >= totalPageNo && 'disabled'
+                        currPageNo + 1 >= totalPageNo && "disabled"
                       }`}
                       onClick={handlePageInc}
                     >
@@ -428,7 +430,7 @@ const Payments = () => {
         </div>
       </section>
     </>
-  )
-}
+  );
+};
 
-export default Payments
+export default Payments;

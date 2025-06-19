@@ -52,9 +52,9 @@
 
 // export default Footer;
 
-
-import { Link } from 'react-router-dom';
-import './footer.css';
+import { Link } from "react-router-dom";
+import metalLogo from "../public/images/metalogo.webp";
+import "./footer.css";
 
 const Footer = () => {
   return (
@@ -62,7 +62,7 @@ const Footer = () => {
       <div className="footer-content">
         {/* Logo Section */}
         <div className="footer-logo">
-          <img src="./images/metalogo.webp" alt="Trip Edo Logo" />
+          <img src={metalLogo} alt="Trip Edo Logo" />
         </div>
 
         {/* Details Section */}

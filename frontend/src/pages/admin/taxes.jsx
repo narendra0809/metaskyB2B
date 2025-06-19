@@ -1,89 +1,89 @@
-import { useState } from 'react'
-import Modal from '../../components/modal'
-import useApiData from '../../hooks/useApiData'
-import './common.css'
-import useSendData from '../../hooks/useSendData'
-import { useAuth } from '../../context/authContext'
-import Confirm from '../../components/confirm'
-import Loader from '../../Loader'
-import '../../Loader.css'
+import { useState } from "react";
+import Modal from "../../components/Modal";
+import useApiData from "../../hooks/useApiData";
+import "./common.css";
+import useSendData from "../../hooks/useSendData";
+import { useAuth } from "../../context/AuthContext";
+import Confirm from "../../components/Confirm";
+import Loader from "../../Loader";
+import "../../Loader.css";
 
 const Taxes = () => {
-  const base_url = process.env.REACT_APP_API_URL
-  const { authToken: token } = useAuth()
+  const base_url = import.meta.env.VITE_API_URL;
+  const { authToken: token } = useAuth();
 
   // Fetch destination and country data
-  const mainData = useApiData(`${base_url}/api/taxes`, token)
+  const mainData = useApiData(`${base_url}/api/taxes`, token);
 
   // State variables for search and pagination
-  const [searchValue, setSearchValue] = useState('')
-  const [perPage, setPerPage] = useState(10)
-  const [currPageNo, setCurrPageNo] = useState(0)
+  const [searchValue, setSearchValue] = useState("");
+  const [perPage, setPerPage] = useState(10);
+  const [currPageNo, setCurrPageNo] = useState(0);
 
   // Form Data State
   const addForm = useSendData(
     `${base_url}/api/tax`, // URL to send data to
     token // Auth token
-  )
+  );
 
-  const [editRes, setEditRes] = useState(null)
-  const [editLoading, setEditLoading] = useState(false)
+  const [editRes, setEditRes] = useState(null);
+  const [editLoading, setEditLoading] = useState(false);
 
   // Modal state
   const [modals, setModals] = useState({
     addModalOpen: false,
     editModalOpen: false,
-  })
+  });
 
   // Form data for add/edit
   const [formData, setFormData] = useState({
     addFormData: {
-      name: '',
-      percentage: '',
+      name: "",
+      percentage: "",
     },
     editFormData: {
       id: null,
-      name: '',
-      percentage: '',
+      name: "",
+      percentage: "",
     },
-  })
+  });
 
   // Handle search input change
   const handleSearch = (e) => {
-    setSearchValue(e.target.value)
-    setCurrPageNo(0)
-  }
+    setSearchValue(e.target.value);
+    setCurrPageNo(0);
+  };
 
   // Handle page change
   const handlePageChange = (increment) => {
-    const newPageNo = currPageNo + increment
+    const newPageNo = currPageNo + increment;
     if (
       newPageNo >= 0 &&
       newPageNo < Math.ceil(filteredData.length / perPage)
     ) {
-      setCurrPageNo(newPageNo)
+      setCurrPageNo(newPageNo);
     }
-  }
+  };
 
   // Filter destinations based on search value
   const filteredData =
     mainData.data?.data?.filter((item) =>
       item.name.toLowerCase().includes(searchValue.toLowerCase())
-    ) || []
+    ) || [];
 
   // Paginated data
   const paginatedData = filteredData.slice(
     perPage * currPageNo,
     perPage * currPageNo + perPage
-  )
+  );
 
   // Handle form data changes
   const handleFormDataChange = (formType) => (e) => {
-    const { name, value, type } = e.target
-    let filteredValue = value
+    const { name, value, type } = e.target;
+    let filteredValue = value;
 
-    if (name == 'percentage') {
-      filteredValue = value.replace(/[^0-9.]/g, '').replace(/(\..*)\./g, '$1')
+    if (name == "percentage") {
+      filteredValue = value.replace(/[^0-9.]/g, "").replace(/(\..*)\./g, "$1");
     }
 
     setFormData((prev) => {
@@ -91,84 +91,84 @@ const Taxes = () => {
         ...prev,
         [formType]: {
           ...prev[formType],
-          [name]: type == 'file' ? e.target.files[0] : filteredValue,
+          [name]: type == "file" ? e.target.files[0] : filteredValue,
         },
-      }
-    })
-  }
+      };
+    });
+  };
 
   // Handle modal open/close
   const toggleModal = (modalType, isOpen) => {
-    setEditRes(null)
-    setModals((prev) => ({ ...prev, [modalType]: isOpen }))
-  }
+    setEditRes(null);
+    setModals((prev) => ({ ...prev, [modalType]: isOpen }));
+  };
 
   // submit form
   const submitFormData = async (formType) => {
     switch (formType) {
-      case 'addFormData':
-        await addForm.sendData(formData['addFormData'])
+      case "addFormData":
+        await addForm.sendData(formData["addFormData"]);
 
         setFormData((item) => ({
           ...item,
           addFormData: {
-            name: '',
-            percentage: '',
+            name: "",
+            percentage: "",
           },
-        }))
-        break
-      case 'editFormData':
-        setEditLoading(true)
+        }));
+        break;
+      case "editFormData":
+        setEditLoading(true);
 
         const res = await fetch(
           `${base_url}/api/updatetaxes/${formData.editFormData.id}`,
           {
-            method: 'POST',
+            method: "POST",
             headers: {
               Authorization: `Bearer ${token}`,
-              'Content-Type': 'application/json',
+              "Content-Type": "application/json",
             },
             body: JSON.stringify(formData.editFormData),
           }
-        )
+        );
 
-        const result = await res.json()
+        const result = await res.json();
 
-        setEditRes(result)
-        setEditLoading(false)
-        break
+        setEditRes(result);
+        setEditLoading(false);
+        break;
     }
 
-    mainData.refetch()
-  }
+    mainData.refetch();
+  };
 
   // Confirmation
-  const [isConfirm, setIsConfirm] = useState(false)
-  const [recordToDelete, setRecordToDelete] = useState(null)
+  const [isConfirm, setIsConfirm] = useState(false);
+  const [recordToDelete, setRecordToDelete] = useState(null);
 
   const handleDeleteClick = (id, name) => {
-    setRecordToDelete((prev) => ({ id, name }))
-    setIsConfirm(true)
-  }
+    setRecordToDelete((prev) => ({ id, name }));
+    setIsConfirm(true);
+  };
 
   const handleConfirm = (confirm, id = null) => {
     if (confirm) {
-      ;(async () => {
+      (async () => {
         const res = await fetch(`${base_url}/api/deletetaxes/${id}`, {
-          method: 'DELETE',
+          method: "DELETE",
           headers: {
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
-        })
+        });
 
-        mainData.refetch()
-      })()
+        mainData.refetch();
+      })();
     } else {
-      setRecordToDelete(null)
+      setRecordToDelete(null);
     }
-    setIsConfirm(false)
-  }
+    setIsConfirm(false);
+  };
 
   return (
     <>
@@ -176,7 +176,7 @@ const Taxes = () => {
         {/* Add Modal */}
         <Modal
           open={modals.addModalOpen}
-          handleClose={() => toggleModal('addModalOpen', false)}
+          handleClose={() => toggleModal("addModalOpen", false)}
           title="Add Tax"
         >
           {/* Modal content */}
@@ -194,7 +194,7 @@ const Taxes = () => {
                   placeholder="Tax Name..."
                   name="name"
                   value={formData.addFormData.name}
-                  onChange={handleFormDataChange('addFormData')}
+                  onChange={handleFormDataChange("addFormData")}
                 />
               </div>
               <div className="mb-3">
@@ -208,7 +208,7 @@ const Taxes = () => {
                   placeholder="Tax Percentage..."
                   name="percentage"
                   value={formData.addFormData.percentage}
-                  onChange={handleFormDataChange('addFormData')}
+                  onChange={handleFormDataChange("addFormData")}
                 />
               </div>
               {addForm.response &&
@@ -218,7 +218,7 @@ const Taxes = () => {
                   </div>
                 ) : (
                   <div className="alert alert-danger">
-                    {typeof addForm.response.errors === 'object'
+                    {typeof addForm.response.errors === "object"
                       ? Object.values(addForm.response.errors)[0]
                       : addForm.response.errors}
                   </div>
@@ -228,9 +228,9 @@ const Taxes = () => {
               <button
                 className="btn btn-primary"
                 type="submit"
-                onClick={() => submitFormData('addFormData')}
+                onClick={() => submitFormData("addFormData")}
               >
-                {addForm.loading ? 'Processing...' : 'Add'}
+                {addForm.loading ? "Processing..." : "Add"}
               </button>
             </div>
           </div>
@@ -239,7 +239,7 @@ const Taxes = () => {
         {/* Edit Modal */}
         <Modal
           open={modals.editModalOpen}
-          handleClose={() => toggleModal('editModalOpen', false)}
+          handleClose={() => toggleModal("editModalOpen", false)}
           title="Edit Taxes"
         >
           {/* Modal content */}
@@ -257,7 +257,7 @@ const Taxes = () => {
                   placeholder="Tax Name..."
                   name="name"
                   value={formData.editFormData.name}
-                  onChange={handleFormDataChange('editFormData')}
+                  onChange={handleFormDataChange("editFormData")}
                 />
               </div>
               <div className="mb-3">
@@ -271,7 +271,7 @@ const Taxes = () => {
                   placeholder="Tax Percentage..."
                   name="percentage"
                   value={formData.editFormData.percentage}
-                  onChange={handleFormDataChange('editFormData')}
+                  onChange={handleFormDataChange("editFormData")}
                 />
               </div>
               {editRes &&
@@ -279,7 +279,7 @@ const Taxes = () => {
                   <div className="alert alert-success">{editRes?.message}</div>
                 ) : (
                   <div className="alert alert-danger">
-                    {typeof editRes.errors === 'object'
+                    {typeof editRes.errors === "object"
                       ? Object.values(editRes.errors)[0]
                       : editRes.errors}
                   </div>
@@ -289,9 +289,9 @@ const Taxes = () => {
               <button
                 className="btn btn-warning"
                 type="submit"
-                onClick={() => submitFormData('editFormData')}
+                onClick={() => submitFormData("editFormData")}
               >
-                {editLoading ? 'Processing...' : 'Update'}
+                {editLoading ? "Processing..." : "Update"}
               </button>
             </div>
           </div>
@@ -301,10 +301,10 @@ const Taxes = () => {
         <Confirm
           open={isConfirm}
           handleConfirm={() => {
-            handleConfirm(true, recordToDelete?.id)
+            handleConfirm(true, recordToDelete?.id);
           }}
           handleClose={() => {
-            handleConfirm(false)
+            handleConfirm(false);
           }}
         >
           Are you sure you want to delete {recordToDelete?.name}?
@@ -320,20 +320,20 @@ const Taxes = () => {
           />
           <button
             className="btn btn-sm btn-primary"
-            onClick={() => toggleModal('addModalOpen', true)}
+            onClick={() => toggleModal("addModalOpen", true)}
           >
             Add Taxes
           </button>
         </div>
 
-        <div style={{ display: 'grid' }}>
+        <div style={{ display: "grid" }}>
           <div className="table-responsive">
             <table className="table table-bordered table-hover">
               <thead className="table-dark">
                 <tr>
                   <th>Tax Name</th>
                   <th>Percentage</th>
-                  <th style={{ width: '1%' }}>Action</th>
+                  <th style={{ width: "1%" }}>Action</th>
                 </tr>
               </thead>
               <tbody>
@@ -352,7 +352,7 @@ const Taxes = () => {
                       {/* Find the tax percentage */}
                       <td>{item.percentage}</td>
 
-                      <td style={{ width: '1%' }}>
+                      <td style={{ width: "1%" }}>
                         <div className="d-flex">
                           <button
                             className="btn flex-shrink-0"
@@ -360,9 +360,9 @@ const Taxes = () => {
                               setFormData((prev) => ({
                                 ...prev,
                                 editFormData: { ...item, id: item.id },
-                              }))
+                              }));
 
-                              toggleModal('editModalOpen', true)
+                              toggleModal("editModalOpen", true);
                             }}
                           >
                             <i className="fa-solid fa-pencil text-warning"></i>
@@ -370,7 +370,7 @@ const Taxes = () => {
                           <button
                             className="btn flex-shrink-0"
                             onClick={async () => {
-                              handleDeleteClick(item.id, item.name)
+                              handleDeleteClick(item.id, item.name);
                             }}
                           >
                             <i className="fa-solid fa-trash-can text-danger"></i>
@@ -394,7 +394,7 @@ const Taxes = () => {
             <ul className="pagination mt-4">
               <li className="page-item">
                 <button
-                  className={`page-link ${currPageNo <= 0 && 'disabled'}`}
+                  className={`page-link ${currPageNo <= 0 && "disabled"}`}
                   onClick={() => handlePageChange(-1)}
                 >
                   Prev
@@ -404,7 +404,7 @@ const Taxes = () => {
                 <button
                   className={`page-link ${
                     currPageNo + 1 >=
-                      Math.ceil(filteredData.length / perPage) && 'disabled'
+                      Math.ceil(filteredData.length / perPage) && "disabled"
                   }`}
                   onClick={() => handlePageChange(1)}
                 >
@@ -416,7 +416,7 @@ const Taxes = () => {
         </div>
       </section>
     </>
-  )
-}
+  );
+};
 
-export default Taxes
+export default Taxes;

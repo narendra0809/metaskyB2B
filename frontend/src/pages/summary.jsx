@@ -1,48 +1,51 @@
-import { useParams } from 'react-router-dom'
-import { useAuth } from '../context/authContext'
-import useApiData from '../hooks/useApiData'
-import { getDaysBetweenDates } from '../functions/date'
+import { useParams } from "react-router-dom";
+import useApiData from "../hooks/useApiData";
+import { getDaysBetweenDates } from "../functions/date";
+import { useAuth } from "../context/AuthContext";
 
 const Summary = () => {
-  const { id } = useParams()
+  const { id } = useParams();
 
   // User Data
-  const base_url = process.env.REACT_APP_API_URL
-  const { authUser, authToken } = useAuth()
-  const adminRole = 'admin'
+  const base_url = import.meta.env.VITE_API_URL;
+  const { authUser, authToken } = useAuth();
+  const adminRole = "admin";
 
-  const transportData = useApiData(`${base_url}/api/transportations`, authToken)
-  const sightseeingData = useApiData(`${base_url}/api/sightseeings`, authToken)
-  const countriesData = useApiData(`${base_url}/api/countries`, authToken)
+  const transportData = useApiData(
+    `${base_url}/api/transportations`,
+    authToken
+  );
+  const sightseeingData = useApiData(`${base_url}/api/sightseeings`, authToken);
+  const countriesData = useApiData(`${base_url}/api/countries`, authToken);
   const destinationsData = useApiData(
     `${base_url}/api/getdestinations`,
     authToken
-  )
-  const hotelsData = useApiData(`${base_url}/api/hotels`, authToken)
+  );
+  const hotelsData = useApiData(`${base_url}/api/hotels`, authToken);
 
   const { data, loading, error, refetch } = useApiData(
     `${base_url}/api/${
       authUser.role === adminRole
-        ? 'showbookings'
+        ? "showbookings"
         : `showbooking/${authUser.id}`
     }`,
     authToken
-  )
+  );
 
   const items = data?.data?.filter((item) => {
     if (authUser.role === adminRole) {
-      return item?.id == id
+      return item?.id == id;
     } else {
-      return item.booking?.id == id
+      return item.booking?.id == id;
     }
-  })
+  });
 
-  let item = null
+  let item = null;
   if (items?.length >= 1) {
     if (authUser.role === adminRole) {
-      item = items[0]
+      item = items[0];
     } else {
-      item = items[0].booking
+      item = items[0].booking;
     }
   }
 
@@ -60,13 +63,13 @@ const Summary = () => {
           <div className="px-2 py-2 px-md-4 text-center">Loading...</div>
         </section>
       </>
-    )
+    );
   }
 
   if (items && items.length >= 1) {
-    const hotels = JSON.parse(item.hotel_info)
-    const transports = JSON.parse(item.transport_info)
-    const sightseeings = JSON.parse(item.sightseeing_info)
+    const hotels = JSON.parse(item.hotel_info);
+    const transports = JSON.parse(item.transport_info);
+    const sightseeings = JSON.parse(item.sightseeing_info);
 
     return (
       <>
@@ -81,7 +84,7 @@ const Summary = () => {
               <div className="row row-cols-1 row-cols-sm-3 row-cols-md-4 row-cols-lg-5">
                 <div className="col">
                   <p className="fw-bold lh-1 mb-2">Travel Date</p>
-                  <p>{item.travel_date_from.split('T')[0]}</p>
+                  <p>{item.travel_date_from.split("T")[0]}</p>
                 </div>
                 <div className="col">
                   <p className="fw-bold lh-1 mb-2">Guest Name</p>
@@ -98,14 +101,14 @@ const Summary = () => {
                     {getDaysBetweenDates(
                       item.travel_date_from,
                       item.travel_date_to
-                    )}{' '}
+                    )}{" "}
                     Days
                   </p>
                 </div>
                 <div className="col">
                   <p className="fw-bold lh-1 mb-2">PAX</p>
                   <p>
-                    {item.no_adults} Adults{' '}
+                    {item.no_adults} Adults{" "}
                     {item.no_children >= 1 && `+ ${item.no_children} Children`}
                   </p>
                 </div>
@@ -124,23 +127,23 @@ const Summary = () => {
               {hotels.map((item, index) => {
                 const tempDes = destinationsData.data?.destinations?.find(
                   (destination) => destination.id == item.destination_id
-                )
+                );
 
                 const thisDes = countriesData.data?.cities.find(
                   (city) => city.id === tempDes.city_id
-                )
+                );
 
                 const thisHotel = hotelsData.data?.data?.find(
                   (hotel) => hotel.id == item.hotel_id
-                )
+                );
 
                 return (
                   <div
                     key={index}
                     className={`${
                       hotels.length != index + 1
-                        ? 'border-bottom pb-4 mb-5'
-                        : ''
+                        ? "border-bottom pb-4 mb-5"
+                        : ""
                     }`}
                   >
                     <div className="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4">
@@ -195,7 +198,7 @@ const Summary = () => {
                       </div>
                     </div>
                   </div>
-                )
+                );
               })}
             </div>
 
@@ -214,7 +217,7 @@ const Summary = () => {
                     transports.map((transport, i) => {
                       const thisTransport = transportData.data.data.find(
                         (item) => item.id == transport.transport_id
-                      )
+                      );
 
                       return (
                         <div className="listing-card mb-4" key={i}>
@@ -237,7 +240,7 @@ const Summary = () => {
                             </div>
                           </div>
                         </div>
-                      )
+                      );
                     })
                   )}
                 </div>
@@ -258,7 +261,7 @@ const Summary = () => {
                     sightseeings.map((sightseeing, i) => {
                       const thissightseeing = sightseeingData.data.data.find(
                         (item) => item.id == sightseeing.sightseeing_id
-                      )
+                      );
 
                       return (
                         <div className="listing-card mb-4" key={i}>
@@ -274,7 +277,7 @@ const Summary = () => {
                                   {thissightseeing?.description}
                                 </div>
                                 <div className="col-12 col-sm-6 mt-3 mt-sm-0">
-                                  {sightseeing.adults} Adults{' '}
+                                  {sightseeing.adults} Adults{" "}
                                   {sightseeing.children >= 1 &&
                                     `+ ${item.children} Children`}
                                 </div>
@@ -282,7 +285,7 @@ const Summary = () => {
                             </div>
                           </div>
                         </div>
-                      )
+                      );
                     })
                   )}
                 </div>
@@ -291,7 +294,7 @@ const Summary = () => {
           </div>
         </section>
       </>
-    )
+    );
   }
 
   return (
@@ -301,6 +304,6 @@ const Summary = () => {
         <div className="px-2 py-2 px-md-4 text-center">No data Found!</div>
       </section>
     </>
-  )
-}
-export default Summary
+  );
+};
+export default Summary;

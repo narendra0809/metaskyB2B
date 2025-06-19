@@ -1,117 +1,117 @@
-import { useState, useEffect } from 'react'
-import { Link } from 'react-router-dom'
-import { useAuth } from '../context/authContext'
-import Loader from '../Loader'
-import '../Loader.css'
+import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
+import Loader from "../Loader";
+import "../Loader.css";
 
 /* -- components -- */
-import useApiData from '../hooks/useApiData'
-import Alert from '../components/alert'
+import useApiData from "../hooks/useApiData";
+import Alert from "../components/Alert";
+import { useAuth } from "../context/AuthContext";
 
 const ConfirmationList = () => {
-  const base_url = process.env.REACT_APP_API_URL
-  const { authUser, authToken } = useAuth()
-  const agentRole = 'agent'
-  const adminRole = 'admin'
+  const base_url = import.meta.env.VITE_API_URL;
+  const { authUser, authToken } = useAuth();
+  const agentRole = "agent";
+  const adminRole = "admin";
 
   /* -- variables -- */
-  let output, outputData, filteredData
-  let totalPageNo = 0
+  let output, outputData, filteredData;
+  let totalPageNo = 0;
 
   /* -- API URLs -- */
   const mainData = useApiData(
     `${base_url}/api/${
       authUser.role === adminRole
-        ? 'showbookings'
+        ? "showbookings"
         : `showbooking/${authUser.id}`
     }`,
     authToken
-  )
+  );
 
   // user data states
-  const [userDataLoading, setUserDataLoading] = useState(false)
-  const [userData, setUserData] = useState(null)
-  const [userDataError, setUserDataError] = useState(null)
+  const [userDataLoading, setUserDataLoading] = useState(false);
+  const [userData, setUserData] = useState(null);
+  const [userDataError, setUserDataError] = useState(null);
 
   useEffect(() => {
-    ;(async () => {
+    (async () => {
       if (authUser.role === adminRole) {
-        setUserDataLoading(true)
+        setUserDataLoading(true);
         try {
           const res = await fetch(`${base_url}/api/agent`, {
-            method: 'GET',
+            method: "GET",
             headers: {
               Authorization: `Bearer ${authToken}`,
-              'Content-Type': 'application/json',
-              'ngrok-skip-browser-warning': true,
+              "Content-Type": "application/json",
+              "ngrok-skip-browser-warning": true,
             },
-          })
+          });
 
-          const resData = await res.json()
+          const resData = await res.json();
 
           if (resData) {
-            setUserData(resData)
+            setUserData(resData);
           }
         } catch (error) {
-          setUserDataError(error)
+          setUserDataError(error);
         } finally {
-          setUserDataLoading(false)
+          setUserDataLoading(false);
         }
       } else {
-        setUserDataLoading(true)
+        setUserDataLoading(true);
         try {
           const res = await fetch(`${base_url}/api/showuser/${authUser.id}`, {
-            method: 'GET',
+            method: "GET",
             headers: {
               Authorization: `Bearer ${authToken}`,
-              'Content-Type': 'application/json',
-              'ngrok-skip-browser-warning': true,
+              "Content-Type": "application/json",
+              "ngrok-skip-browser-warning": true,
             },
-          })
+          });
 
-          const resData = await res.json()
+          const resData = await res.json();
 
           if (resData) {
-            setUserData(resData)
+            setUserData(resData);
           }
         } catch (error) {
-          setUserDataError(error)
+          setUserDataError(error);
         } finally {
-          setUserDataLoading(false)
+          setUserDataLoading(false);
         }
       }
-    })()
-  }, [])
+    })();
+  }, []);
 
   /* -- state variables -- */
   const [filterValue, setFilterValue] = useState({
-    search: '',
-  })
-  let [perPage, setPerPage] = useState(10)
-  let [currPageNo, setCurrPageNo] = useState(0)
+    search: "",
+  });
+  let [perPage, setPerPage] = useState(10);
+  let [currPageNo, setCurrPageNo] = useState(0);
 
-  const [err, setErr] = useState(null)
-  const [success, setSuccess] = useState(false)
-  const [popUp, setPopUp] = useState(false)
+  const [err, setErr] = useState(null);
+  const [success, setSuccess] = useState(false);
+  const [popUp, setPopUp] = useState(false);
 
   /* -- render data -- */
   if (!mainData.loading && mainData.data?.data) {
     // filtering
 
-    const rawData = [...mainData.data?.data]
+    const rawData = [...mainData.data?.data];
 
-    let data
+    let data;
     if (authUser.role === adminRole) {
       data = rawData.filter(
-        (item) => item.payment_status?.toLowerCase() === 'paid'
-      )
+        (item) => item.payment_status?.toLowerCase() === "paid"
+      );
     } else {
       data = rawData.filter(
-        (item) => item.booking?.payment_status?.toLowerCase() === 'paid'
-      )
+        (item) => item.booking?.payment_status?.toLowerCase() === "paid"
+      );
     }
 
-    data?.reverse()
+    data?.reverse();
 
     if (authUser.role === adminRole) {
       filteredData = data?.filter((item) => {
@@ -122,23 +122,23 @@ const ConfirmationList = () => {
           item.userData
             ?.find((user) => user.id === item.user_id)
             ?.email.includes(filterValue.search.toLowerCase())
-        )
-      })
+        );
+      });
     } else {
       filteredData = data?.filter((item) =>
         item.booking?.customer_name
           .toLowerCase()
           .includes(filterValue.search.toLowerCase())
-      )
+      );
     }
 
-    totalPageNo = Math.ceil(filteredData.length / perPage)
+    totalPageNo = Math.ceil(filteredData.length / perPage);
 
     // pagination
     outputData = filteredData.slice(
       perPage * currPageNo,
       perPage * currPageNo + perPage
-    )
+    );
 
     // render
     output = outputData.map((item) =>
@@ -155,13 +155,13 @@ const ConfirmationList = () => {
             {item.no_children > 0 && ` + ${item.no_children}`}
           </td>
           <td>{item.final_payment}</td>
-          <td>{item.travel_date_from.split('T')[0]}</td>
-          <td>{item.created_date.split('T')[0]}</td>
+          <td>{item.travel_date_from.split("T")[0]}</td>
+          <td>{item.created_date.split("T")[0]}</td>
           <td>
             <button
               className="btn rounded-pill p-0"
               onClick={() => {
-                handleCancelCustomer(item.id)
+                handleCancelCustomer(item.id);
               }}
             >
               <span className="bg-danger text-light rounded-pill px-2 py-1">
@@ -191,8 +191,8 @@ const ConfirmationList = () => {
             {item.booking?.no_children > 0 && ` + ${item.booking?.no_children}`}
           </td>
           <td>{item.booking?.final_payment}</td>
-          <td>{item.booking?.travel_date_from.split('T')[0]}</td>
-          <td>{item.booking?.created_date.split('T')[0]}</td>
+          <td>{item.booking?.travel_date_from.split("T")[0]}</td>
+          <td>{item.booking?.created_date.split("T")[0]}</td>
           <td>
             <div className="d-flex">
               <Link
@@ -211,74 +211,74 @@ const ConfirmationList = () => {
           </td>
         </tr>
       )
-    )
+    );
   } else {
     output = (
       <tr>
         <td>Loading...</td>
       </tr>
-    )
+    );
   }
 
   /* -- functions -- */
   const handlePerPage = (e) => {
-    setPerPage(e.target.value)
-    setCurrPageNo(0)
-  }
+    setPerPage(e.target.value);
+    setCurrPageNo(0);
+  };
 
   const handleSort = (key) => {
     // data = data.sort((a, b) => a[key] - b[key])
-  }
+  };
 
   const handleFilter = ({ currentTarget }) => {
     setFilterValue((item) => ({
       ...item,
       [currentTarget.name]: currentTarget.value,
-    }))
-    setCurrPageNo(0)
-  }
+    }));
+    setCurrPageNo(0);
+  };
 
   const handlePageInc = () => {
     if (currPageNo + 1 < totalPageNo) {
-      setCurrPageNo((item) => item + 1)
+      setCurrPageNo((item) => item + 1);
     }
-  }
+  };
   const handlePageDec = () => {
     if (currPageNo > 0) {
-      setCurrPageNo((item) => item - 1)
+      setCurrPageNo((item) => item - 1);
     }
-  }
+  };
 
   const handleCancelCustomer = async (id) => {
     if (authUser.role != adminRole) {
-      return
+      return;
     }
 
     const res = await fetch(`${base_url}/api/cancelbooking/${id}`, {
-      method: 'POST',
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
         Authorization: `Bearer ${authToken}`,
       },
       body: JSON.stringify({
-        customer_status: 'cancelled',
-        payment_status: 'failed',
+        customer_status: "cancelled",
+        payment_status: "failed",
       }),
-    })
+    });
 
-    const response = await res.json()
+    const response = await res.json();
 
     if (response) {
       if (response.success) {
-        setSuccess(response.success)
-        mainData.refetch()
+        setSuccess(response.success);
+        mainData.refetch();
       } else {
-        setSuccess(response.success)
+        setSuccess(response.success);
       }
-      setErr(response.message)
-      setPopUp(true)
+      setErr(response.message);
+      setPopUp(true);
     }
-  }
+  };
 
   return (
     <>
@@ -286,7 +286,7 @@ const ConfirmationList = () => {
         <Alert
           open={popUp}
           handleClose={() => {
-            setPopUp(false)
+            setPopUp(false);
           }}
           success={success}
         >
@@ -349,14 +349,14 @@ const ConfirmationList = () => {
               </div>
             </div>
 
-            <div style={{ display: 'grid' }}>
+            <div style={{ display: "grid" }}>
               <div className="table-responsive mt-4">
                 <table className="table table-hover text-center">
                   <thead>
                     <tr>
                       <th
                         onClick={() => {
-                          handleSort('')
+                          handleSort("");
                         }}
                       >
                         Customer Name
@@ -391,16 +391,16 @@ const ConfirmationList = () => {
               </div>
               <div className="d-flex justify-content-between align-items-center">
                 <small>
-                  Showing {(currPageNo + 1) * perPage - (perPage - 1)} to{' '}
+                  Showing {(currPageNo + 1) * perPage - (perPage - 1)} to{" "}
                   {(currPageNo + 1) * perPage < filteredData?.length
                     ? (currPageNo + 1) * perPage
-                    : filteredData?.length}{' '}
+                    : filteredData?.length}{" "}
                   of {filteredData?.length} entries
                 </small>
                 <ul className="pagination mt-4">
                   <li className="page-item">
                     <button
-                      className={`page-link ${currPageNo <= 0 && 'disabled'}`}
+                      className={`page-link ${currPageNo <= 0 && "disabled"}`}
                       onClick={handlePageDec}
                     >
                       Prev
@@ -409,7 +409,7 @@ const ConfirmationList = () => {
                   <li className="page-item">
                     <button
                       className={`page-link ${
-                        currPageNo + 1 >= totalPageNo && 'disabled'
+                        currPageNo + 1 >= totalPageNo && "disabled"
                       }`}
                       onClick={handlePageInc}
                     >
@@ -423,7 +423,7 @@ const ConfirmationList = () => {
         </div>
       </section>
     </>
-  )
-}
+  );
+};
 
-export default ConfirmationList
+export default ConfirmationList;

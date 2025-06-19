@@ -1,5 +1,5 @@
-import { Link } from 'react-router-dom'
-import Footer from '../components/footer'
+import { Link } from "react-router-dom";
+import Footer from "../components/Footer";
 
 const RefundPolicy = () => {
   return (
@@ -88,7 +88,7 @@ const RefundPolicy = () => {
 
       <Footer />
     </>
-  )
-}
+  );
+};
 
-export default RefundPolicy
+export default RefundPolicy;

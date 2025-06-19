@@ -1,110 +1,110 @@
-import { useState } from 'react'
-import useApiData from '../hooks/useApiData'
-import Loader from '../Loader';
-import '../Loader.css';
-import { useAuth } from '../context/authContext'
+import { useState } from "react";
+import useApiData from "../hooks/useApiData";
+import { useAuth } from "../context/AuthContext";
 
-const RoomPrice = () => {
-  const base_url = process.env.REACT_APP_API_URL
-  const { authToken } = useAuth()
+/* -- components -- */
+const TransportPrice = () => {
+  const base_url = import.meta.env.VITE_API_URL;
+  const { authToken } = useAuth();
 
   /* -- variables -- */
-  let output, outputData, filteredData
-  let totalPageNo = 0
+  let output, outputData, filteredData;
+  let totalPageNo = 0;
 
   /* -- fetch data -- */
   const { data, loading } = useApiData(
-    `${base_url}/api/getHotelsWithCity`,
+    `${base_url}/api/getTransportWithCity`,
     authToken
-  )
+  );
 
   /* -- state variables -- */
   const [filterValue, setFilterValue] = useState({
-    search: '',
-    hotels: '',
-  })
-  let [perPage, setPerPage] = useState(10)
-  let [currPageNo, setCurrPageNo] = useState(0)
+    search: "",
+    hotels: "",
+  });
+  let [perPage, setPerPage] = useState(10);
+  let [currPageNo, setCurrPageNo] = useState(0);
 
   /* -- render data -- */
   if (!loading) {
-    // Check if data and data.hotels are available
-    if (data && data.hotels) {
-      // filtering
-      filteredData = data.hotels.filter((item) =>
-        item.hotel_name.toLowerCase().includes(filterValue.search.toLowerCase())
-      )
+    // filtering
 
-      totalPageNo = Math.ceil(filteredData.length / perPage)
+    console.log("data", data);
+    filteredData = data?.transport?.filter(
+      (item) =>
+        item.company_name
+          .toLowerCase()
+          .includes(filterValue.search.toLowerCase()) ||
+        item.city.toLowerCase().includes(filterValue.search.toLowerCase())
+    );
 
-      // pagination
-      outputData = filteredData.slice(
-        perPage * currPageNo,
-        perPage * currPageNo + perPage
-      )
+    totalPageNo = Math.ceil(filteredData?.length / perPage);
 
-      // render
-      output = outputData.map((item, index) => (
-        <tr key={index}>
-          <td className="align-middle">{item.hotel_name}</td>
-          <td className="align-middle">{item.city}</td>
-          <td>
-            {item.room_types.map((room, i) => (
-              <p key={i}>{room.type}</p>
-            ))}
-          </td>
-          <td>
-            {item.room_types.map((room, i) => (
-              <p key={i}>₹ {room.rate} /-</p>
-            ))}
-          </td>
-        </tr>
-      ))
-    } else {
-      output = (
-        <tr>
-          <td colSpan={4} style={{ textAlign: 'center' }}>No hotels found</td>
-        </tr>
-      )
-    }
+    // pagination
+    outputData = filteredData?.slice(
+      perPage * currPageNo,
+      perPage * currPageNo + perPage
+    );
+
+    // render
+    output = outputData?.map((item, index) => (
+      <tr key={index}>
+        <td className="align-middle">{item.company_name}</td>
+        <td className="align-middle">{item.city}</td>
+        <td>
+          {item.options.map((ele, i) => (
+            <p key={i}>{ele.type}</p>
+          ))}
+        </td>
+        <td>
+          {item.options.map((ele, i) => (
+            <p key={i}>₹ {ele.rate} /-</p>
+          ))}
+        </td>
+      </tr>
+    ));
   } else {
     output = (
       <tr>
-        <td colSpan={4}> <Loader /></td>
+        <td>Loading...</td>
       </tr>
-    )
+    );
   }
 
   /* -- functions -- */
   const handlePerPage = (e) => {
-    setPerPage(e.target.value)
-    setCurrPageNo(0)
-  }
+    setPerPage(e.target.value);
+    setCurrPageNo(0);
+  };
+
+  const handleSort = (key) => {
+    // data = data?.sort((a, b) => a[key] - b[key])
+  };
 
   const handleFilter = ({ currentTarget }) => {
     setFilterValue((item) => ({
       ...item,
       [currentTarget.name]: currentTarget.value,
-    }))
-    setCurrPageNo(0)
-  }
+    }));
+    setCurrPageNo(0);
+  };
 
   const handlePageInc = () => {
     if (currPageNo + 1 < totalPageNo) {
-      setCurrPageNo((item) => item + 1)
+      setCurrPageNo((item) => item + 1);
     }
-  }
+  };
   const handlePageDec = () => {
     if (currPageNo > 0) {
-      setCurrPageNo((item) => item - 1)
+      setCurrPageNo((item) => item - 1);
     }
-  }
+  };
 
   return (
     <>
       <section className="page-section">
         <div className="page-header">
-          <h1 className="page-title">Room Price</h1>
+          <h1 className="page-title">Transport Price</h1>
         </div>
 
         {/* Table */}
@@ -150,12 +150,12 @@ const RoomPrice = () => {
               </div>
             </div>
 
-            <div style={{ display: 'grid' }}>
+            <div style={{ display: "grid" }}>
               <div className="table-responsive mt-4">
                 <table className="table table-hover text-center">
                   <thead>
                     <tr>
-                      <th>Hotel Name</th>
+                      <th>Company Name</th>
                       <th>City</th>
                       <th>Room Types</th>
                       <th>Room Cost</th>
@@ -166,7 +166,7 @@ const RoomPrice = () => {
                       output
                     ) : (
                       <tr>
-                        <td colSpan={4}>No record found</td>
+                        <td colSpan={99}>No record found</td>
                       </tr>
                     )}
                   </tbody>
@@ -174,16 +174,16 @@ const RoomPrice = () => {
               </div>
               <div className="d-flex justify-content-between align-items-center">
                 <small>
-                  Showing {(currPageNo + 1) * perPage - (perPage - 1)} to{' '}
+                  Showing {(currPageNo + 1) * perPage - (perPage - 1)} to{" "}
                   {(currPageNo + 1) * perPage < filteredData?.length
                     ? (currPageNo + 1) * perPage
-                    : filteredData?.length}{' '}
+                    : filteredData?.length}{" "}
                   of {filteredData?.length} entries
                 </small>
                 <ul className="pagination mt-4">
                   <li className="page-item">
                     <button
-                      className={`page-link ${currPageNo <= 0 && 'disabled'}`}
+                      className={`page-link ${currPageNo <= 0 && "disabled"}`}
                       onClick={handlePageDec}
                     >
                       Prev
@@ -192,7 +192,7 @@ const RoomPrice = () => {
                   <li className="page-item">
                     <button
                       className={`page-link ${
-                        currPageNo + 1 >= totalPageNo && 'disabled'
+                        currPageNo + 1 >= totalPageNo && "disabled"
                       }`}
                       onClick={handlePageInc}
                     >
@@ -206,7 +206,7 @@ const RoomPrice = () => {
         </div>
       </section>
     </>
-  )
-}
+  );
+};
 
-export default RoomPrice
+export default TransportPrice;

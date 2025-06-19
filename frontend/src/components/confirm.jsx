@@ -1,5 +1,4 @@
-import React from 'react'
-import { Dialog } from '@mui/material'
+import { Dialog } from "@mui/material";
 
 function Confirm({ open, handleClose, handleConfirm, children }) {
   return (
@@ -7,14 +6,14 @@ function Confirm({ open, handleClose, handleConfirm, children }) {
       open={open}
       onClose={handleClose}
       sx={{
-        '& .MuiDialog-paper': {
-          width: '90%',
-          maxWidth: '300px',
-          borderRadius: '7px',
+        "& .MuiDialog-paper": {
+          width: "90%",
+          maxWidth: "300px",
+          borderRadius: "7px",
         },
       }}
     >
-      <div style={{ width: '100%', maxWidth: '600px' }}>
+      <div style={{ width: "100%", maxWidth: "600px" }}>
         <div className="p-3">
           <>
             <div className="border-bottom border-light-subtle">
@@ -32,6 +31,6 @@ function Confirm({ open, handleClose, handleConfirm, children }) {
         </div>
       </div>
     </Dialog>
-  )
+  );
 }
-export default Confirm
+export default Confirm;

@@ -1,20 +1,19 @@
-import React from 'react'
-import { Dialog } from '@mui/material'
+import { Dialog } from "@mui/material";
 
-function Modal({ open, handleClose, title = '', children }) {
+function Modal({ open, handleClose, title = "", children }) {
   return (
     <Dialog
       open={open}
       onClose={handleClose}
       sx={{
-        '& .MuiDialog-paper': {
-          width: '90%',
-          maxWidth: '600px',
-          borderRadius: '7px',
+        "& .MuiDialog-paper": {
+          width: "90%",
+          maxWidth: "600px",
+          borderRadius: "7px",
         },
       }}
     >
-      <div style={{ width: '100%', maxWidth: '600px' }}>
+      <div style={{ width: "100%", maxWidth: "600px" }}>
         <div className="d-flex justify-content-between align-items-center p-3 border border-bottom border-light-subtle">
           <h2 className="h5 m-0">{title}</h2>
           <button
@@ -27,6 +26,6 @@ function Modal({ open, handleClose, title = '', children }) {
         <div>{children}</div>
       </div>
     </Dialog>
-  )
+  );
 }
-export default Modal
+export default Modal;

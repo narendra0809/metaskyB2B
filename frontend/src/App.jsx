@@ -1,290 +1,241 @@
-import { Navigate, Route, Routes } from 'react-router-dom'
+import { Navigate, Route, Routes } from "react-router-dom";
+import NavContextProvider from "./context/NavContext";
+import { useAuth } from "./context/AuthContext";
+import Layout from "./Layout";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
+import RefundPolicy from "./pages/RefundPolicy";
+import Wallet from "./pages/Wallet";
+import AddWallet from "./pages/AddWallet";
+import Calculator from "./pages/Calculator";
+import ChangePassword from "./pages/ChangePassword";
+import ChangeProfile from "./pages/ChangeProfile";
+import FinalCustomer from "./pages/FinalCustomers";
+import Login from "./pages/Login";
+import Register from "./pages/Register";
+import Dashboard from "./pages/Dashboard";
+import ConfirmationList from "./pages/ConfirmationList";
+import Customers from "./pages/Customers";
+import EditCalculator from "./pages/EditCalculator";
+import Itinerary from "./pages/Itinerary";
+import Payments from "./pages/Payments";
+import RoomPrice from "./pages/RoomPrice";
+import SightseeingPrice from "./pages/SightseeingPrice";
+import Summary from "./pages/Summary";
+import TermsAndConditions from "./pages/TermsAndConditions";
+import TransportPrice from "./pages/TransportPrice";
+import WhatsappCustomer from "./pages/WhatsappCustomer";
+import Destinations from "./pages/admin/Destinations";
+import Hotels from "./pages/admin/Hotels";
+import Sightseeing from "./pages/admin/Sightseeing";
+import Transportation from "./pages/admin/Transportation";
+import Tickets from "./pages/admin/Tickets";
+import Taxes from "./pages/admin/Taxes";
+import Agents from "./pages/admin/Agents";
+import Staff from "./pages/admin/Staff";
+import AllAccounts from "./pages/admin/AllAccounts";
+import Banking from "./pages/admin/Banking";
+import AgentWallets from "./pages/admin/AgentWallets";
 
-import NavContextProvider from './context/navContext'
-import { useAuth } from './context/authContext'
-
-// Pages
-import Login from './pages/login'
-import Register from './pages/register'
-
-import Destinations from './pages/admin/destinations'
-import Tickets from './pages/admin/tickets'
-import Hotels from './pages/admin/hotels'
-import Sightseeing from './pages/admin/sightseeing'
-import Transportation from './pages/admin/transportation'
-import Taxes from './pages/admin/taxes'
-import Agents from './pages/admin/agents'
-import Staff from './pages/admin/staff'
-import Banking from './pages/admin/banking'
-import AllAccounts from './pages/admin/all-accounts'
-
-import Dashboard from './pages/dashboard'
-import Customers from './pages/customers'
-import FinalCustomer from './pages/final-customers'
-import ChangePassword from './pages/change-password'
-import ChangeProfile from './pages/change-profile'
-import ConfirmationList from './pages/confirmation-list'
-import Wallet from './pages/wallet'
-import Payments from './pages/payments'
-import RoomPrice from './pages/room-price'
-import TransportPrice from './pages/transport-price'
-import SightseeingPrice from './pages/sightseeing-price'
-import PrivacyPolicy from './pages/privacy-policy'
-import RefundPolicy from './pages/refund-policy'
-import TermsAndConditions from './pages/terms-and-conditions'
-
-import Calculator from './pages/calculator'
-import AddWallet from './pages/add-wallet'
-import WhatsappCustomer from './pages/whatsapp-customer'
-import Itinerary from './pages/itinerary'
-import AgentWallets from './pages/admin/agent-wallets'
-import EditCalculator from './pages/edit-calculator'
-import Layout from './layout'
-import Summary from './pages/summary'
+// Lazy-loaded pages for better performance
+// const Login = () => import("./pages/Login");
+// const Register = () => import("./pages/Register");
+// const Dashboard = () => import("./pages/Dashboard");
+// ... (similar for all other page components)
 
 function App() {
-  const { loggedIn, authUser } = useAuth()
-  const adminRole = 'admin'
-  const agentRole = 'agent'
+  const { loggedIn, authUser } = useAuth();
+  const adminRole = "admin";
+  const agentRole = "agent";
+
+  // Protected Route component
+  const ProtectedRoute = ({ element, roles = [], ...rest }) => {
+    if (!loggedIn) return <Navigate to="/login" />;
+    if (roles.length && !roles.includes(authUser.role)) {
+      return <Navigate to="/" />;
+    }
+    return element;
+  };
 
   return (
     <div className="App">
       <NavContextProvider>
         <Routes>
+          {/* Public Routes */}
+          <Route
+            path="/login"
+            element={loggedIn ? <Navigate to="/" /> : <Login />}
+          />
+          <Route
+            path="/register"
+            element={loggedIn ? <Navigate to="/" /> : <Register />}
+          />
+
+          {/* Policy Routes (accessible regardless of auth) */}
+          <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+          <Route path="/refund-policy" element={<RefundPolicy />} />
+          <Route
+            path="/terms-and-conditions"
+            element={<TermsAndConditions />}
+          />
+
+          {/* Main Layout Protected Routes */}
           <Route
             path="/"
-            element={loggedIn ? <Layout /> : <Navigate to={'/login'} />}
+            element={loggedIn ? <Layout /> : <Navigate to="/login" />}
           >
-            {/* Private Routes */}
-            <Route
-              index
-              element={
-                loggedIn ? (
-                  <Navigate to={'/dashboard'} />
-                ) : (
-                  <Navigate to={'/login'} />
-                )
-              }
-            />
+            <Route index element={<Navigate to="/dashboard" />} />
+            {/* Common Protected Routes */}
             <Route
               path="/dashboard"
-              element={loggedIn ? <Dashboard /> : <Navigate to={'/'} />}
+              element={<ProtectedRoute element={<Dashboard />} />}
             />
             <Route
               path="/customers"
-              element={loggedIn ? <Customers /> : <Navigate to={'/'} />}
+              element={<ProtectedRoute element={<Customers />} />}
             />
             <Route
               path="/final-customers"
-              element={loggedIn ? <FinalCustomer /> : <Navigate to={'/'} />}
+              element={<ProtectedRoute element={<FinalCustomer />} />}
             />
             <Route
               path="/confirmation-list"
-              element={loggedIn ? <ConfirmationList /> : <Navigate to={'/'} />}
+              element={<ProtectedRoute element={<ConfirmationList />} />}
             />
             <Route
               path="/wallet"
-              element={loggedIn ? <Wallet /> : <Navigate to={'/'} />}
+              element={<ProtectedRoute element={<Wallet />} />}
             />
             <Route
               path="/payments"
-              element={loggedIn ? <Payments /> : <Navigate to={'/'} />}
+              element={<ProtectedRoute element={<Payments />} />}
             />
             <Route
               path="/change-password"
-              element={loggedIn ? <ChangePassword /> : <Navigate to={'/'} />}
+              element={<ProtectedRoute element={<ChangePassword />} />}
             />
             <Route
               path="/change-profile"
-              element={loggedIn ? <ChangeProfile /> : <Navigate to={'/'} />}
+              element={<ProtectedRoute element={<ChangeProfile />} />}
             />
             <Route
               path="/room-price"
-              element={loggedIn ? <RoomPrice /> : <Navigate to={'/'} />}
+              element={<ProtectedRoute element={<RoomPrice />} />}
             />
             <Route
               path="/transport-price"
-              element={loggedIn ? <TransportPrice /> : <Navigate to={'/'} />}
+              element={<ProtectedRoute element={<TransportPrice />} />}
             />
             <Route
               path="/sightseeing-price"
-              element={loggedIn ? <SightseeingPrice /> : <Navigate to={'/'} />}
+              element={<ProtectedRoute element={<SightseeingPrice />} />}
             />
-
-            {/* Extra pages */}
+            {/* Agent-Specific Routes */}
             <Route
               path="/calculator"
-              element={
-                loggedIn && authUser.role === agentRole ? (
-                  <Calculator />
-                ) : (
-                  <Navigate to={'/'} />
-                )
-              }
+              element={<ProtectedRoute element={<Calculator />} />}
+              roles={[agentRole]}
             />
             <Route
               path="/calculator/:bookingId"
-              element={loggedIn ? <EditCalculator /> : <Navigate to={'/'} />}
+              element={<ProtectedRoute element={<EditCalculator />} />}
             />
             <Route
               path="/add-wallet"
-              element={
-                loggedIn && authUser.role === agentRole ? (
-                  <AddWallet />
-                ) : (
-                  <Navigate to={'/'} />
-                )
-              }
+              element={<ProtectedRoute element={<AddWallet />} />}
+              roles={[agentRole]}
             />
+            {/* Dynamic Parameter Routes */}
             <Route
               path="/whatsapp-customer/:id"
-              element={loggedIn ? <WhatsappCustomer /> : <Navigate to={'/'} />}
+              element={<ProtectedRoute element={<WhatsappCustomer />} />}
             />
             <Route
               path="/itinerary/:id"
-              element={loggedIn ? <Itinerary /> : <Navigate to={'/'} />}
+              element={<ProtectedRoute element={<Itinerary />} />}
             />
             <Route
               path="/summary/:id"
-              element={loggedIn ? <Summary /> : <Navigate to={'/'} />}
+              element={<ProtectedRoute element={<Summary />} />}
             />
-            <Route
-              path="/banking"
-              element={loggedIn ? <Banking /> : <Navigate to={'/'} />}
-            />
-
-            {/* Admin */}
+            {/* Admin-Only Routes */}
             <Route
               path="/destinations"
               element={
-                loggedIn && authUser.role === adminRole ? (
-                  <Destinations />
-                ) : (
-                  <Navigate to={'/'} />
-                )
+                <ProtectedRoute
+                  element={<Destinations />}
+                  roles={[adminRole]}
+                />
               }
             />
             <Route
               path="/hotels"
               element={
-                loggedIn && authUser.role === adminRole ? (
-                  <Hotels />
-                ) : (
-                  <Navigate to={'/'} />
-                )
+                <ProtectedRoute element={<Hotels />} roles={[adminRole]} />
               }
             />
             <Route
               path="/sightseeing"
               element={
-                loggedIn && authUser.role === adminRole ? (
-                  <Sightseeing />
-                ) : (
-                  <Navigate to={'/'} />
-                )
+                <ProtectedRoute element={<Sightseeing />} roles={[adminRole]} />
               }
             />
             <Route
               path="/transportation"
               element={
-                loggedIn && authUser.role === adminRole ? (
-                  <Transportation />
-                ) : (
-                  <Navigate to={'/'} />
-                )
+                <ProtectedRoute
+                  element={<Transportation />}
+                  roles={[adminRole]}
+                />
               }
             />
-
-            {/* added by me  */}
             <Route
               path="/tickets"
               element={
-                loggedIn && authUser.role === adminRole ? (
-                  <Tickets />
-                ) : (
-                  <Navigate to={'/'} />
-                )
+                <ProtectedRoute element={<Tickets />} roles={[adminRole]} />
               }
             />
-
-            {/*  end  */}
-
             <Route
               path="/taxes"
               element={
-                loggedIn && authUser.role === adminRole ? (
-                  <Taxes />
-                ) : (
-                  <Navigate to={'/'} />
-                )
+                <ProtectedRoute element={<Taxes />} roles={[adminRole]} />
               }
             />
             <Route
               path="/agents"
               element={
-                loggedIn && authUser.role === adminRole ? (
-                  <Agents />
-                ) : (
-                  <Navigate to={'/'} />
-                )
+                <ProtectedRoute element={<Agents />} roles={[adminRole]} />
               }
             />
             <Route
               path="/staff"
               element={
-                loggedIn && authUser.role === adminRole ? (
-                  <Staff />
-                ) : (
-                  <Navigate to={'/'} />
-                )
+                <ProtectedRoute element={<Staff />} roles={[adminRole]} />
               }
             />
             <Route
               path="/all-accounts"
               element={
-                loggedIn && authUser.role === adminRole ? (
-                  <AllAccounts />
-                ) : (
-                  <Navigate to={'/'} />
-                )
+                <ProtectedRoute element={<AllAccounts />} roles={[adminRole]} />
               }
             />
             <Route
               path="/agent-wallets"
               element={
-                loggedIn && authUser.role === adminRole ? (
-                  <AgentWallets />
-                ) : (
-                  <Navigate to={'/'} />
-                )
+                <ProtectedRoute
+                  element={<AgentWallets />}
+                  roles={[adminRole]}
+                />
+              }
+            />
+            <Route
+              path="/banking"
+              element={
+                <ProtectedRoute element={<Banking />} roles={[adminRole]} />
               }
             />
           </Route>
 
-          {/* Auth */}
-          <Route
-            path="/login"
-            element={loggedIn ? <Navigate to={'/'} /> : <Login />}
-          />
-          <Route
-            path="/register"
-            element={loggedIn ? <Navigate to={'/'} /> : <Register />}
-          />
-
-          {/* Sitemaps */}
-          <Route
-            path="/privacy-policy"
-            element={loggedIn ? <PrivacyPolicy /> : <Navigate to={'/'} />}
-          />
-          <Route
-            path="/refund-policy"
-            element={loggedIn ? <RefundPolicy /> : <Navigate to={'/'} />}
-          />
-          <Route
-            path="/terms-and-conditions"
-            element={loggedIn ? <TermsAndConditions /> : <Navigate to={'/'} />}
-          />
-
+          {/* 404 Route */}
           <Route
             path="*"
             element={<h1 className="text-center">Page not found!</h1>}
@@ -292,7 +243,7 @@ function App() {
         </Routes>
       </NavContextProvider>
     </div>
-  )
+  );
 }
 
-export default App
+export default App;

@@ -1,40 +1,40 @@
-import { useState } from 'react'
-import useApiData from '../../hooks/useApiData'
-import { useAuth } from '../../context/authContext'
-import './common.css'
-import Loader from '../../Loader'
-import '../../Loader.css'
+import { useState } from "react";
+import useApiData from "../../hooks/useApiData";
+import "./common.css";
+import Loader from "../../Loader";
+import "../../Loader.css";
+import { useAuth } from "../../context/AuthContext";
 
 const AllAccounts = () => {
-  const base_url = process.env.REACT_APP_API_URL
-  const { authToken } = useAuth()
+  const base_url = import.meta.env.VITE_API_URL;
+  const { authToken } = useAuth();
 
-  const token = authToken
+  const token = authToken;
 
   // Fetch destination and country data
-  const mainData = useApiData(`${base_url}/api/allbankdetail/`, token)
+  const mainData = useApiData(`${base_url}/api/allbankdetail/`, token);
 
   // State variables for search and pagination
-  const [searchValue, setSearchValue] = useState('')
-  const [perPage, setPerPage] = useState(10)
-  const [currPageNo, setCurrPageNo] = useState(0)
+  const [searchValue, setSearchValue] = useState("");
+  const [perPage, setPerPage] = useState(10);
+  const [currPageNo, setCurrPageNo] = useState(0);
 
   // Handle search input change
   const handleSearch = (e) => {
-    setSearchValue(e.target.value)
-    setCurrPageNo(0)
-  }
+    setSearchValue(e.target.value);
+    setCurrPageNo(0);
+  };
 
   // Handle page change
   const handlePageChange = (increment) => {
-    const newPageNo = currPageNo + increment
+    const newPageNo = currPageNo + increment;
     if (
       newPageNo >= 0 &&
       newPageNo < Math.ceil(filteredData.length / perPage)
     ) {
-      setCurrPageNo(newPageNo)
+      setCurrPageNo(newPageNo);
     }
-  }
+  };
 
   // Filter destinations based on search value
   const filteredData =
@@ -44,13 +44,13 @@ const AllAccounts = () => {
           ?.toLowerCase()
           .includes(searchValue.toLowerCase()) ||
         item.bank_name?.toLowerCase().includes(searchValue.toLowerCase())
-    ) || []
+    ) || [];
 
   // Paginated data
   const paginatedData = filteredData.slice(
     perPage * currPageNo,
     perPage * currPageNo + perPage
-  )
+  );
 
   return (
     <>
@@ -65,7 +65,7 @@ const AllAccounts = () => {
           />
         </div>
 
-        <div style={{ display: 'grid' }}>
+        <div style={{ display: "grid" }}>
           <div className="table-responsive">
             <table className="table table-bordered table-hover">
               <thead className="table-dark">
@@ -106,12 +106,12 @@ const AllAccounts = () => {
                       {/* Status */}
                       <td
                         className={`text-center ${
-                          item.status === 'online'
-                            ? 'text-success'
-                            : 'text-danger'
+                          item.status === "online"
+                            ? "text-success"
+                            : "text-danger"
                         }`}
                       >
-                        {item.status === 'online' ? 'Active' : 'Inactive'}
+                        {item.status === "online" ? "Active" : "Inactive"}
                       </td>
                     </tr>
                   ))
@@ -130,7 +130,7 @@ const AllAccounts = () => {
             <ul className="pagination mt-4">
               <li className="page-item">
                 <button
-                  className={`page-link ${currPageNo <= 0 && 'disabled'}`}
+                  className={`page-link ${currPageNo <= 0 && "disabled"}`}
                   onClick={() => handlePageChange(-1)}
                 >
                   Prev
@@ -140,7 +140,7 @@ const AllAccounts = () => {
                 <button
                   className={`page-link ${
                     currPageNo + 1 >=
-                      Math.ceil(filteredData.length / perPage) && 'disabled'
+                      Math.ceil(filteredData.length / perPage) && "disabled"
                   }`}
                   onClick={() => handlePageChange(1)}
                 >
@@ -152,7 +152,7 @@ const AllAccounts = () => {
         </div>
       </section>
     </>
-  )
-}
+  );
+};
 
-export default AllAccounts
+export default AllAccounts;

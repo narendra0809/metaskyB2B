@@ -1,94 +1,94 @@
-import { useState, useEffect } from 'react'
-import { Link } from 'react-router-dom'
-import useApiData from '../hooks/useApiData'
+import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
+import useApiData from "../hooks/useApiData";
+import { useAuth } from "../context/AuthContext";
 
 /* -- components -- */
-import { useAuth } from '../context/authContext'
 
 const Wallet = () => {
-  const base_url = process.env.REACT_APP_API_URL
-  const { authUser, authToken } = useAuth()
-  const agentRole = 'agent'
-  const adminRole = 'admin'
+  const base_url = import.meta.env.VITE_API_URL;
+  const { authUser, authToken } = useAuth();
+  const agentRole = "agent";
+  const adminRole = "admin";
 
   /* -- variables -- */
-  let output, outputData, filteredData
-  let totalPageNo = 0
+  let output, outputData, filteredData;
+  let totalPageNo = 0;
 
   /* -- state variables -- */
   const [filterValue, setFilterValue] = useState({
-    name: '',
-  })
-  let [perPage, setPerPage] = useState(10)
-  let [currPageNo, setCurrPageNo] = useState(0)
-  let [sortOrder, setSortOrder] = useState('desc')
-  let [sortKey, setSortKey] = useState('created_at')
+    name: "",
+  });
+  let [perPage, setPerPage] = useState(10);
+  let [currPageNo, setCurrPageNo] = useState(0);
+  let [sortOrder, setSortOrder] = useState("desc");
+  let [sortKey, setSortKey] = useState("created_at");
 
   // user data states
-  const [userDataLoading, setUserDataLoading] = useState(false)
-  const [userData, setUserData] = useState(null)
-  const [userDataError, setUserDataError] = useState(null)
+  const [userDataLoading, setUserDataLoading] = useState(false);
+  const [userData, setUserData] = useState(null);
+  const [userDataError, setUserDataError] = useState(null);
 
   useEffect(() => {
-    ;(async () => {
+    (async () => {
       if (authUser.role === adminRole) {
-        setUserDataLoading(true)
+        setUserDataLoading(true);
         try {
           const res = await fetch(`${base_url}/api/agent`, {
-            method: 'GET',
+            method: "GET",
             headers: {
               Authorization: `Bearer ${authToken}`,
-              'Content-Type': 'application/json',
-              'ngrok-skip-browser-warning': true,
+              "Content-Type": "application/json",
+              "ngrok-skip-browser-warning": true,
             },
-          })
+          });
 
-          const resData = await res.json()
+          const resData = await res.json();
 
           if (resData) {
-            setUserData(resData)
+            setUserData(resData);
           }
         } catch (error) {
-          setUserDataError(error)
+          setUserDataError(error);
         } finally {
-          setUserDataLoading(false)
+          setUserDataLoading(false);
         }
       }
-    })()
-  }, [])
+    })();
+  }, []);
 
   /* -- API URLs -- */
   const mainData = useApiData(
     `${base_url}/api/${
-      authUser.role === adminRole ? 'gettransaction' : 'getusertransaction'
+      authUser.role === adminRole ? "gettransaction" : "getusertransaction"
     }`,
     authToken
-  )
+  );
 
   /* -- render data -- */
   if (mainData?.data && !mainData?.loading && !userDataLoading) {
     // filtering
-    filteredData = mainData.data.transactions?.filter((item) => item)
+    filteredData = mainData.data.transactions?.filter((item) => item);
 
     // Sort filtered data based on sortKey and sortOrder
     filteredData = filteredData.sort((a, b) => {
-      const dateA = new Date(a[sortKey])
-      const dateB = new Date(b[sortKey])
+      const dateA = new Date(a[sortKey]);
+      const dateB = new Date(b[sortKey]);
 
-      if (sortOrder === 'desc') {
-        return dateB - dateA // Descending order
+      if (sortOrder === "desc") {
+        return dateB - dateA; // Descending order
       } else {
-        return dateA - dateB // Ascending order
+        return dateA - dateB; // Ascending order
       }
-    })
+    });
 
-    totalPageNo = Math.ceil(filteredData.length / perPage)
+    totalPageNo = Math.ceil(filteredData.length / perPage);
 
     // pagination
     outputData = filteredData.slice(
       perPage * currPageNo,
       perPage * currPageNo + perPage
-    )
+    );
 
     // render
     output = outputData.map((item) => (
@@ -99,69 +99,69 @@ const Wallet = () => {
           </td>
         )}
         <td>{item.payment_date}</td>
-        <td>{item.created_at?.split('T')[0]}</td>
+        <td>{item.created_at?.split("T")[0]}</td>
         <td>
-          {item.payment_status.toLowerCase() === 'Debit'.toLowerCase()
+          {item.payment_status.toLowerCase() === "Debit".toLowerCase()
             ? item.amount
-            : ''}
+            : ""}
         </td>
         <td>
-          {item.payment_status.toLowerCase() === 'Credit'.toLowerCase()
+          {item.payment_status.toLowerCase() === "Credit".toLowerCase()
             ? item.amount
-            : ''}
+            : ""}
         </td>
         <td>
-          {item.status === 'approved' ? (
+          {item.status === "approved" ? (
             <i className="fa-solid fa-check text-success"></i>
           ) : (
             <i className="fa-solid fa-xmark text-danger"></i>
           )}
         </td>
       </tr>
-    ))
+    ));
   } else {
     output = (
       <tr>
         <td colSpan="6">Loading...</td>
       </tr>
-    )
+    );
   }
 
   /* -- functions -- */
   const handlePerPage = (e) => {
-    setPerPage(e.target.value)
-    setCurrPageNo(0)
-  }
+    setPerPage(e.target.value);
+    setCurrPageNo(0);
+  };
 
   const handleSort = (key) => {
     // Toggle sort order
     if (key === sortKey) {
-      setSortOrder((prevOrder) => (prevOrder === 'desc' ? 'asc' : 'desc'))
+      setSortOrder((prevOrder) => (prevOrder === "desc" ? "asc" : "desc"));
     } else {
-      setSortKey(key)
-      setSortOrder('desc') // Default to descending when changing column
+      setSortKey(key);
+      setSortOrder("desc"); // Default to descending when changing column
     }
-  }
+  };
 
   const handleFilter = ({ currentTarget }) => {
     setFilterValue((item) => ({
       ...item,
       [currentTarget.name]: currentTarget.value,
-    }))
-    setCurrPageNo(0)
-  }
+    }));
+    setCurrPageNo(0);
+  };
 
   const handlePageInc = () => {
     if (currPageNo + 1 < totalPageNo) {
-      setCurrPageNo((item) => item + 1)
+      setCurrPageNo((item) => item + 1);
     }
-  }
+  };
 
   const handlePageDec = () => {
     if (currPageNo > 0) {
-      setCurrPageNo((item) => item - 1)
+      setCurrPageNo((item) => item - 1);
     }
-  }
+  };
 
   return (
     <>
@@ -203,7 +203,7 @@ const Wallet = () => {
               </div>
             </div>
 
-            <div style={{ display: 'grid' }}>
+            <div style={{ display: "grid" }}>
               <div className="table-responsive mt-4">
                 <table className="table table-hover text-center">
                   <thead>
@@ -212,7 +212,7 @@ const Wallet = () => {
                       <th>
                         <button
                           className="th-btn"
-                          onClick={() => handleSort('payment_date')}
+                          onClick={() => handleSort("payment_date")}
                         >
                           Payment Date
                           <i className="fa-solid fa-arrow-down-wide-short ms-2"></i>
@@ -221,7 +221,7 @@ const Wallet = () => {
                       <th>
                         <button
                           className="th-btn"
-                          onClick={() => handleSort('created_at')}
+                          onClick={() => handleSort("created_at")}
                         >
                           Created At
                           <i className="fa-solid fa-arrow-down-wide-short ms-2"></i>
@@ -245,16 +245,16 @@ const Wallet = () => {
               </div>
               <div className="d-flex justify-content-between align-items-center">
                 <small>
-                  Showing {(currPageNo + 1) * perPage - (perPage - 1)} to{' '}
+                  Showing {(currPageNo + 1) * perPage - (perPage - 1)} to{" "}
                   {(currPageNo + 1) * perPage < filteredData?.length
                     ? (currPageNo + 1) * perPage
-                    : filteredData?.length}{' '}
+                    : filteredData?.length}{" "}
                   of {filteredData?.length} entries
                 </small>
                 <ul className="pagination mt-4">
                   <li className="page-item">
                     <button
-                      className={`page-link ${currPageNo <= 0 && 'disabled'}`}
+                      className={`page-link ${currPageNo <= 0 && "disabled"}`}
                       onClick={handlePageDec}
                     >
                       Prev
@@ -263,7 +263,7 @@ const Wallet = () => {
                   <li className="page-item">
                     <button
                       className={`page-link ${
-                        currPageNo + 1 >= totalPageNo && 'disabled'
+                        currPageNo + 1 >= totalPageNo && "disabled"
                       }`}
                       onClick={handlePageInc}
                     >
@@ -277,7 +277,7 @@ const Wallet = () => {
         </div>
       </section>
     </>
-  )
-}
+  );
+};
 
-export default Wallet
+export default Wallet;

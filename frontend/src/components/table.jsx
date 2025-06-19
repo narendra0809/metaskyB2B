@@ -1,33 +1,33 @@
-import { useState } from 'react'
-import useFetch from '../hooks/useFetch'
-import './table.css'
+import { useState } from "react";
+import useFetch from "../hooks/useFetch";
+import "./table.css";
 
 const Table = ({ dataUrl }) => {
-  let output, outputData, filteredData
-  let totalPageNo = 0
+  let output, outputData, filteredData;
+  let totalPageNo = 0;
 
   /* -- contexts -- */
-  const { data, loading } = useFetch(dataUrl)
+  const { data, loading } = useFetch(dataUrl);
 
   /* -- state variables -- */
-  const [searchValue, setSearchValue] = useState('')
-  let [perPage, setPerPage] = useState(10)
-  let [currPageNo, setCurrPageNo] = useState(0)
+  const [searchValue, setSearchValue] = useState("");
+  let [perPage, setPerPage] = useState(10);
+  let [currPageNo, setCurrPageNo] = useState(0);
 
   /* -- render data -- */
   if (!loading) {
     // filtering
     filteredData = data.filter((item) =>
       item.Name.toLowerCase().includes(searchValue.toLowerCase())
-    )
+    );
 
-    totalPageNo = Math.ceil(filteredData.length / perPage)
+    totalPageNo = Math.ceil(filteredData.length / perPage);
 
     // pagination
     outputData = filteredData.slice(
       perPage * currPageNo,
       perPage * currPageNo + perPage
-    )
+    );
 
     // render
     output = outputData.map((item) => (
@@ -38,7 +38,7 @@ const Table = ({ dataUrl }) => {
         <td>{item.Email}</td>
         <td>{item.Country}</td>
       </tr>
-    ))
+    ));
   } else {
     output = (
       <tr>
@@ -51,29 +51,29 @@ const Table = ({ dataUrl }) => {
 
   /* -- functions -- */
   const handlePerPage = (e) => {
-    setPerPage(e.target.value)
-    setCurrPageNo(0)
-  }
+    setPerPage(e.target.value);
+    setCurrPageNo(0);
+  };
 
   const handleSort = (key) => {
     // data = data.sort((a, b) => a[key] - b[key])
-  }
+  };
 
   const handleSearch = (e) => {
-    setSearchValue(e.target.value)
-    setCurrPageNo(0)
-  }
+    setSearchValue(e.target.value);
+    setCurrPageNo(0);
+  };
 
   const handlePageInc = () => {
     if (currPageNo + 1 < totalPageNo) {
-      setCurrPageNo((item) => item + 1)
+      setCurrPageNo((item) => item + 1);
     }
-  }
+  };
   const handlePageDec = () => {
     if (currPageNo > 0) {
-      setCurrPageNo((item) => item - 1)
+      setCurrPageNo((item) => item - 1);
     }
-  }
+  };
 
   return (
     <div className="table-container">
@@ -102,35 +102,35 @@ const Table = ({ dataUrl }) => {
             <tr>
               <th
                 onClick={() => {
-                  handleSort('ID')
+                  handleSort("ID");
                 }}
               >
                 Id
               </th>
               <th
                 onClick={() => {
-                  handleSort('Name')
+                  handleSort("Name");
                 }}
               >
                 Name
               </th>
               <th
                 onClick={() => {
-                  handleSort('Age')
+                  handleSort("Age");
                 }}
               >
                 Age
               </th>
               <th
                 onClick={() => {
-                  handleSort('Email')
+                  handleSort("Email");
                 }}
               >
                 Email
               </th>
               <th
                 onClick={() => {
-                  handleSort('Country')
+                  handleSort("Country");
                 }}
               >
                 Country
@@ -150,16 +150,16 @@ const Table = ({ dataUrl }) => {
       </div>
       <div className="d-flex justify-content-between align-items-center">
         <small>
-          Showing {(currPageNo + 1) * perPage - (perPage - 1)} to{' '}
+          Showing {(currPageNo + 1) * perPage - (perPage - 1)} to{" "}
           {(currPageNo + 1) * perPage < filteredData?.length
             ? (currPageNo + 1) * perPage
-            : filteredData?.length}{' '}
+            : filteredData?.length}{" "}
           of {filteredData?.length} entries
         </small>
         <ul className="pagination mt-4">
           <li className="page-item">
             <button
-              className={`page-link ${currPageNo <= 0 && 'disabled'}`}
+              className={`page-link ${currPageNo <= 0 && "disabled"}`}
               onClick={handlePageDec}
             >
               Prev
@@ -168,7 +168,7 @@ const Table = ({ dataUrl }) => {
           <li className="page-item">
             <button
               className={`page-link ${
-                currPageNo + 1 >= totalPageNo && 'disabled'
+                currPageNo + 1 >= totalPageNo && "disabled"
               }`}
               onClick={handlePageInc}
             >
@@ -178,7 +178,7 @@ const Table = ({ dataUrl }) => {
         </ul>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default Table
+export default Table;

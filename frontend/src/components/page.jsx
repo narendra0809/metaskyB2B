@@ -1,16 +1,16 @@
-import { useContext, useEffect } from 'react'
-
-import { NavContext } from '../context/navContext'
+import { useContext, useEffect } from "react";
 
 /* -- components -- */
-import Header from './header'
-import Navbar from './navbar'
-import Footer from './footer'
-import BalanceContextProvider from '../context/balanceContext'
+
+import { NavContext } from "../context/NavContext";
+import BalanceContextProvider from "../context/BalanceContext";
+import Header from "./Header";
+import Footer from "./Footer";
+import Navbar from "./Navbar";
 
 const Page = ({ children }) => {
   /* -- contexts -- */
-  const { navActive } = useContext(NavContext)
+  const { navActive } = useContext(NavContext);
 
   return (
     <>
@@ -18,14 +18,14 @@ const Page = ({ children }) => {
         <Header />
         <div className="d-flex align-items-stretch">
           <Navbar />
-          <main className={navActive ? 'active' : ''}>
+          <main className={navActive ? "active" : ""}>
             <div className="page-wrapper">{children}</div>
             <Footer />
           </main>
         </div>
       </BalanceContextProvider>
     </>
-  )
-}
+  );
+};
 
-export default Page
+export default Page;

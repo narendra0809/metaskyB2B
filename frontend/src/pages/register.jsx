@@ -1,109 +1,110 @@
-import { useRef, useState } from 'react'
-import { Link } from 'react-router-dom'
-import './register.css'
+import { useRef, useState } from "react";
+import { Link } from "react-router-dom";
+import metalLogo from "../public/images/metalogo.webp";
+import "./register.css";
 
 const Register = () => {
-  const base_url = process.env.REACT_APP_API_URL
+  const base_url = import.meta.env.VITE_API_URL;
 
   const [data, setData] = useState({
-    username: '',
-    company_name: '',
-    phoneno: '',
-    address: '',
+    username: "",
+    company_name: "",
+    phoneno: "",
+    address: "",
     company_documents: null,
     company_logo: null,
-    reffered_by: '',
-    role: '',
-    email: '',
-    password: '',
-    password_confirmation: '',
-  })
+    reffered_by: "",
+    role: "",
+    email: "",
+    password: "",
+    password_confirmation: "",
+  });
 
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState('')
-  const [success, setSuccess] = useState('')
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
 
-  const inputLogo = useRef()
-  const inputDocs = useRef()
+  const inputLogo = useRef();
+  const inputDocs = useRef();
 
   const handleChange = ({ currentTarget }) => {
-    const { name, value, type } = currentTarget
+    const { name, value, type } = currentTarget;
 
     setData((item) => ({
       ...item,
-      [name]: type === 'file' ? currentTarget.files[0] : value,
-    }))
-  }
+      [name]: type === "file" ? currentTarget.files[0] : value,
+    }));
+  };
 
   const handleSubmit = async (e) => {
-    e.preventDefault()
-    if (data.role === 'staff') {
-      data.company_documents = null
-      data.company_logo = null
-      data.company_name = ''
+    e.preventDefault();
+    if (data.role === "staff") {
+      data.company_documents = null;
+      data.company_logo = null;
+      data.company_name = "";
     }
 
     try {
-      setLoading(true)
-      if (data.role === 'agent') {
-        if (data.company_name === '') {
-          throw new Error('Company Name is required')
+      setLoading(true);
+      if (data.role === "agent") {
+        if (data.company_name === "") {
+          throw new Error("Company Name is required");
         } else if (data.company_documents === null) {
-          throw new Error('Company Documents field is required')
+          throw new Error("Company Documents field is required");
         } else if (data.company_logo === null) {
-          throw new Error('Company Logo field is required')
+          throw new Error("Company Logo field is required");
         }
       }
-      const formData = new FormData()
+      const formData = new FormData();
 
       Object.entries(data).forEach(([key, value]) => {
-        formData.append(key, value)
-      })
+        formData.append(key, value);
+      });
 
       // Send POST request to the API using fetch
       const response = await fetch(`${base_url}/api/register`, {
-        method: 'POST',
+        method: "POST",
         body: formData,
-      })
+      });
 
-      const resData = await response.json()
+      const resData = await response.json();
 
       // Check if the login was successful (status code 200-299)
       if (!resData.success) {
-        throw new Error(Object.values(resData.errors)[0])
+        throw new Error(Object.values(resData.errors)[0]);
       }
 
       setData({
-        username: '',
-        company_name: '',
-        phoneno: '',
-        address: '',
+        username: "",
+        company_name: "",
+        phoneno: "",
+        address: "",
         company_documents: null,
         company_logo: null,
-        reffered_by: '',
-        role: '',
-        email: '',
-        password: '',
-        password_confirmation: '',
-      })
+        reffered_by: "",
+        role: "",
+        email: "",
+        password: "",
+        password_confirmation: "",
+      });
       if (inputLogo.current) {
-        inputLogo.current.value = ''
+        inputLogo.current.value = "";
       }
       if (inputDocs.current) {
-        inputDocs.current.value = ''
+        inputDocs.current.value = "";
       }
 
-      setError(null)
-      setSuccess(resData.message)
+      setError(null);
+      setSuccess(resData.message);
     } catch (err) {
       // Handle error
 
-      setSuccess('')
-      setError(err.message)
+      setSuccess("");
+      setError(err.message);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   return (
     <div className="login">
@@ -117,18 +118,16 @@ const Register = () => {
                     <div className="card-body p-md-5 mx-md-4">
                       <div className="mt-5">
                         <h4 className="head">Register</h4>
-                        <p
-                          className=" register-data"
-                          
-                        >
-                          to create your account
-                        </p>
+                        <p className=" register-data">to create your account</p>
                       </div>
 
                       <form className="myForm" onSubmit={handleSubmit}>
                         <div className="row g-3">
                           <div className="col-md-6">
-                            <div className="form-floating mb-2 mt-2" style={{background:'#02001e'}}>
+                            <div
+                              className="form-floating mb-2 mt-2"
+                              style={{ background: "#02001e" }}
+                            >
                               <input
                                 type="text"
                                 className="form-control"
@@ -158,7 +157,7 @@ const Register = () => {
                         </div>
                         <div className="row g-3">
                           {/* compoany name */}
-                          {data.role === 'agent' && (
+                          {data.role === "agent" && (
                             <div className="col-md-6">
                               <div className="form-floating mb-2 mt-2">
                                 <input
@@ -178,7 +177,7 @@ const Register = () => {
                           )}
                           <div
                             className={`col-md-${
-                              data.role === 'agent' ? '6' : 12
+                              data.role === "agent" ? "6" : 12
                             }`}
                           >
                             <div className="form-floating mb-2 mt-2">
@@ -236,9 +235,15 @@ const Register = () => {
                                 value={data.role}
                                 onChange={handleChange}
                               >
-                                <option value="" class="select">-- select --</option>
-                                <option value="agent" class="select">Agent</option>
-                                <option value="staff" class="select">Staff</option>
+                                <option value="" class="select">
+                                  -- select --
+                                </option>
+                                <option value="agent" class="select">
+                                  Agent
+                                </option>
+                                <option value="staff" class="select">
+                                  Staff
+                                </option>
                               </select>
                               <label htmlFor="role" className="form-label">
                                 User Type:
@@ -247,7 +252,7 @@ const Register = () => {
                           </div>
                         </div>
                         {/* company docs */}
-                        {data.role === 'agent' && (
+                        {data.role === "agent" && (
                           <>
                             <div className="row">
                               <div className="col-md-12">
@@ -331,7 +336,7 @@ const Register = () => {
                           className="btn btn-main w-100 mb-2 mt-2 py-3"
                           type="submit"
                         >
-                          {loading ? 'Processing...' : 'Register'}
+                          {loading ? "Processing..." : "Register"}
                         </button>
 
                         <div className="d-flex align-items-center justify-content-center pb-4">
@@ -351,9 +356,9 @@ const Register = () => {
                   <div className="col-lg-4 d-flex align-items-center border-start border-light-subtle">
                     <div className="text-center text-muted px-3 py-4 p-md-5 mx-md-4">
                       <img
-                        src="/images/metalogo.webp"
+                        src={metalLogo}
                         className="mb-4 w-100"
-                        style={{ maxWidth: '200px' }}
+                        style={{ maxWidth: "200px" }}
                         alt="logo"
                       />
                       <h4 className="mb-2 h5">System Features</h4>
@@ -370,7 +375,7 @@ const Register = () => {
         </div>
       </section>
     </div>
-  )
-}
+  );
+};
 
-export default Register
+export default Register;

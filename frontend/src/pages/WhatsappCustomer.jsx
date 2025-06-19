@@ -1,9 +1,9 @@
-import { Link, useParams } from 'react-router-dom'
-import useFetch from '../hooks/useFetch'
+import { Link, useParams } from "react-router-dom";
+import useFetch from "../hooks/useFetch";
 
 const WhatsappCustomer = () => {
-  const { data, loading } = useFetch('/data/dummydata.json')
-  const { id } = useParams()
+  const { data, loading } = useFetch("/data/dummydata.json");
+  const { id } = useParams();
 
   // const item = data.filter((item) => item.ID == id)
 
@@ -15,7 +15,7 @@ const WhatsappCustomer = () => {
           <div className="px-2 py-2 px-md-4 mb-4">Loading...</div>
         </section>
       </>
-    )
+    );
   }
   return (
     <>
@@ -86,6 +86,6 @@ const WhatsappCustomer = () => {
         </div>
       </section>
     </>
-  )
-}
-export default WhatsappCustomer
+  );
+};
+export default WhatsappCustomer;

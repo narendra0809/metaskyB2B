@@ -1,11 +1,11 @@
-import { useEffect, useState } from 'react';
-import { useAuth } from '../context/authContext';
-import useSendData from '../hooks/useSendData';
-import Alert from '../components/alert';
+import { useEffect, useState } from "react";
+import useSendData from "../hooks/useSendData";
+import Alert from "../components/Alert";
+import { useAuth } from "../context/AuthContext";
 
 const ChangeProfile = () => {
-  const base_url = process.env.REACT_APP_API_URL;
-  const { authUser , setAuthUser , authToken } = useAuth();
+  const base_url = import.meta.env.VITE_API_URL;
+  const { authUser, setAuthUser, authToken } = useAuth();
 
   /* -- State -- */
   const [msg, setMsg] = useState(null);
@@ -13,22 +13,22 @@ const ChangeProfile = () => {
   const [popUp, setPopUp] = useState(false);
 
   const [formData, setFormData] = useState({
-    username: '',
-    email: '',
-    company_name: '',
-    phoneno: '',
-    address: '',
+    username: "",
+    email: "",
+    company_name: "",
+    phoneno: "",
+    address: "",
   });
 
   useEffect(() => {
     (async () => {
       try {
         const res = await fetch(`${base_url}/api/showuser/${authUser.id}`, {
-          method: 'GET',
+          method: "GET",
           headers: {
             Authorization: `Bearer ${authToken}`,
-            'Content-Type': 'application/json',
-            'ngrok-skip-browser-warning': true,
+            "Content-Type": "application/json",
+            "ngrok-skip-browser-warning": true,
           },
         });
 
@@ -63,8 +63,8 @@ const ChangeProfile = () => {
     let filteredValue = value;
 
     switch (name) {
-      case 'phoneno':
-        filteredValue = value.replace(/[^0-9]/g, '');
+      case "phoneno":
+        filteredValue = value.replace(/[^0-9]/g, "");
         break;
 
       default:
@@ -89,17 +89,17 @@ const ChangeProfile = () => {
       setPopUp(true);
       setSucc(response?.success);
       if (response?.success) {
-        setAuthUser ((prev) => ({ ...prev, username: formData.username }));
+        setAuthUser((prev) => ({ ...prev, username: formData.username }));
         setMsg(response.message);
       } else {
         setMsg(
-          typeof response.error === 'object'
+          typeof response.error === "object"
             ? Object.values(response.error)[0]
             : response.error
         );
       }
     }
-  }, [loading, response, formData.username, setAuthUser ]);
+  }, [loading, response, formData.username, setAuthUser]);
 
   return (
     <>
@@ -153,7 +153,7 @@ const ChangeProfile = () => {
                     />
                   </div>
 
-                  {authUser.role === 'agent' && (
+                  {authUser.role === "agent" && (
                     <div className="col-12 col-md-6">
                       <label htmlFor="company_name" className="fw-bold mb-1">
                         Company Name
@@ -172,7 +172,7 @@ const ChangeProfile = () => {
                   )}
                   <div
                     className={`col-12 ${
-                      authUser.role === 'agent' ? 'col-md-6' : ''
+                      authUser.role === "agent" ? "col-md-6" : ""
                     }`}
                   >
                     <label htmlFor="phone_number" className="fw-bold mb-1">
@@ -212,7 +212,7 @@ const ChangeProfile = () => {
 
             <div className="mt-4">
               <button className="btn btn-success">
-                {loading ? 'Processing' : 'Update'}
+                {loading ? "Processing" : "Update"}
               </button>
             </div>
           </form>

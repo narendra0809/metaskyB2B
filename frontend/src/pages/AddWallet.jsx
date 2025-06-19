@@ -1,63 +1,65 @@
-import { useEffect, useRef, useState } from 'react'
-import LoaderIcon from '../Loader'; // Adjust the path as necessary
-import useSendFile from '../hooks/useSendFile'
-import { useAuth } from '../context/authContext'
-import useApiData from '../hooks/useApiData'
-import { useNavigate } from 'react-router-dom'
-import Alert from '../components/alert'
+import { useEffect, useRef, useState } from "react";
+import LoaderIcon from "../Loader"; // Adjust the path as necessary
+import useSendFile from "../hooks/useSendFile";
+import useApiData from "../hooks/useApiData";
+import { useNavigate } from "react-router-dom";
+import Alert from "../components/Alert";
+import { useAuth } from "../context/AuthContext";
 
 const AddWallet = () => {
-  const base_url = process.env.REACT_APP_API_URL
-  const { authUser, authToken } = useAuth()
-  const navigator = useNavigate()
-  const today = new Date().toISOString().split('T')[0]
+  const base_url = import.meta.env.VITE_API_URL;
+  const { authUser, authToken } = useAuth();
+  const navigator = useNavigate();
+  const today = new Date().toISOString().split("T")[0];
 
   /* -- API URLs -- */
-  const addForm = useSendFile(`${base_url}/api/add-payment`, authToken)
+  const addForm = useSendFile(`${base_url}/api/add-payment`, authToken);
   const userData = useApiData(
     `${base_url}/api/showuser/${authUser.id}`,
     authToken
-  )
+  );
 
   /* -- State Variables -- */
-  const [err, setErr] = useState(null)
-  const [success, setSuccess] = useState(false)
-  const [popUp, setPopUp] = useState(false)
+  const [err, setErr] = useState(null);
+  const [success, setSuccess] = useState(false);
+  const [popUp, setPopUp] = useState(false);
 
   /* -- Form Data -- */
   const [formData, setFormData] = useState({
-    mode: 'manual',
-    amount: '',
-    payment_date: '',
-    description: '',
+    mode: "manual",
+    amount: "",
+    payment_date: "",
+    description: "",
     screenshot: null,
-  })
-  const attachmentFile = useRef(null)
+  });
+  const attachmentFile = useRef(null);
 
   const handleOnchange = (e) => {
-    const { name, value, type } = e.target
-    let filteredValue = value
+    const { name, value, type } = e.target;
+    let filteredValue = value;
 
     switch (name) {
-      case 'amount':
-        filteredValue = value.replace(/[^0-9.]/g, '').replace(/(\..*)\./g, '$1')
-        break
+      case "amount":
+        filteredValue = value
+          .replace(/[^0-9.]/g, "")
+          .replace(/(\..*)\./g, "$1");
+        break;
 
       default:
-        filteredValue = value
-        break
+        filteredValue = value;
+        break;
     }
 
     setFormData((prev) => {
       return {
         ...prev,
-        [name]: type == 'file' ? e.target.files[0] : filteredValue,
-      }
-    })
-  }
+        [name]: type == "file" ? e.target.files[0] : filteredValue,
+      };
+    });
+  };
 
   const handleSubmit = (e) => {
-    e.preventDefault()
+    e.preventDefault();
 
     if (
       !formData.amount ||
@@ -65,52 +67,52 @@ const AddWallet = () => {
       !formData.payment_date ||
       !formData.screenshot
     ) {
-      setSuccess(false)
-      setErr('All fields are required')
-      setPopUp(true)
-      return
+      setSuccess(false);
+      setErr("All fields are required");
+      setPopUp(true);
+      return;
     }
 
-    const submitFormData = new FormData()
+    const submitFormData = new FormData();
 
     Object.entries(formData).forEach(([key, value]) => {
-      submitFormData.append(key, value)
-    })
-    addForm.sendData(submitFormData)
-  }
+      submitFormData.append(key, value);
+    });
+    addForm.sendData(submitFormData);
+  };
   useEffect(() => {
     if (!addForm.loading && addForm.response) {
-      setSuccess(addForm.response?.success)
+      setSuccess(addForm.response?.success);
 
       if (addForm.response?.success) {
-        setErr(addForm.response?.message)
+        setErr(addForm.response?.message);
         if (attachmentFile.current) {
-          attachmentFile.current.value = ''
+          attachmentFile.current.value = "";
         }
         setFormData({
-          mode: 'manual',
-          amount: '',
-          payment_date: '',
-          description: '',
+          mode: "manual",
+          amount: "",
+          payment_date: "",
+          description: "",
           screenshot: null,
-        })
+        });
       } else {
         setErr(
-          typeof addForm.response.error === 'object'
+          typeof addForm.response.error === "object"
             ? Object.values(addForm.response.error)[0]
             : addForm.response.error
-        )
+        );
       }
 
-      setPopUp(true)
+      setPopUp(true);
     }
-  }, [addForm.loading])
+  }, [addForm.loading]);
   return (
     <>
       <Alert
         open={popUp}
         handleClose={() => {
-          setPopUp(false)
+          setPopUp(false);
         }}
         success={success}
       >
@@ -121,24 +123,24 @@ const AddWallet = () => {
         <div className="px-2 py-2 px-md-4 mb-4">
           <div>
             <p className="mb-2">
-              <span className="fw-bold">Company Name:</span>{' '}
-              {userData.loading ? 'Loading...' : userData.data?.company_name}
+              <span className="fw-bold">Company Name:</span>{" "}
+              {userData.loading ? "Loading..." : userData.data?.company_name}
             </p>
             <p className="mb-2">
-              <span className="fw-bold">Email:</span>{' '}
-              {userData.loading ? 'Loading...' : userData.data?.email}
+              <span className="fw-bold">Email:</span>{" "}
+              {userData.loading ? "Loading..." : userData.data?.email}
             </p>
             <p className="mb-2">
-              <span className="fw-bold">Address:</span>{' '}
-              {userData.loading ? 'Loading...' : userData.data?.address}
+              <span className="fw-bold">Address:</span>{" "}
+              {userData.loading ? "Loading..." : userData.data?.address}
             </p>
             <p className="mb-2">
-              <span className="fw-bold">Contact Person Name:</span>{' '}
-              {userData.loading ? 'Loading...' : userData.data?.username}
+              <span className="fw-bold">Contact Person Name:</span>{" "}
+              {userData.loading ? "Loading..." : userData.data?.username}
             </p>
             <p className="mb-2">
-              <span className="fw-bold">Mobile Number:</span>{' '}
-              {userData.loading ? 'Loading...' : userData.data?.phoneno}
+              <span className="fw-bold">Mobile Number:</span>{" "}
+              {userData.loading ? "Loading..." : userData.data?.phoneno}
             </p>
           </div>
 
@@ -242,14 +244,14 @@ const AddWallet = () => {
 
                   <div className="d-flex gap-3 flex-wrap">
                     <button type="submit" className="btn btn-primary">
-                      {addForm.loading ? <LoaderIcon /> : 'Add Payment'}
-                      </button>
+                      {addForm.loading ? <LoaderIcon /> : "Add Payment"}
+                    </button>
                     <button
                       type="button"
                       className="btn btn-primary"
                       onClick={(e) => {
-                        e.preventDefault()
-                        navigator(-1)
+                        e.preventDefault();
+                        navigator(-1);
                       }}
                     >
                       Back
@@ -263,7 +265,7 @@ const AddWallet = () => {
                   <div className="row">
                     <div className="col-md-6 col-sm-12 col-lg-12">
                       <h4 className="mb-4">INDIAN ACCOUNT</h4>
-                      <div style={{ fontSize: '14px' }}>
+                      <div style={{ fontSize: "14px" }}>
                         <div className="mb-3 d-flex">
                           <div className="col-lg-5 col-md-12">
                             <label htmlFor="name" className="form-label">
@@ -345,6 +347,6 @@ const AddWallet = () => {
         </div>
       </section>
     </>
-  )
-}
-export default AddWallet
+  );
+};
+export default AddWallet;

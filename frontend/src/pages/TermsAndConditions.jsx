@@ -1,5 +1,5 @@
-import { Link } from 'react-router-dom'
-import Footer from '../components/footer'
+import { Link } from "react-router-dom";
+import Footer from "../components/Footer";
 
 const TermsAndConditions = () => {
   return (
@@ -107,7 +107,7 @@ const TermsAndConditions = () => {
 
       <Footer />
     </>
-  )
-}
+  );
+};
 
-export default TermsAndConditions
+export default TermsAndConditions;

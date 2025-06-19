@@ -1,10 +1,9 @@
 import { useState } from "react";
 import useApiData from "../hooks/useApiData";
-import { useAuth } from "../context/authContext";
+import { useAuth } from "../context/AuthContext";
 
-/* -- components -- */
-const TransportPrice = () => {
-  const base_url = process.env.REACT_APP_API_URL;
+const SightseeingPrice = () => {
+  const base_url = import.meta.env.VITE_API_URL;
   const { authToken } = useAuth();
 
   /* -- variables -- */
@@ -13,7 +12,7 @@ const TransportPrice = () => {
 
   /* -- fetch data -- */
   const { data, loading } = useApiData(
-    `${base_url}/api/getTransportWithCity`,
+    `${base_url}/api/getsswithcity`,
     authToken
   );
 
@@ -27,46 +26,46 @@ const TransportPrice = () => {
 
   /* -- render data -- */
   if (!loading) {
-    // filtering
+    // Check if data and data.sightseeing are available
+    if (data && data.sightseeing) {
+      // filtering
+      filteredData = data.sightseeing.filter(
+        (item) =>
+          item.company_name
+            .toLowerCase()
+            .includes(filterValue.search.toLowerCase()) ||
+          item.city.toLowerCase().includes(filterValue.search.toLowerCase())
+      );
 
-    console.log("data", data);
-    filteredData = data?.transport?.filter(
-      (item) =>
-        item.company_name
-          .toLowerCase()
-          .includes(filterValue.search.toLowerCase()) ||
-        item.city.toLowerCase().includes(filterValue.search.toLowerCase())
-    );
+      totalPageNo = Math.ceil(filteredData.length / perPage);
 
-    totalPageNo = Math.ceil(filteredData?.length / perPage);
+      // pagination
+      outputData = filteredData.slice(
+        perPage * currPageNo,
+        perPage * currPageNo + perPage
+      );
 
-    // pagination
-    outputData = filteredData?.slice(
-      perPage * currPageNo,
-      perPage * currPageNo + perPage
-    );
-
-    // render
-    output = outputData?.map((item, index) => (
-      <tr key={index}>
-        <td className="align-middle">{item.company_name}</td>
-        <td className="align-middle">{item.city}</td>
-        <td>
-          {item.options.map((ele, i) => (
-            <p key={i}>{ele.type}</p>
-          ))}
-        </td>
-        <td>
-          {item.options.map((ele, i) => (
-            <p key={i}>₹ {ele.rate} /-</p>
-          ))}
-        </td>
-      </tr>
-    ));
+      // render
+      output = outputData.map((item, index) => (
+        <tr key={index}>
+          <td className="align-middle">{item.company_name}</td>
+          <td className="align-middle">{item.description}</td>
+          <td className="align-middle">{item.city}</td>
+          <td className="align-middle">{item.rate_adult}</td>
+          <td className="align-middle">{item.rate_child}</td>
+        </tr>
+      ));
+    } else {
+      output = (
+        <tr>
+          <td colSpan={5}>No sightseeing options found</td>
+        </tr>
+      );
+    }
   } else {
     output = (
       <tr>
-        <td>Loading...</td>
+        <td colSpan={5}>Loading...</td>
       </tr>
     );
   }
@@ -75,10 +74,6 @@ const TransportPrice = () => {
   const handlePerPage = (e) => {
     setPerPage(e.target.value);
     setCurrPageNo(0);
-  };
-
-  const handleSort = (key) => {
-    // data = data?.sort((a, b) => a[key] - b[key])
   };
 
   const handleFilter = ({ currentTarget }) => {
@@ -104,7 +99,7 @@ const TransportPrice = () => {
     <>
       <section className="page-section">
         <div className="page-header">
-          <h1 className="page-title">Transport Price</h1>
+          <h1 className="page-title">Sightseeing Price</h1>
         </div>
 
         {/* Table */}
@@ -156,9 +151,10 @@ const TransportPrice = () => {
                   <thead>
                     <tr>
                       <th>Company Name</th>
+                      <th>Description</th>
                       <th>City</th>
-                      <th>Room Types</th>
-                      <th>Room Cost</th>
+                      <th>Adult Cost</th>
+                      <th>Child Cost</th>
                     </tr>
                   </thead>
                   <tbody className="bg-white">
@@ -166,7 +162,7 @@ const TransportPrice = () => {
                       output
                     ) : (
                       <tr>
-                        <td colSpan={99}>No record found</td>
+                        <td colSpan={5}>No record found</td>
                       </tr>
                     )}
                   </tbody>
@@ -209,4 +205,4 @@ const TransportPrice = () => {
   );
 };
 
-export default TransportPrice;
+export default SightseeingPrice;

@@ -1,5 +1,4 @@
-import React from 'react'
-import { Dialog } from '@mui/material'
+import { Dialog } from "@mui/material";
 
 function FullModal({ open, handleClose, title, children }) {
   return (
@@ -7,13 +6,13 @@ function FullModal({ open, handleClose, title, children }) {
       open={open}
       onClose={handleClose}
       sx={{
-        '& .MuiDialog-paper': {
-          width: '90%',
-          borderRadius: '7px',
+        "& .MuiDialog-paper": {
+          width: "90%",
+          borderRadius: "7px",
         },
       }}
     >
-      <div style={{ width: '100%', maxWidth: '500px' }}>
+      <div style={{ width: "100%", maxWidth: "500px" }}>
         <div className="d-flex justify-content-between align-items-center p-3 border border-bottom border-light-subtle">
           <h2 className="h5 m-0">{title}</h2>
           <button
@@ -26,6 +25,6 @@ function FullModal({ open, handleClose, title, children }) {
         <div>{children}</div>
       </div>
     </Dialog>
-  )
+  );
 }
-export default FullModal
+export default FullModal;
