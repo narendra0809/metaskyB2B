@@ -36,18 +36,11 @@ import AllAccounts from "./pages/admin/AllAccounts";
 import Banking from "./pages/admin/Banking";
 import AgentWallets from "./pages/admin/AgentWallets";
 
-// Lazy-loaded pages for better performance
-// const Login = () => import("./pages/Login");
-// const Register = () => import("./pages/Register");
-// const Dashboard = () => import("./pages/Dashboard");
-// ... (similar for all other page components)
-
 function App() {
   const { loggedIn, authUser } = useAuth();
   const adminRole = "admin";
   const agentRole = "agent";
 
-  // Protected Route component
   const ProtectedRoute = ({ element, roles = [], ...rest }) => {
     if (!loggedIn) return <Navigate to="/login" />;
     if (roles.length && !roles.includes(authUser.role)) {

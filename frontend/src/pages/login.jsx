@@ -32,7 +32,7 @@ const Login = () => {
     try {
       setLoading(true);
 
-      if (data.email === "" || data.password === "") {
+      if (data.email.trim() === "" || data.password.trim() === "") {
         throw new Error("Please fill all the fields");
       }
 

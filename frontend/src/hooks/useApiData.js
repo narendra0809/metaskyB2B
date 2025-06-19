@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from "react";
 
 function useApiData(url, token) {
   const [data, setData] = useState(null);
@@ -8,21 +8,23 @@ function useApiData(url, token) {
   const refetch = useCallback(async () => {
     setLoading(true);
     try {
+      console.log(url);
+      console.log(token);
       const response = await fetch(url, {
-        method: 'GET',
+        method: "GET",
         headers: {
           Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
-          'ngrok-skip-browser-warning': true,
+          "Content-Type": "application/json",
+          "ngrok-skip-browser-warning": true,
         },
       });
 
       // Log the response status
-      console.log('Response Status:', response.status);
+      console.log("Response Status:", response.status);
 
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
-        console.log("response",response);
+        console.log("response", response);
       }
 
       const result = await response.json();

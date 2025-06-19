@@ -18,7 +18,7 @@ const Hotels = () => {
 
   const countriesData = useApiData(`${base_url}/api/countries`, token);
   const destinationsData = useApiData(`${base_url}/api/getdestinations`, token);
-
+  console.log(destinationsData);
   // State variables for search and pagination
   const [searchValue, setSearchValue] = useState("");
   const [perPage, setPerPage] = useState(10);

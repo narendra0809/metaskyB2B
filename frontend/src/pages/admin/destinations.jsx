@@ -181,7 +181,7 @@ const Destinations = () => {
         setEditLoading(false);
         break;
     }
-
+    setModals({ [formType]: false });
     destinationsData.refetch();
   };
 
@@ -229,8 +229,7 @@ const Destinations = () => {
                 <option value="">-- select state --</option>
                 {countriesData.data?.states
                   .filter(
-                    (item) =>
-                      item.country_id === formData.addFormData.country_id
+                    (item) => item.country_id == formData.addFormData.country_id
                   )
                   .map((item) => (
                     <option key={item.id} value={item.id}>
@@ -254,7 +253,7 @@ const Destinations = () => {
                 <option value="">-- select city --</option>
                 {countriesData.data?.cities
                   .filter(
-                    (item) => item.state_id === formData.addFormData.state_id
+                    (item) => item.state_id == formData.addFormData.state_id
                   )
                   .map((item) => (
                     <option key={item.id} value={item.id}>
@@ -275,7 +274,7 @@ const Destinations = () => {
                 value={formData.addFormData.status}
                 onChange={handleFormDataChange("addFormData")}
               >
-                <option value="">-- select country --</option>
+                <option value="">-- select status --</option>
                 <option value={0}>Offline</option>
                 <option value={1}>Online</option>
               </select>
@@ -346,7 +345,7 @@ const Destinations = () => {
                 {countriesData.data?.states
                   .filter(
                     (item) =>
-                      item.country_id === formData.editFormData.country_id
+                      item.country_id == formData.editFormData.country_id
                   )
                   .map((item) => (
                     <option key={item.id} value={item.id}>
@@ -370,7 +369,7 @@ const Destinations = () => {
                 <option value="">-- select city --</option>
                 {countriesData.data?.cities
                   .filter(
-                    (item) => item.state_id === formData.editFormData.state_id
+                    (item) => item.state_id == formData.editFormData.state_id
                   )
                   .map((item) => (
                     <option key={item.id} value={item.id}>
@@ -391,7 +390,7 @@ const Destinations = () => {
                 value={formData.editFormData.status ? "1" : "0"}
                 onChange={handleFormDataChange("editFormData")}
               >
-                <option value="">-- select country --</option>
+                <option value="">-- select status --</option>
                 <option value={0}>Offline</option>
                 <option value={1}>Online</option>
               </select>

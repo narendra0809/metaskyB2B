@@ -1,8 +1,7 @@
 header {
-  background-color: #000F33;
-  height: 80px;
+  background-color: #000f33;
+  height: 70px;
   display: flex;
-  border: 1px solid #FFFFFF;
   justify-content: space-between;
   align-items: center;
   padding: 10px 20px;
@@ -17,20 +16,21 @@ header {
   top: 0;
   left: 0;
   right: 0;
-
 }
 
 /* Add this to your CSS file */
-main, .content-container, #root > div:not(header) {
+main,
+.content-container,
+#root > div:not(header) {
   padding-top: 40px; /* Same as your header height */
 }
 @media (width <= 768px) {
-  main, .content-container, #root > div:not(header) {
+  main,
+  .content-container,
+  #root > div:not(header) {
     padding-top: 30px; /* Adjust if header height changes on mobile */
   }
 }
-
-
 
 .header-left {
   display: flex;
@@ -48,13 +48,13 @@ main, .content-container, #root > div:not(header) {
   width: 37px;
   height: 37px;
 }
-.emailProfile{
-  color:#919EAB;
+.emailProfile {
+  color: #919eab;
 }
 
 .header-logo {
   width: var(--nav-width);
-  height: 80px;
+  height: 70px;
   padding: 0px 10px;
   display: flex;
   justify-content: center;
@@ -73,8 +73,12 @@ main, .content-container, #root > div:not(header) {
 
 /* Completely restructured arrow button */
 .arrow-btn {
-  background: linear-gradient(90deg, rgba(255,255,255,1) 0%, rgba(21,162,176,1) 35%);
-  color: #FFFFFF;
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 1) 0%,
+    rgba(21, 162, 176, 1) 35%
+  );
+  color: #ffffff;
   width: 100%;
   height: 100%;
   border-radius: 8px;
@@ -173,7 +177,7 @@ main, .content-container, #root > div:not(header) {
   position: absolute;
   bottom: -30px;
   white-space: nowrap;
-  background-color: #000F33;
+  background-color: #000f33;
   color: white;
   padding: 5px 8px;
   border-radius: 4px;
@@ -194,7 +198,7 @@ main, .content-container, #root > div:not(header) {
   .header-logo {
     display: none;
   }
-  
+
   .arrow-btn-container {
     position: relative;
     top: auto;
@@ -202,7 +206,7 @@ main, .content-container, #root > div:not(header) {
     transform: none;
     margin-left: 10px;
   }
-  
+
   .header-right {
     gap: 10px;
   }
@@ -212,24 +216,24 @@ main, .content-container, #root > div:not(header) {
   header {
     padding: 10px;
   }
-  
+
   .balance-display {
     font-size: 12px;
   }
-  
+
   .user-info span {
     display: none;
   }
-  
+
   .header-icons {
     gap: 8px;
   }
-  
+
   .icon-link {
     width: 30px;
     height: 30px;
   }
-  
+
   .user-details {
     display: none;
   }
@@ -242,7 +246,7 @@ main, .content-container, #root > div:not(header) {
 }
 
 .username {
-  color: #FFFFFF;
+  color: #ffffff;
   font-size: 14px;
   font-weight: 500;
 }
