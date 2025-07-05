@@ -185,6 +185,9 @@ const Destinations = () => {
     destinationsData.refetch();
   };
 
+  const filteredCountry = countriesData.data?.countries.find(
+    (item) => item.id == 229
+  );
   return (
     <>
       <section className="display-section">
@@ -194,9 +197,7 @@ const Destinations = () => {
           handleClose={() => toggleModal("addModalOpen", false)}
           title="Add Destination"
         >
-          {/* Modal content */}
-          <div className="container p-3 ">
-            {/* Country */}
+          <div className="container p-3">
             <div className="mb-3">
               <label htmlFor="country_id" className="form-label">
                 Country
@@ -204,18 +205,16 @@ const Destinations = () => {
               <select
                 className="form-control"
                 name="country_id"
+                disabled
                 value={formData.addFormData.country_id}
                 onChange={handleFormDataChange("addFormData")}
               >
-                <option value="">-- select country --</option>
-                {countriesData.data?.countries.map((item) => (
-                  <option key={item.id} value={item.id}>
-                    {item.name}
-                  </option>
-                ))}
+                <option key={filteredCountry?.id} value={filteredCountry?.id}>
+                  {filteredCountry?.name}
+                </option>
               </select>
             </div>
-            {/* state */}
+
             <div className="mb-3">
               <label htmlFor="state_id" className="form-label">
                 State
@@ -228,9 +227,7 @@ const Destinations = () => {
               >
                 <option value="">-- select state --</option>
                 {countriesData.data?.states
-                  .filter(
-                    (item) => item.country_id == formData.addFormData.country_id
-                  )
+                  .filter((item) => item.country_id == 229)
                   .map((item) => (
                     <option key={item.id} value={item.id}>
                       {item.name}
@@ -319,15 +316,13 @@ const Destinations = () => {
               <select
                 className="form-control"
                 name="country_id"
+                disabled
                 value={formData.editFormData.country_id}
                 onChange={handleFormDataChange("editFormData")}
               >
-                <option value="">-- select country --</option>
-                {countriesData.data?.countries.map((item) => (
-                  <option key={item.id} value={item.id}>
-                    {item.name}
-                  </option>
-                ))}
+                <option key={filteredCountry?.id} value={filteredCountry?.id}>
+                  {filteredCountry?.name}
+                </option>
               </select>
             </div>
             {/* state */}
@@ -343,10 +338,7 @@ const Destinations = () => {
               >
                 <option value="">-- select state --</option>
                 {countriesData.data?.states
-                  .filter(
-                    (item) =>
-                      item.country_id == formData.editFormData.country_id
-                  )
+                  .filter((item) => item.country_id == 229)
                   .map((item) => (
                     <option key={item.id} value={item.id}>
                       {item.name}

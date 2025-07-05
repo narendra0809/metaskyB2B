@@ -50,26 +50,8 @@ const Calculator = () => {
           meals: [],
         },
       ],
-      transport_info: [
-        {
-          destination_id: "",
-          transport_id: "",
-          v_type: "",
-          date: "",
-          transport_cost: 0,
-        },
-      ],
-      sightseeing_info: [
-        {
-          destination_id: "",
-          sightseeing_id: "",
-          adults: 0,
-          children: 0,
-          date: "",
-          adult_cost: 0,
-          children_cost: 0,
-        },
-      ],
+      transport_info: [],
+      sightseeing_info: [],
       remarks: "",
       taxes: [],
       customer_status: "pending",
@@ -79,9 +61,11 @@ const Calculator = () => {
       total_per_child: "",
     }),
     [authUser.id]
-  ); // Memoize based on authUser .id
+  );
 
   const [formData, setFormData] = useState({ ...defaultForm });
+  const [showTransportPrompt, setShowTransportPrompt] = useState(true);
+  const [showSightseeingPrompt, setShowSightseeingPrompt] = useState(true);
 
   // Calculate values
   const [calc, setCalc] = useState({
@@ -142,6 +126,7 @@ const Calculator = () => {
         }));
         break;
       case "transport":
+        setShowTransportPrompt(false);
         setFormData((prev) => ({
           ...prev,
           transport_info: [
@@ -157,6 +142,7 @@ const Calculator = () => {
         }));
         break;
       case "sightseeing":
+        setShowSightseeingPrompt(false);
         setFormData((prev) => ({
           ...prev,
           sightseeing_info: [
@@ -184,6 +170,14 @@ const Calculator = () => {
     const data = { ...formData };
     data[key].splice(index, 1);
     setFormData(data);
+
+    // Show prompt again if all items are deleted
+    if (key === "transport_info" && data[key].length === 0) {
+      setShowTransportPrompt(true);
+    }
+    if (key === "sightseeing_info" && data[key].length === 0) {
+      setShowSightseeingPrompt(true);
+    }
   };
 
   // Handle Data Change
@@ -192,7 +186,7 @@ const Calculator = () => {
     const { name, value } = currentTarget;
     let filteredValue = value;
 
-    if (name === "travel_date_from") {
+    if (name == "travel_date_from") {
       formData.travel_date_to = "";
     }
 
@@ -214,7 +208,7 @@ const Calculator = () => {
     const { name, value } = currentTarget;
     const data = { ...formData };
 
-    if (infoType === "hotel_info") {
+    if (infoType == "hotel_info") {
       switch (name) {
         case "check_in":
           data.hotel_info[index].check_out = "";
@@ -235,7 +229,7 @@ const Calculator = () => {
 
           // Select Hotel
           const s_hotel = hotelsData.data?.data?.find(
-            (hotel) => hotel.id === value
+            (hotel) => hotel.id == value
           );
           if (s_hotel) {
             // Assign rate
@@ -258,12 +252,12 @@ const Calculator = () => {
         case "room_type":
           // Select Hotel
           const selectedHotel = hotelsData.data?.data?.find(
-            (hotel) => hotel.id === data.hotel_info[index].hotel_id
+            (hotel) => hotel.id == data.hotel_info[index].hotel_id
           );
           if (selectedHotel) {
             // Select Room Type
             const selectedRoomType = selectedHotel.room_types.find(
-              (room_type) => room_type.type === value
+              (room_type) => room_type.type == value
             );
             // Assign rate
             data.hotel_info[index].room_type_cost = selectedRoomType?.rate;
@@ -273,7 +267,7 @@ const Calculator = () => {
           console.warn(`Unhandled case in hotel_info: ${name}`);
           break;
       }
-    } else if (infoType === "transport_info") {
+    } else if (infoType == "transport_info") {
       switch (name) {
         case "destination_id":
           data.transport_info[index].transport_id = "";
@@ -288,12 +282,12 @@ const Calculator = () => {
           // Select Transport
           const selectedTransport = transportData.data?.data?.find(
             (transport) =>
-              transport.id === data.transport_info[index].transport_id
+              transport.id == data.transport_info[index].transport_id
           );
           if (selectedTransport) {
             // Select Transport Type
             const selectedType = selectedTransport.options.find(
-              (v_type) => v_type.type === value
+              (v_type) => v_type.type == value
             );
             // Assign rate
             data.transport_info[index].transport_cost = selectedType?.rate;
@@ -303,7 +297,7 @@ const Calculator = () => {
           console.warn(`Unhandled case in transport_info: ${name}`);
           break;
       }
-    } else if (infoType === "sightseeing_info") {
+    } else if (infoType == "sightseeing_info") {
       switch (name) {
         case "destination_id":
           data.sightseeing_info[index].sightseeing_id = "";
@@ -313,7 +307,7 @@ const Calculator = () => {
         case "sightseeing_id":
           // Select Sightseeing
           const selectedSightseeing = sightseeingData.data?.data?.find(
-            (sightseeing) => sightseeing.id === value
+            (sightseeing) => sightseeing.id == value
           );
 
           data.sightseeing_info[index].adult_cost =
@@ -339,7 +333,7 @@ const Calculator = () => {
     const data = { ...formData };
 
     const foundMeal = data.hotel_info[index].meals.find(
-      (item) => item.name === name
+      (item) => item.name == name
     );
 
     foundMeal.isChecked = !foundMeal.isChecked; // Toggle the isChecked value
@@ -630,334 +624,29 @@ const Calculator = () => {
                   <label htmlFor="no_adults" className="fw-bold">
                     Adults
                   </label>
-                  <select
+                  <input
                     id="no_adults"
+                    type="number"
                     className="form-control mt-1"
                     name="no_adults"
                     value={formData.no_adults}
                     onChange={handleDataChange}
-                  >
-                    <option value={0}>0</option>
-                    <option value={1}>1</option>
-                    <option value={2}>2</option>
-                    <option value={3}>3</option>
-                    <option value={4}>4</option>
-                    <option value={5}>5</option>
-                    <option value={6}>6</option>
-                    <option value={7}>7</option>
-                    <option value={8}>8</option>
-                    <option value={9}>9</option>
-                    <option value={10}>10</option>
-                    <option value={11}>11</option>
-                    <option value={12}>12</option>
-                    <option value={13}>13</option>
-                    <option value={14}>14</option>
-                    <option value={15}>15</option>
-                  </select>
+                  />
                 </div>
                 <div className="col mb-3 mb-md-4">
                   <label htmlFor="no_children" className="fw-bold">
                     Children
                   </label>
-                  <select
+                  <input
+                    type="number"
                     id="no_children"
                     className="form-control mt-1"
                     name="no_children"
                     value={formData.no_children}
                     onChange={handleDataChange}
-                  >
-                    <option value={0}>0</option>
-                    <option value={1}>1</option>
-                    <option value={2}>2</option>
-                    <option value={3}>3</option>
-                    <option value={4}>4</option>
-                    <option value={5}>5</option>
-                    <option value={6}>6</option>
-                    <option value={7}>7</option>
-                    <option value={8}>8</option>
-                    <option value={9}>9</option>
-                    <option value={10}>10</option>
-                    <option value={11}>11</option>
-                    <option value={12}>12</option>
-                    <option value={13}>13</option>
-                    <option value={14}>14</option>
-                    <option value={15}>15</option>
-                  </select>
+                  />
                 </div>
               </div>
-            </div>
-
-            {/* Hotel Info */}
-            <div className="px-2 py-2 px-md-4 mb-4">
-              <div className="title-line">
-                <span>Hotel info</span>
-              </div>
-              {formData.hotel_info.map((item, index) => (
-                <div className="mb-3" key={index}>
-                  <div className="d-flex align-items-center justify-content-between column-gap-3">
-                    <h5 className="fs-6 fw-bold">Hotel {index + 1}</h5>
-                    {index > 0 && (
-                      <button
-                        className="btn btn-danger rounded-circle"
-                        onClick={() => {
-                          handleDeleteInfo("hotel_info", index);
-                        }}
-                      >
-                        <i className="fa-regular fa-trash-can"></i>
-                      </button>
-                    )}
-                  </div>
-                  <div className="row row-cols-1 row-cols-md-2 row-cols-lg-3">
-                    <div className="col mb-3 mb-md-4">
-                      <label htmlFor="destination_id" className="fw-bold">
-                        City
-                      </label>
-                      <select
-                        id="destination_id"
-                        className="form-control mt-1"
-                        name="destination_id"
-                        value={item.destination_id}
-                        onChange={(e) => {
-                          handleNestedDataChange(e, "hotel_info", index);
-                        }}
-                        disabled={
-                          !formData.travel_date_from ||
-                          !formData.travel_date_to ||
-                          formData.no_adults < 1
-                        }
-                      >
-                        <option value="">-- select --</option>
-                        {!destinationsData.loading &&
-                          destinationsData.data?.destinations?.map((item) => (
-                            <option key={item.id} value={item.id}>
-                              {countriesData.data?.cities.find(
-                                (city) => city.id === item.city_id
-                              )?.name || "N/A"}
-                            </option>
-                          ))}
-                      </select>
-                    </div>
-
-                    <div className="col mb-3 mb-md-4">
-                      <label htmlFor="hotel_id" className="fw-bold">
-                        Hotel
-                      </label>
-                      <select
-                        id="hotel_id"
-                        className="form-control mt-1"
-                        name="hotel_id"
-                        value={item.hotel_id}
-                        onChange={(e) => {
-                          handleNestedDataChange(e, "hotel_info", index);
-                        }}
-                        disabled={!item.destination_id}
-                      >
-                        <option value="">-- select --</option>
-                        {hotelsData.data?.data
-                          ?.filter(
-                            (hotel) =>
-                              hotel.destination_id === item.destination_id
-                          )
-                          .map((hotel) => (
-                            <option key={hotel.id} value={hotel.id}>
-                              {hotel.name || "N/A"}
-                            </option>
-                          ))}
-                      </select>
-                    </div>
-
-                    <div className="col mb-3 mb-md-4">
-                      <label htmlFor="room_type" className="fw-bold">
-                        Category
-                      </label>
-                      <select
-                        id="room_type"
-                        className="form-control mt-1"
-                        name="room_type"
-                        value={item.room_type}
-                        onChange={(e) => {
-                          handleNestedDataChange(e, "hotel_info", index);
-                        }}
-                        disabled={!item.hotel_id}
-                      >
-                        <option value="">-- select --</option>
-                        {hotelsData.data?.data
-                          ?.find((hotel) => hotel.id === item.hotel_id)
-                          ?.room_types.map((room_type, i) => (
-                            <option key={i} value={room_type.type}>
-                              {room_type.type || "N/A"}
-                            </option>
-                          ))}
-                      </select>
-                    </div>
-
-                    <div className="col mb-3 mb-md-4">
-                      <label htmlFor="rooms" className="fw-bold">
-                        Rooms
-                      </label>
-                      <select
-                        id="rooms"
-                        className="form-control mt-1"
-                        name="rooms"
-                        value={item.rooms}
-                        onChange={(e) => {
-                          handleNestedDataChange(e, "hotel_info", index);
-                        }}
-                        disabled={!item.room_type}
-                      >
-                        <option value={0}>0</option>
-                        <option value={1}>1</option>
-                        <option value={2}>2</option>
-                        <option value={3}>3</option>
-                        <option value={4}>4</option>
-                        <option value={5}>5</option>
-                        <option value={6}>6</option>
-                        <option value={7}>7</option>
-                        <option value={8}>8</option>
-                        <option value={9}>9</option>
-                        <option value={10}>10</option>
-                      </select>
-                    </div>
-
-                    <div className="col mb-3 mb-md-4">
-                      <label htmlFor="ex_adults" className="fw-bold">
-                        Ex Adults
-                      </label>
-                      <select
-                        id="ex_adults"
-                        className="form-control mt-1"
-                        name="ex_adults"
-                        value={item.ex_adults}
-                        onChange={(e) => {
-                          handleNestedDataChange(e, "hotel_info", index);
-                        }}
-                      >
-                        <option value={0}>0</option>
-                        <option value={1}>1</option>
-                        <option value={2}>2</option>
-                        <option value={3}>3</option>
-                        <option value={4}>4</option>
-                        <option value={5}>5</option>
-                        <option value={6}>6</option>
-                        <option value={7}>7</option>
-                        <option value={8}>8</option>
-                        <option value={9}>9</option>
-                        <option value={10}>10</option>
-                      </select>
-                    </div>
-
-                    <div className="col mb-3 mb-md-4">
-                      <label htmlFor="ex_children" className="fw-bold">
-                        Ex Children
-                      </label>
-                      <select
-                        id="ex_children"
-                        className="form-control mt-1"
-                        name="ex_children"
-                        value={item.ex_children}
-                        onChange={(e) => {
-                          handleNestedDataChange(e, "hotel_info", index);
-                        }}
-                      >
-                        <option value={0}>0</option>
-                        <option value={1}>1</option>
-                        <option value={2}>2</option>
-                        <option value={3}>3</option>
-                        <option value={4}>4</option>
-                        <option value={5}>5</option>
-                        <option value={6}>6</option>
-                        <option value={7}>7</option>
-                        <option value={8}>8</option>
-                        <option value={9}>9</option>
-                        <option value={10}>10</option>
-                      </select>
-                    </div>
-
-                    <div className="col mb-3 mb-md-4">
-                      <label htmlFor="check_in" className="fw-bold">
-                        Check-In
-                      </label>
-                      <input
-                        type="date"
-                        id="check_in"
-                        className="form-control mt-1"
-                        name="check_in"
-                        min={formData.travel_date_from}
-                        max={formData.travel_date_to}
-                        value={item.check_in}
-                        onChange={(e) => {
-                          handleNestedDataChange(e, "hotel_info", index);
-                        }}
-                        disabled={
-                          !formData.travel_date_from || !formData.travel_date_to
-                        }
-                      />
-                    </div>
-
-                    <div className="col mb-3 mb-md-4">
-                      <label htmlFor="check_out" className="fw-bold">
-                        Check-Out
-                      </label>
-                      <input
-                        type="date"
-                        id="check_out"
-                        className="form-control mt-1"
-                        name="check_out"
-                        min={
-                          formData.hotel_info[index].check_in ||
-                          formData.travel_date_to
-                        }
-                        max={formData.travel_date_to}
-                        value={item.check_out}
-                        onChange={(e) => {
-                          handleNestedDataChange(e, "hotel_info", index);
-                        }}
-                        disabled={
-                          !formData.travel_date_from || !formData.travel_date_to
-                        }
-                      />
-                    </div>
-
-                    {item.hotel_id && (
-                      <div className="col mb-3 mb-md-4">
-                        <label className="fw-bold">Meals</label>
-                        <div className="d-flex row-gap-1 column-gap-4 flex-wrap mt-1">
-                          {item.meals?.map((meal) => (
-                            <div className="form-check" key={meal.name}>
-                              <input
-                                className="form-check-input"
-                                type="checkbox"
-                                id={`checkbox-${index}-${meal.name}`}
-                                name={meal.name}
-                                onChange={(e) => {
-                                  handleMealsChange(e, index);
-                                }}
-                                checked={meal.isChecked}
-                              />
-                              <label
-                                className="form-check-label user-select-none"
-                                htmlFor={`checkbox-${index}-${meal.name}`}
-                              >
-                                <span className="text-capitalize">
-                                  {meal.name}
-                                </span>
-                              </label>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              ))}
-              <button
-                className="btn btn-info"
-                onClick={() => {
-                  handleAddInfo("hotel");
-                }}
-              >
-                Add Hotel
-              </button>
             </div>
 
             {/* Transport Info */}
@@ -965,11 +654,32 @@ const Calculator = () => {
               <div className="title-line">
                 <span>Transport info</span>
               </div>
-              {formData.transport_info.map((item, index) => (
-                <div className="mb-3" key={index}>
-                  <div className="d-flex align-items-center justify-content-between column-gap-3">
-                    <h5 className="fs-6 fw-bold">Transport {index + 1}</h5>
-                    {index > 0 && (
+
+              {showTransportPrompt && (
+                <div
+                  className="mb-3 p-3 rounded"
+                  style={{
+                    backgroundColor: "#15a2b0",
+                    border: "1px solid #16acbf",
+                  }}
+                >
+                  <p className="mb-2 fw-bold">
+                    Do you need transportation services for your trip?
+                  </p>
+                  <button
+                    className="btn btn-main"
+                    onClick={() => handleAddInfo("transport")}
+                  >
+                    <i className="fas fa-car me-2"></i> Add Transport
+                  </button>
+                </div>
+              )}
+
+              {formData.transport_info.length > 0 &&
+                formData.transport_info.map((item, index) => (
+                  <div className="mb-3" key={index}>
+                    <div className="d-flex align-items-center justify-content-between column-gap-3">
+                      <h5 className="fs-6 fw-bold">Transport {index + 1}</h5>
                       <button
                         className="btn btn-danger rounded-circle"
                         onClick={() => {
@@ -978,125 +688,128 @@ const Calculator = () => {
                       >
                         <i className="fa-regular fa-trash-can"></i>
                       </button>
-                    )}
+                    </div>
+                    <div className="row row-cols-1 row-cols-md-2 row-cols-lg-4">
+                      <div className="col mb-3 mb-md-4">
+                        <label htmlFor="destination_id" className="fw-bold">
+                          City
+                        </label>
+                        <select
+                          id="destination_id"
+                          className="form-control mt-1"
+                          name="destination_id"
+                          value={item.destination_id}
+                          onChange={(e) => {
+                            handleNestedDataChange(e, "transport_info", index);
+                          }}
+                          disabled={
+                            !formData.travel_date_from ||
+                            !formData.travel_date_to ||
+                            formData.no_adults < 1
+                          }
+                        >
+                          <option value="">-- select --</option>
+                          {!destinationsData.loading &&
+                            destinationsData.data?.destinations?.map((item) => (
+                              <option key={item.id} value={item.id}>
+                                {countriesData.data?.cities.find(
+                                  (city) => city.id == item.city_id
+                                )?.name || "N/A"}
+                              </option>
+                            ))}
+                        </select>
+                      </div>
+
+                      <div className="col mb-3 mb-md-4">
+                        <label htmlFor="transport_id" className="fw-bold">
+                          Transport
+                        </label>
+                        <select
+                          id="transport_id"
+                          className="form-control mt-1"
+                          name="transport_id"
+                          value={item.transport_id}
+                          onChange={(e) => {
+                            handleNestedDataChange(e, "transport_info", index);
+                          }}
+                          disabled={!item.destination_id}
+                        >
+                          <option value="">-- select --</option>
+                          {transportData.data?.data
+                            ?.filter(
+                              (transport) =>
+                                transport.destination_id == item.destination_id
+                            )
+                            .map((transport) => (
+                              <option key={transport.id} value={transport.id}>
+                                {transport.transport || "N/A"}
+                              </option>
+                            ))}
+                        </select>
+                      </div>
+
+                      <div className="col mb-3 mb-md-4">
+                        <label htmlFor="v_type" className="fw-bold">
+                          No. Of People
+                        </label>
+                        <select
+                          id="v_type"
+                          className="form-control mt-1"
+                          name="v_type"
+                          value={item.v_type}
+                          onChange={(e) => {
+                            handleNestedDataChange(e, "transport_info", index);
+                          }}
+                          disabled={!item.transport_id}
+                        >
+                          <option value="">0</option>
+                          {transportData.data?.data
+                            ?.find(
+                              (transport) => transport.id == item.transport_id
+                            )
+                            ?.options.map((option, i) => (
+                              <option key={i} value={option.type}>
+                                {option.type || "N/A"}
+                              </option>
+                            ))}
+                        </select>
+                      </div>
+
+                      <div className="col mb-3 mb-md-4">
+                        <label htmlFor="date" className="fw-bold">
+                          Date
+                        </label>
+                        <input
+                          type="date"
+                          id="date"
+                          className="form-control mt-1"
+                          min={formData.travel_date_from}
+                          max={formData.travel_date_to}
+                          name="date"
+                          value={item.date}
+                          onChange={(e) => {
+                            handleNestedDataChange(e, "transport_info", index);
+                          }}
+                          disabled={
+                            !formData.travel_date_from ||
+                            !formData.travel_date_to
+                          }
+                        />
+                      </div>
+                    </div>
                   </div>
-                  <div className="row row-cols-1 row-cols-md-2 row-cols-lg-4">
-                    <div className="col mb-3 mb-md-4">
-                      <label htmlFor="destination_id" className="fw-bold">
-                        City
-                      </label>
-                      <select
-                        id="destination_id"
-                        className="form-control mt-1"
-                        name="destination_id"
-                        value={item.destination_id}
-                        onChange={(e) => {
-                          handleNestedDataChange(e, "transport_info", index);
-                        }}
-                        disabled={
-                          !formData.travel_date_from ||
-                          !formData.travel_date_to ||
-                          formData.no_adults < 1
-                        }
-                      >
-                        <option value="">-- select --</option>
-                        {!destinationsData.loading &&
-                          destinationsData.data?.destinations?.map((item) => (
-                            <option key={item.id} value={item.id}>
-                              {countriesData.data?.cities.find(
-                                (city) => city.id === item.city_id
-                              )?.name || "N/A"}
-                            </option>
-                          ))}
-                      </select>
-                    </div>
+                ))}
 
-                    <div className="col mb-3 mb-md-4">
-                      <label htmlFor="transport_id" className="fw-bold">
-                        Transport
-                      </label>
-                      <select
-                        id="transport_id"
-                        className="form-control mt-1"
-                        name="transport_id"
-                        value={item.transport_id}
-                        onChange={(e) => {
-                          handleNestedDataChange(e, "transport_info", index);
-                        }}
-                        disabled={!item.destination_id}
-                      >
-                        <option value="">-- select --</option>
-                        {transportData.data?.data
-                          ?.filter(
-                            (transport) =>
-                              transport.destination_id === item.destination_id
-                          )
-                          .map((transport) => (
-                            <option key={transport.id} value={transport.id}>
-                              {transport.transport || "N/A"}
-                            </option>
-                          ))}
-                      </select>
-                    </div>
-
-                    <div className="col mb-3 mb-md-4">
-                      <label htmlFor="v_type" className="fw-bold">
-                        No. Of People
-                      </label>
-                      <select
-                        id="v_type"
-                        className="form-control mt-1"
-                        name="v_type"
-                        value={item.v_type}
-                        onChange={(e) => {
-                          handleNestedDataChange(e, "transport_info", index);
-                        }}
-                        disabled={!item.transport_id}
-                      >
-                        <option value="">0</option>
-                        {transportData.data?.data
-                          ?.find(
-                            (transport) => transport.id === item.transport_id
-                          )
-                          ?.options.map((option, i) => (
-                            <option key={i} value={option.type}>
-                              {option.type || "N/A"}
-                            </option>
-                          ))}
-                      </select>
-                    </div>
-
-                    <div className="col mb-3 mb-md-4">
-                      <label htmlFor="date" className="fw-bold">
-                        Date
-                      </label>
-                      <input
-                        type="date"
-                        id="date"
-                        className="form-control mt-1"
-                        min={formData.travel_date_from}
-                        max={formData.travel_date_to}
-                        name="date"
-                        value={item.date}
-                        onChange={(e) => {
-                          handleNestedDataChange(e, "transport_info", index);
-                        }}
-                        disabled={
-                          !formData.travel_date_from || !formData.travel_date_to
-                        }
-                      />
-                    </div>
-                  </div>
-                </div>
-              ))}
-              <button
-                className="btn btn-info"
-                onClick={() => {
-                  handleAddInfo("transport");
-                }}
-              >
-                Add Transport
-              </button>
+              {formData.transport_info.length > 0 && (
+                <button
+                  className="btn btn-info"
+                  onClick={() => {
+                    handleAddInfo("transport");
+                  }}
+                >
+                  Add Another Transport
+                </button>
+              )}
             </div>
 
             {/* Sightseeing Info */}
@@ -1105,11 +818,31 @@ const Calculator = () => {
                 <span>Sightseeing info</span>
               </div>
 
-              {formData.sightseeing_info.map((item, index) => (
-                <div className="mb-3" key={index}>
-                  <div className="d-flex align-items-center justify-content-between column-gap-3">
-                    <h5 className="fs-6 fw-bold">Sightseeing {index + 1}</h5>
-                    {index > 0 && (
+              {showSightseeingPrompt && (
+                <div
+                  className="mb-3 p-3 rounded"
+                  style={{
+                    backgroundColor: "#15a2b0",
+                    border: "1px solid #16acbf",
+                  }}
+                >
+                  <p className="mb-2 fw-bold">
+                    Would you like to add any sightseeing activities?
+                  </p>
+                  <button
+                    className="btn btn-main"
+                    onClick={() => handleAddInfo("sightseeing")}
+                  >
+                    <i className="fas fa-binoculars me-2"></i> Add Sightseeing
+                  </button>
+                </div>
+              )}
+
+              {formData.sightseeing_info.length > 0 &&
+                formData.sightseeing_info.map((item, index) => (
+                  <div className="mb-3" key={index}>
+                    <div className="d-flex align-items-center justify-content-between column-gap-3">
+                      <h5 className="fs-6 fw-bold">Sightseeing {index + 1}</h5>
                       <button
                         className="btn btn-danger rounded-circle"
                         onClick={() => {
@@ -1118,154 +851,158 @@ const Calculator = () => {
                       >
                         <i className="fa-regular fa-trash-can"></i>
                       </button>
-                    )}
+                    </div>
+                    <div className="row row-cols-1 row-cols-md-2 row-cols-lg-4">
+                      <div className="col mb-3 mb-md-4">
+                        <label htmlFor="destination_id" className="fw-bold">
+                          City
+                        </label>
+                        <select
+                          id="destination_id"
+                          className="form-control mt-1"
+                          name="destination_id"
+                          value={item.destination_id}
+                          onChange={(e) => {
+                            handleNestedDataChange(
+                              e,
+                              "sightseeing_info",
+                              index
+                            );
+                          }}
+                          disabled={
+                            !formData.travel_date_from ||
+                            !formData.travel_date_to ||
+                            formData.no_adults < 1
+                          }
+                        >
+                          <option value="">-- select --</option>
+                          {!destinationsData.loading &&
+                            destinationsData.data?.destinations?.map((item) => (
+                              <option key={item.id} value={item.id}>
+                                {countriesData.data?.cities.find(
+                                  (city) => city.id == item.city_id
+                                )?.name || "N/A"}
+                              </option>
+                            ))}
+                        </select>
+                      </div>
+
+                      <div className="col mb-3 mb-md-4">
+                        <label htmlFor="sightseeing_id" className="fw-bold">
+                          Sightseeing
+                        </label>
+                        <select
+                          id="sightseeing_id"
+                          className="form-control mt-1"
+                          name="sightseeing_id"
+                          value={item.sightseeing_id}
+                          onChange={(e) => {
+                            handleNestedDataChange(
+                              e,
+                              "sightseeing_info",
+                              index
+                            );
+                          }}
+                          disabled={!item.destination_id}
+                        >
+                          <option value="">-- select --</option>
+                          {sightseeingData.data?.data
+                            ?.filter(
+                              (sightseeing) =>
+                                sightseeing.destination_id ==
+                                item.destination_id
+                            )
+                            .map((sightseeing) => (
+                              <option
+                                key={sightseeing.id}
+                                value={sightseeing.id}
+                              >
+                                {sightseeing.description || "N/A"}
+                              </option>
+                            ))}
+                        </select>
+                      </div>
+
+                      <div className="col mb-3 mb-md-4">
+                        <label htmlFor="adults" className="fw-bold">
+                          No Of Adult
+                        </label>
+                        <input
+                          type="number"
+                          id="adults"
+                          className="form-control mt-1"
+                          name="adults"
+                          value={item.adults}
+                          onChange={(e) => {
+                            handleNestedDataChange(
+                              e,
+                              "sightseeing_info",
+                              index
+                            );
+                          }}
+                          disabled={!item.sightseeing_id}
+                        />
+                      </div>
+
+                      <div className="col mb-3 mb-md-4">
+                        <label htmlFor="children" className="fw-bold">
+                          No Of Children
+                        </label>
+                        <input
+                          id="children"
+                          className="form-control mt-1"
+                          name="children"
+                          value={item.children}
+                          onChange={(e) => {
+                            handleNestedDataChange(
+                              e,
+                              "sightseeing_info",
+                              index
+                            );
+                          }}
+                          disabled={!item.destination_id}
+                        />
+                      </div>
+
+                      <div className="col mb-3 mb-md-4">
+                        <label htmlFor="date" className="fw-bold">
+                          Date
+                        </label>
+                        <input
+                          type="date"
+                          id="date"
+                          className="form-control mt-1"
+                          min={formData.travel_date_from}
+                          max={formData.travel_date_to}
+                          name="date"
+                          value={item.date}
+                          onChange={(e) => {
+                            handleNestedDataChange(
+                              e,
+                              "sightseeing_info",
+                              index
+                            );
+                          }}
+                          disabled={
+                            !formData.travel_date_from ||
+                            !formData.travel_date_to
+                          }
+                        />
+                      </div>
+                    </div>
                   </div>
-                  <div className="row row-cols-1 row-cols-md-2 row-cols-lg-4">
-                    <div className="col mb-3 mb-md-4">
-                      <label htmlFor="destination_id" className="fw-bold">
-                        City
-                      </label>
-                      <select
-                        id="destination_id"
-                        className="form-control mt-1"
-                        name="destination_id"
-                        value={item.destination_id}
-                        onChange={(e) => {
-                          handleNestedDataChange(e, "sightseeing_info", index);
-                        }}
-                        disabled={
-                          !formData.travel_date_from ||
-                          !formData.travel_date_to ||
-                          formData.no_adults < 1
-                        }
-                      >
-                        <option value="">-- select --</option>
-                        {!destinationsData.loading &&
-                          destinationsData.data?.destinations?.map((item) => (
-                            <option key={item.id} value={item.id}>
-                              {countriesData.data?.cities.find(
-                                (city) => city.id === item.city_id
-                              )?.name || "N/A"}
-                            </option>
-                          ))}
-                      </select>
-                    </div>
+                ))}
 
-                    <div className="col mb-3 mb-md-4">
-                      <label htmlFor="sightseeing_id" className="fw-bold">
-                        Sightseeing
-                      </label>
-                      <select
-                        id="sightseeing_id"
-                        className="form-control mt-1"
-                        name="sightseeing_id"
-                        value={item.sightseeing_id}
-                        onChange={(e) => {
-                          handleNestedDataChange(e, "sightseeing_info", index);
-                        }}
-                        disabled={!item.destination_id}
-                      >
-                        <option value="">-- select --</option>
-                        {sightseeingData.data?.data
-                          ?.filter(
-                            (sightseeing) =>
-                              sightseeing.destination_id === item.destination_id
-                          )
-                          .map((sightseeing) => (
-                            <option key={sightseeing.id} value={sightseeing.id}>
-                              {sightseeing.description || "N/A"}
-                            </option>
-                          ))}
-                      </select>
-                    </div>
-
-                    <div className="col mb-3 mb-md-4">
-                      <label htmlFor="adults" className="fw-bold">
-                        No Of Adult
-                      </label>
-                      <select
-                        id="adults"
-                        className="form-control mt-1"
-                        name="adults"
-                        value={item.adults}
-                        onChange={(e) => {
-                          handleNestedDataChange(e, "sightseeing_info", index);
-                        }}
-                        disabled={!item.sightseeing_id}
-                      >
-                        <option value={0}>0</option>
-                        <option value={1}>1</option>
-                        <option value={2}>2</option>
-                        <option value={3}>3</option>
-                        <option value={4}>4</option>
-                        <option value={5}>5</option>
-                        <option value={6}>6</option>
-                        <option value={7}>7</option>
-                        <option value={8}>8</option>
-                        <option value={9}>9</option>
-                        <option value={10}>10</option>
-                      </select>
-                    </div>
-
-                    <div className="col mb-3 mb-md-4">
-                      <label htmlFor="children" className="fw-bold">
-                        No Of Children
-                      </label>
-                      <select
-                        id="children"
-                        className="form-control mt-1"
-                        name="children"
-                        value={item.children}
-                        onChange={(e) => {
-                          handleNestedDataChange(e, "sightseeing_info", index);
-                        }}
-                        disabled={!item.destination_id}
-                      >
-                        <option value={0}>0</option>
-                        <option value={1}>1</option>
-                        <option value={2}>2</option>
-                        <option value={3}>3</option>
-                        <option value={4}>4</option>
-                        <option value={5}>5</option>
-                        <option value={6}>6</option>
-                        <option value={7}>7</option>
-                        <option value={8}>8</option>
-                        <option value={9}>9</option>
-                        <option value={10}>10</option>
-                      </select>
-                    </div>
-
-                    <div className="col mb-3 mb-md-4">
-                      <label htmlFor="date" className="fw-bold">
-                        Date
-                      </label>
-                      <input
-                        type="date"
-                        id="date"
-                        className="form-control mt-1"
-                        min={formData.travel_date_from}
-                        max={formData.travel_date_to}
-                        name="date"
-                        value={item.date}
-                        onChange={(e) => {
-                          handleNestedDataChange(e, "sightseeing_info", index);
-                        }}
-                        disabled={
-                          !formData.travel_date_from || !formData.travel_date_to
-                        }
-                      />
-                    </div>
-                  </div>
-                </div>
-              ))}
-              <button
-                className="btn btn-info"
-                onClick={() => {
-                  handleAddInfo("sightseeing");
-                }}
-              >
-                Add Sightseeing
-              </button>
+              {formData.sightseeing_info.length > 0 && (
+                <button
+                  className="btn btn-info"
+                  onClick={() => {
+                    handleAddInfo("sightseeing");
+                  }}
+                >
+                  Add Another Sightseeing
+                </button>
+              )}
             </div>
 
             {/* Remarks */}

@@ -30,15 +30,14 @@ const Navbar = () => {
               />
               Destinations
             </NavLink>
-            <NavLink to="/hotels" className="nav-dropdown-link">
-              {/* <i className="fa-solid fa-chevron-right nav-dropdown-icons"></i> */}
+            {/* <NavLink to="/hotels" className="nav-dropdown-link">
               <img
                 src={arrow}
                 alt="Dropdown Arrow"
                 className="nav-dropdown-icons"
               />
               Hotels
-            </NavLink>
+            </NavLink> */}
             <NavLink to="/sightseeing" className="nav-dropdown-link">
               {/* <i className="fa-solid fa-chevron-right nav-dropdown-icons"></i> */}
               <img
