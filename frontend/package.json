@@ -2,7 +2,7 @@
   "name": "client",
   "version": "0.1.0",
   "private": true,
-  "proxy": "https://f529-2405-201-300b-9ff-f0f0-1927-a7c7-cd1a.ngrok-free.app",
+  "proxy": "https://sckfi.com/b2b/public",
   "dependencies": {
     "@emotion/react": "^11.13.5",
     "@emotion/styled": "^11.13.5",

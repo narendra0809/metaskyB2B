@@ -18,28 +18,22 @@ function useApiData(url, token) {
           "ngrok-skip-browser-warning": true,
         },
       });
-
-      // Log the response status
-      console.log("Response Status:", response.status);
-
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
-        console.log("response", response);
       }
-
       const result = await response.json();
       setData(result);
     } catch (err) {
-      console.error("Fetch error:", err); // Log the error for debugging
+      console.log("Fetch error:", err);
       setError(err.message || "An error occurred while fetching data.");
     } finally {
       setLoading(false);
     }
-  }, [url, token]); // Add url and token as dependencies
+  }, [url, token]);
 
   useEffect(() => {
-    refetch(); // Initial fetch on mount
-  }, [refetch]); // Depend on the refetch function
+    refetch();
+  }, [refetch]);
 
   return { data, loading, error, refetch };
 }

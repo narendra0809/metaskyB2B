@@ -7,13 +7,14 @@ import { useAuth } from "../../context/AuthContext";
 import Loader from "../../Loader";
 import "../../Loader.css";
 
+// TODO: Data Fetching
 const Staff = () => {
   const base_url = import.meta.env.VITE_API_URL;
   const { authToken: token } = useAuth();
 
   // Fetch destination and country data
   const mainData = useApiData(`${base_url}/api/staff`, token);
-
+  console.log(mainData);
   // State variables for search and pagination
   const [searchValue, setSearchValue] = useState("");
   const [perPage, setPerPage] = useState(10);
