@@ -17,9 +17,10 @@ class TicketController extends Controller
 
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
-            'category' => 'required|string|max:100',
             'status' => 'required|in:Active,Inactive',
             'transfer_options' => 'required|array',
+            'category' => 'required|array',
+            'category.*' => 'string|max:100',
             'transfer_options.*.option' => 'required|string|max:100',
             'transfer_options.*.adult_price' => 'required|numeric',
             'transfer_options.*.child_price' => 'required|numeric',
@@ -54,7 +55,7 @@ class TicketController extends Controller
         // Validate filter parameters
         $validator = Validator::make($request->all(), [
             'status' => 'nullable|in:Active,Inactive',
-            'category' => 'nullable|string|max:100',
+            'category' => 'nullable|array',
         ]);
 
         if ($validator->fails()) {
@@ -99,7 +100,8 @@ class TicketController extends Controller
         // Validate the request data
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
-            'category' => 'required|string|max:100',
+            'category' => 'required|array',
+            'category.*' => 'string|max:100',
             'status' => 'required|in:Active,Inactive',
             'transfer_options' => 'required|array',
             'transfer_options.*.option' => 'required|string|max:100',

@@ -51,7 +51,7 @@ const Tickets = () => {
     adult_price: "",
     child_price: "",
   });
-
+  const [categoryOption, setCategoryOption] = useState({ option: "" });
   // Modal state
   const [modals, setModals] = useState({
     addModalOpen: false,
@@ -64,7 +64,7 @@ const Tickets = () => {
       name: "",
       transfer_options: [],
       time_slots: [],
-      category: "",
+      category: [],
       status: "Active",
     },
     editFormData: {
@@ -72,7 +72,7 @@ const Tickets = () => {
       name: "",
       transfer_options: [],
       time_slots: [],
-      category: "",
+      category: [],
       status: "Active",
     },
   });
@@ -124,9 +124,9 @@ const Tickets = () => {
         "6:30 PM - 7:00 PM",
       ];
       if (isEdit) {
-        setEditAvailableTimeSlots(primeSlots);
+        setEditAvailableTimeSlots((prev) => [...prev, ...primeSlots]);
       } else {
-        setAvailableTimeSlots(primeSlots);
+        setAvailableTimeSlots((prev) => [...prev, ...primeSlots]);
       }
     } else if (category === "Non prime") {
       const nonPrimeSlots = [
@@ -136,9 +136,9 @@ const Tickets = () => {
         "11:00 AM - 11:30 AM",
       ];
       if (isEdit) {
-        setEditAvailableTimeSlots(nonPrimeSlots);
+        setEditAvailableTimeSlots((prev) => [...prev, ...nonPrimeSlots]);
       } else {
-        setAvailableTimeSlots(nonPrimeSlots);
+        setAvailableTimeSlots((prev) => [...prev, ...nonPrimeSlots]);
       }
     } else {
       if (isEdit) {
@@ -235,6 +235,10 @@ const Tickets = () => {
 
     setTransferOptionTemp((item) => ({ ...item, [name]: filteredValue }));
   };
+  const handleCategoryOption = (e) => {
+    const { value } = e.target;
+    setCategoryOption({ option: value });
+  };
 
   const addTransferOption = (formType) => {
     if (
@@ -257,6 +261,78 @@ const Tickets = () => {
     setTransferOptionTemp({ option: "", adult_price: "", child_price: "" });
   };
 
+  const addCategoryOption = (formType) => {
+    if (categoryOption.option === "") {
+      return;
+    }
+    const found = formData[formType].category.find(
+      (item) => item === categoryOption.option
+    );
+    if (found) return;
+    updateTimeSlots(categoryOption.option, formType === "editFormData");
+    setFormData((prev) => ({
+      ...prev,
+      [formType]: {
+        ...prev[formType],
+        category: [
+          ...(prev[formType]["category"] || []),
+          categoryOption.option,
+        ],
+      },
+    }));
+    setCategoryOption({ option: "" });
+  };
+  const removeTimeSlotByCategory = (isEdit = false, category) => {
+    if (category === "Prime") {
+      const primeSlots = [
+        "3:30 PM - 4:00 PM",
+        "4:00 PM - 4:30 PM",
+        "4:30 PM - 5:00 PM",
+        "5:00 PM - 5:30 PM",
+        "5:30 PM - 6:00 PM",
+        "6:00 PM - 6:30 PM",
+        "6:30 PM - 7:00 PM",
+      ];
+      if (isEdit) {
+        setEditAvailableTimeSlots((prev) =>
+          prev.filter((slot) => !primeSlots.includes(slot))
+        );
+      } else {
+        setAvailableTimeSlots((prev) =>
+          prev.filter((slot) => !primeSlots.includes(slot))
+        );
+      }
+    } else if (category === "Non prime") {
+      const nonPrimeSlots = [
+        "7:30 AM - 8:00 AM",
+        "8:00 AM - 8:30 AM",
+        "8:30 AM - 9:00 AM",
+        "11:00 AM - 11:30 AM",
+      ];
+      if (isEdit) {
+        setEditAvailableTimeSlots((prev) =>
+          prev.filter((slot) => !nonPrimeSlots.includes(slot))
+        );
+      } else {
+        setAvailableTimeSlots((prev) =>
+          prev.filter((slot) => !nonPrimeSlots.includes(slot))
+        );
+      }
+    }
+  };
+  const removeCategoryOption = (formType, option) => {
+    const updatedCateogryOptions = formData[formType].category.filter(
+      (categoryOpt) => categoryOpt !== option
+    );
+    removeTimeSlotByCategory(formType === "editFormData", option);
+    setFormData((prev) => ({
+      ...prev,
+      [formType]: {
+        ...prev[formType],
+        category: updatedCateogryOptions,
+      },
+    }));
+  };
   const removeTransferOption = (formType, option) => {
     const updatedTransferOptions = formData[formType].transfer_options.filter(
       (transferOption) => transferOption.option !== option
@@ -283,7 +359,7 @@ const Tickets = () => {
           name: "",
           transfer_options: [],
           time_slots: [],
-          category: "",
+          category: [],
           status: "Active",
         },
       }));
@@ -309,7 +385,7 @@ const Tickets = () => {
             name: "",
             transfer_options: [],
             time_slots: [],
-            category: "",
+            category: [],
             status: "Active",
           },
         }));
@@ -359,7 +435,7 @@ const Tickets = () => {
                 name: "",
                 transfer_options: [],
                 time_slots: [],
-                category: "",
+                category: [],
                 status: "Active",
               },
             }));
@@ -413,7 +489,6 @@ const Tickets = () => {
     }
     setIsConfirm(false);
   };
-
   return (
     <>
       <section className="display-section">
@@ -510,7 +585,7 @@ const Tickets = () => {
                   Add Transfer Option
                 </button>
               </div>
-
+              {/* Category */}
               <div className="mb-3">
                 <label htmlFor="category" className="form-label">
                   Category
@@ -519,8 +594,9 @@ const Tickets = () => {
                   className="form-control"
                   id="category"
                   name="category"
-                  value={formData.addFormData.category}
-                  onChange={handleFormDataChange("addFormData")}
+                  value={categoryOption.option}
+                  onChange={handleCategoryOption}
+                  disabled={formData.addFormData.category.length === 2}
                 >
                   <option value="">-- select --</option>
                   {categories.map((category) => (
@@ -529,8 +605,32 @@ const Tickets = () => {
                     </option>
                   ))}
                 </select>
+                <div>
+                  {formData.addFormData.category?.map((item, index) => (
+                    <div className="row m-0 mt-2" key={index}>
+                      <div className="col-4">{item}</div>
+                      <div className="col-2">
+                        <button
+                          className="btn flex-shrink-0"
+                          onClick={() => {
+                            removeCategoryOption("addFormData", item);
+                          }}
+                        >
+                          <i className="fa-solid fa-trash-can text-danger"></i>
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <button
+                  className="btn btn-success mt-3"
+                  onClick={() => {
+                    addCategoryOption("addFormData");
+                  }}
+                >
+                  Add Category
+                </button>
               </div>
-
               <div className="mb-3">
                 <label htmlFor="time_slot" className="form-label">
                   Time Slot
@@ -600,7 +700,6 @@ const Tickets = () => {
                   Add Time Slot
                 </button>
               </div>
-
               <div className="mb-3">
                 <label htmlFor="status" className="form-label">
                   Status
@@ -744,8 +843,9 @@ const Tickets = () => {
                   className="form-control"
                   id="category"
                   name="category"
-                  value={formData.editFormData.category || ""}
-                  onChange={handleFormDataChange("editFormData")}
+                  value={categoryOption.option}
+                  onChange={handleCategoryOption}
+                  disabled={formData.editFormData?.category?.length === 2}
                 >
                   <option value="">-- select --</option>
                   {categories.map((category) => (
@@ -754,6 +854,31 @@ const Tickets = () => {
                     </option>
                   ))}
                 </select>
+                <div>
+                  {formData.editFormData.category?.map((item, index) => (
+                    <div className="row m-0 mt-2" key={index}>
+                      <div className="col-4">{item}</div>
+                      <div className="col-2">
+                        <button
+                          className="btn flex-shrink-0"
+                          onClick={() => {
+                            removeCategoryOption("editFormData", item);
+                          }}
+                        >
+                          <i className="fa-solid fa-trash-can text-danger"></i>
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <button
+                  className="btn btn-success mt-3"
+                  onClick={() => {
+                    addCategoryOption("editFormData");
+                  }}
+                >
+                  Add Category
+                </button>
               </div>
 
               <div className="mb-3">
@@ -934,7 +1059,11 @@ const Tickets = () => {
                           </div>
                         ))}
                       </td>
-                      <td>{item.category}</td>
+                      <td>
+                        {item.category?.map((item, idx) => (
+                          <div key={idx}>{item}</div>
+                        ))}
+                      </td>
                       <td>
                         <span
                           className={`text-center ${

@@ -19,6 +19,7 @@ class Ticket extends Model
 ];
 
 protected $casts = [
+    'category' => 'array',
     'transfer_options' => 'array',
     'time_slots' => 'array',
 ];

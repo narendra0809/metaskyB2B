@@ -3,6 +3,24 @@ import useApiData from "../hooks/useApiData";
 import useSendData from "../hooks/useSendData";
 import Alert from "../components/Alert";
 import { useAuth } from "../context/AuthContext";
+import Table from "react-bootstrap/Table";
+
+const primeSlots = [
+  "3:30 PM - 4:00 PM",
+  "4:00 PM - 4:30 PM",
+  "4:30 PM - 5:00 PM",
+  "5:00 PM - 5:30 PM",
+  "5:30 PM - 6:00 PM",
+  "6:00 PM - 6:30 PM",
+  "6:30 PM - 7:00 PM",
+];
+
+const nonPrimeSlots = [
+  "7:30 AM - 8:00 AM",
+  "8:00 AM - 8:30 AM",
+  "8:30 AM - 9:00 AM",
+  "11:00 AM - 11:30 AM",
+];
 
 const Calculator = () => {
   const base_url = import.meta.env.VITE_API_URL;
@@ -23,6 +41,10 @@ const Calculator = () => {
   const sightseeingData = useApiData(`${base_url}/api/sightseeings`, authToken);
   const taxesData = useApiData(`${base_url}/api/taxes`, authToken);
   const subFormData = useSendData(`${base_url}/api/addbooking`, authToken);
+
+  const tickets = useApiData(`${base_url}/api/tickets`, authToken);
+
+  console.log("Tickets : ", tickets?.data?.data);
 
   // Memoize the default form object
   const defaultForm = useMemo(
@@ -48,6 +70,20 @@ const Calculator = () => {
           ex_adult_cost: 0,
           ex_children_cost: 0,
           meals: [],
+        },
+      ],
+      ticket_info: [
+        {
+          id: "",
+          name: "",
+          category: "",
+          time_slot: "",
+          transfer_option: "",
+          adults: 0,
+          children: 0,
+          date: "",
+          adult_price: 0,
+          child_price: 0,
         },
       ],
       transport_info: [],
@@ -155,6 +191,21 @@ const Calculator = () => {
               date: "",
               adult_cost: 0,
               children_cost: 0,
+            },
+          ],
+        }));
+        break;
+      case "ticket":
+        setFormData((prev) => ({
+          ...prev,
+          ticket_info: [
+            ...(prev.ticket_info || []),
+            {
+              ticket_id: "",
+              time_slot: "",
+              transfer_option: "",
+              adults: 0,
+              children: 0,
             },
           ],
         }));
@@ -320,6 +371,63 @@ const Calculator = () => {
           console.warn(`Unhandled case in sightseeing_info: ${name}`);
           break;
       }
+    } else if (infoType === "ticket_info") {
+      const { name, value } = currentTarget;
+      const data = { ...formData };
+      if (name === "id") {
+        data.ticket_info[index] = {
+          ...data.ticket_info[index],
+          id: value,
+          name: tickets.data?.data?.find((t) => t.id == value)?.name || "",
+          category: "",
+          time_slot: "",
+          transfer_option: "",
+          adult_price: 0,
+          child_price: 0,
+        };
+      } else if (name === "category") {
+        // When category changes, reset time slot
+        data.ticket_info[index] = {
+          ...data.ticket_info[index],
+          category: value,
+          time_slot: "",
+          transfer_option: "",
+          adult_price: 0,
+          child_price: 0,
+        };
+      } else if (name === "time_slot") {
+        // When time slot changes, reset transfer option
+        data.ticket_info[index] = {
+          ...data.ticket_info[index],
+          time_slot: value,
+          transfer_option: "",
+          adult_price: 0,
+          child_price: 0,
+        };
+      } else {
+        // For other fields (transfer_option, adults, children, date)
+        data.ticket_info[index][name] = value;
+
+        // Calculate prices when transfer option is selected
+        if (name === "transfer_option") {
+          const selectedTicket = tickets.data?.data?.find(
+            (t) => t.id == data.ticket_info[index].id
+          );
+          const timeSlot = selectedTicket?.time_slots?.find(
+            (s) => s.slot == data.ticket_info[index].time_slot
+          );
+          const transferOption = selectedTicket?.transfer_options?.find(
+            (o) => o.option == value
+          );
+
+          if (timeSlot && transferOption) {
+            data.ticket_info[index].adult_price =
+              Number(timeSlot.adult_price) + Number(transferOption.adult_price);
+            data.ticket_info[index].child_price =
+              Number(timeSlot.child_price) + Number(transferOption.child_price);
+          }
+        }
+      }
     }
 
     data[infoType][index][name] = value;
@@ -327,19 +435,19 @@ const Calculator = () => {
   };
 
   // Handle Meals
-  const handleMealsChange = ({ currentTarget }, index) => {
-    setToSubmit(false);
-    const { name } = currentTarget;
-    const data = { ...formData };
+  // const handleMealsChange = ({ currentTarget }, index) => {
+  //   setToSubmit(false);
+  //   const { name } = currentTarget;
+  //   const data = { ...formData };
 
-    const foundMeal = data.hotel_info[index].meals.find(
-      (item) => item.name == name
-    );
+  //   const foundMeal = data.hotel_info[index].meals.find(
+  //     (item) => item.name == name
+  //   );
 
-    foundMeal.isChecked = !foundMeal.isChecked; // Toggle the isChecked value
+  //   foundMeal.isChecked = !foundMeal.isChecked; // Toggle the isChecked value
 
-    setFormData(data);
-  };
+  //   setFormData(data);
+  // };
 
   // Handle Cost Calculation
   const handleCalculate = () => {
@@ -443,19 +551,40 @@ const Calculator = () => {
       sightseeingInfoChildren += childrenCost * sight.children;
     });
 
+    let ticketInfoAdults = 0,
+      ticketInfoChildren = 0;
+
+    formData.ticket_info?.forEach((ticket) => {
+      if (ticket.adult_price && ticket.child_price) {
+        ticketInfoAdults += Number(ticket.adult_price) * Number(ticket.adults);
+        ticketInfoChildren +=
+          Number(ticket.child_price) * Number(ticket.children);
+      }
+    });
+
     // Totalling
     // adults
-    adultsTotal = hotelInfoAdults + transportInfoAdults + sightseeingInfoAdults;
+    adultsTotal =
+      hotelInfoAdults +
+      transportInfoAdults +
+      sightseeingInfoAdults +
+      ticketInfoAdults;
     // Per adult
     perAdult =
       Math.round(
-        (hotelInfoAdults + transportInfoAdults + sightseeingInfoAdults) /
+        (hotelInfoAdults +
+          transportInfoAdults +
+          sightseeingInfoAdults +
+          ticketInfoAdults) /
           Number(formData.no_adults)
       ) || 0;
 
     // Children
     childrenTotal =
-      hotelInfoChildren + transportInfoChildren + sightseeingInfoChildren;
+      hotelInfoChildren +
+      transportInfoChildren +
+      sightseeingInfoChildren +
+      ticketInfoChildren;
     // Per child
     if (formData.no_children <= 0) {
       perChild = 0;
@@ -464,7 +593,8 @@ const Calculator = () => {
         Math.round(
           (hotelInfoChildren +
             transportInfoChildren +
-            sightseeingInfoChildren) /
+            sightseeingInfoChildren +
+            ticketInfoChildren) /
             Number(formData.no_children)
         ) || 0;
     }
@@ -473,6 +603,8 @@ const Calculator = () => {
       hotelInfoAdults +
         transportInfoAdults +
         sightseeingInfoAdults +
+        ticketInfoAdults +
+        ticketInfoChildren +
         hotelInfoChildren +
         transportInfoChildren +
         sightseeingInfoChildren || 0;
@@ -648,7 +780,6 @@ const Calculator = () => {
                 </div>
               </div>
             </div>
-
             {/* Transport Info */}
             <div className="px-2 py-2 px-md-4 mb-4">
               <div className="title-line">
@@ -659,7 +790,6 @@ const Calculator = () => {
                 <div
                   className="mb-3 p-3 rounded"
                   style={{
-                    backgroundColor: "#15a2b0",
                     border: "1px solid #16acbf",
                   }}
                 >
@@ -811,7 +941,6 @@ const Calculator = () => {
                 </button>
               )}
             </div>
-
             {/* Sightseeing Info */}
             <div className="px-2 py-2 px-md-4 mb-4">
               <div className="title-line">
@@ -822,7 +951,6 @@ const Calculator = () => {
                 <div
                   className="mb-3 p-3 rounded"
                   style={{
-                    backgroundColor: "#15a2b0",
                     border: "1px solid #16acbf",
                   }}
                 >
@@ -1004,7 +1132,277 @@ const Calculator = () => {
                 </button>
               )}
             </div>
+            {/* Tickets */}
+            <div className="px-2 py-2 px-md-4 mb-4">
+              <div className="title-line">
+                <span>Tickets</span>
+              </div>
 
+              {tickets.loading ? (
+                <p>Loading tickets...</p>
+              ) : tickets.error ? (
+                <p>Error loading tickets</p>
+              ) : (
+                <>
+                  {formData.ticket_info?.length > 0 ? (
+                    formData.ticket_info.map((item, index) => (
+                      <div className="mb-3" key={index}>
+                        <div className="d-flex align-items-center justify-content-between column-gap-3">
+                          <h5 className="fs-6 fw-bold">Ticket {index + 1}</h5>
+                          <button
+                            className="btn btn-danger rounded-circle"
+                            onClick={() =>
+                              handleDeleteInfo("ticket_info", index)
+                            }
+                          >
+                            <i className="fa-regular fa-trash-can"></i>
+                          </button>
+                        </div>
+                        <div className="row row-cols-1 row-cols-md-2 row-cols-lg-4">
+                          {/* Ticket Selection */}
+                          <div className="col mb-3 mb-md-4">
+                            <label
+                              htmlFor={`ticket_${index}`}
+                              className="fw-bold"
+                            >
+                              Ticket
+                            </label>
+                            <select
+                              id={`ticket_${index}`}
+                              className="form-control mt-1"
+                              name="id"
+                              value={item.id}
+                              onChange={(e) =>
+                                handleNestedDataChange(e, "ticket_info", index)
+                              }
+                            >
+                              <option value="">-- Select Ticket --</option>
+                              {tickets.data?.data?.map((ticket) => (
+                                <option key={ticket.id} value={ticket.id}>
+                                  {ticket.name}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+
+                          {/* Category Selection (shown when ticket is selected) */}
+                          {item.id && (
+                            <div className="col mb-3 mb-md-4">
+                              <label
+                                htmlFor={`category_${index}`}
+                                className="fw-bold"
+                              >
+                                Category
+                              </label>
+                              <select
+                                id={`category_${index}`}
+                                className="form-control mt-1"
+                                name="category"
+                                value={item.category}
+                                onChange={(e) =>
+                                  handleNestedDataChange(
+                                    e,
+                                    "ticket_info",
+                                    index
+                                  )
+                                }
+                              >
+                                <option value="">-- Select Category --</option>
+                                {tickets.data?.data
+                                  ?.find((t) => t.id == item.id)
+                                  ?.category?.map((cat, catIndex) => (
+                                    <option key={catIndex} value={cat}>
+                                      {cat}
+                                    </option>
+                                  ))}
+                              </select>
+                            </div>
+                          )}
+
+                          {/* Time Slot Selection (shown when category is selected) */}
+                          {item.category && (
+                            <div className="col mb-3 mb-md-4">
+                              <label
+                                htmlFor={`time_slot_${index}`}
+                                className="fw-bold"
+                              >
+                                Time Slot
+                              </label>
+                              <select
+                                id={`time_slot_${index}`}
+                                className="form-control mt-1"
+                                name="time_slot"
+                                value={item.time_slot}
+                                onChange={(e) =>
+                                  handleNestedDataChange(
+                                    e,
+                                    "ticket_info",
+                                    index
+                                  )
+                                }
+                              >
+                                <option value="">-- Select Time Slot --</option>
+                                {tickets.data?.data
+                                  ?.find((t) => t.id == item.id)
+                                  ?.time_slots?.filter((slot) =>
+                                    item.category == "Prime"
+                                      ? primeSlots.includes(slot.slot)
+                                      : nonPrimeSlots.includes(slot.slot)
+                                  )
+                                  ?.map((slot, i) => (
+                                    <option key={i} value={slot.slot}>
+                                      {slot.slot} (Adult: {slot.adult_price},
+                                      Child: {slot.child_price})
+                                    </option>
+                                  ))}
+                              </select>
+                            </div>
+                          )}
+
+                          {/* Transfer Options (shown when time slot is selected) */}
+                          {item.time_slot && (
+                            <div className="col mb-3 mb-md-4">
+                              <label
+                                htmlFor={`transfer_option_${index}`}
+                                className="fw-bold"
+                              >
+                                Transfer Option
+                              </label>
+                              <select
+                                id={`transfer_option_${index}`}
+                                className="form-control mt-1"
+                                name="transfer_option"
+                                value={item.transfer_option}
+                                onChange={(e) =>
+                                  handleNestedDataChange(
+                                    e,
+                                    "ticket_info",
+                                    index
+                                  )
+                                }
+                              >
+                                <option value="">-- Select Transfer --</option>
+                                {tickets.data?.data
+                                  ?.find((t) => t.id == item.id)
+                                  ?.transfer_options?.map((option, i) => (
+                                    <option key={i} value={option.option}>
+                                      {option.option} (Adult:{" "}
+                                      {option.adult_price}, Child:{" "}
+                                      {option.child_price})
+                                    </option>
+                                  ))}
+                              </select>
+                            </div>
+                          )}
+
+                          {/* Quantity and Date Fields */}
+                          {item.transfer_option && (
+                            <>
+                              <div className="col mb-3 mb-md-4">
+                                <label
+                                  htmlFor={`ticket_adults_${index}`}
+                                  className="fw-bold"
+                                >
+                                  No. of Adults
+                                </label>
+                                <input
+                                  type="number"
+                                  id={`ticket_adults_${index}`}
+                                  className="form-control mt-1"
+                                  name="adults"
+                                  value={item.adults}
+                                  onChange={(e) =>
+                                    handleNestedDataChange(
+                                      e,
+                                      "ticket_info",
+                                      index
+                                    )
+                                  }
+                                  min="0"
+                                />
+                              </div>
+
+                              <div className="col mb-3 mb-md-4">
+                                <label
+                                  htmlFor={`ticket_children_${index}`}
+                                  className="fw-bold"
+                                >
+                                  No. of Children
+                                </label>
+                                <input
+                                  type="number"
+                                  id={`ticket_children_${index}`}
+                                  className="form-control mt-1"
+                                  name="children"
+                                  value={item.children}
+                                  onChange={(e) =>
+                                    handleNestedDataChange(
+                                      e,
+                                      "ticket_info",
+                                      index
+                                    )
+                                  }
+                                  min="0"
+                                />
+                              </div>
+
+                              <div className="col mb-3 mb-md-4">
+                                <label
+                                  htmlFor={`ticket_date_${index}`}
+                                  className="fw-bold"
+                                >
+                                  Date
+                                </label>
+                                <input
+                                  type="date"
+                                  id={`ticket_date_${index}`}
+                                  className="form-control mt-1"
+                                  name="date"
+                                  value={item.date}
+                                  onChange={(e) =>
+                                    handleNestedDataChange(
+                                      e,
+                                      "ticket_info",
+                                      index
+                                    )
+                                  }
+                                  min={formData.travel_date_from}
+                                  max={formData.travel_date_to}
+                                />
+                              </div>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div
+                      className="mb-3 p-3 rounded"
+                      style={{ border: "1px solid #16acbf" }}
+                    >
+                      <p className="mb-2 fw-bold">
+                        Would you like to add any tickets to your package?
+                      </p>
+                      <button
+                        className="btn btn-main"
+                        onClick={() => handleAddInfo("ticket")}
+                      >
+                        <i className="fas fa-ticket me-2"></i> Add Ticket
+                      </button>
+                    </div>
+                  )}
+
+                  {formData.ticket_info?.length > 0 && (
+                    <button
+                      className="btn btn-info"
+                      onClick={() => handleAddInfo("ticket")}
+                    >
+                      Add Another Ticket
+                    </button>
+                  )}
+                </>
+              )}
+            </div>
             {/* Remarks */}
             <div className="px-2 py-2 px-md-4 mb-4">
               <div className="row row-cols-1">
@@ -1023,7 +1421,6 @@ const Calculator = () => {
                 </div>
               </div>
             </div>
-
             {toSubmit && (
               <>
                 {/* Pricing */}
@@ -1077,7 +1474,6 @@ const Calculator = () => {
                 </div>
               </>
             )}
-
             <div className="px-2 py-2 px-md-4 mb-4">
               {!toSubmit ? (
                 <button
