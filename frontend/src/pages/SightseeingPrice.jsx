@@ -105,7 +105,7 @@ const SightseeingPrice = () => {
         {/* Table */}
         <div className="mt-4">
           <div className="table-container">
-            <div className="border-bottom">
+            {/* <div className="border-bottom">
               <div className="row g-3 pb-3">
                 <div className="col-12 col-md-4 col-lg-3">
                   <select
@@ -119,7 +119,7 @@ const SightseeingPrice = () => {
                   </select>
                 </div>
               </div>
-            </div>
+            </div> */}
             <div className="d-flex justify-content-between align-items-center mt-3">
               <div>
                 <select
@@ -150,7 +150,7 @@ const SightseeingPrice = () => {
                 <table className="table table-hover text-center">
                   <thead>
                     <tr>
-                      <th>Company Name</th>
+                      <th>Sightseeing Authority </th>
                       <th>Description</th>
                       <th>City</th>
                       <th>Adult Cost</th>

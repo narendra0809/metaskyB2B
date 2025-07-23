@@ -103,11 +103,12 @@ const Navbar = () => {
             <span className="no-display">All Accounts</span>
           </NavLink>
         )}
-        <NavLink to={"/banking"} className="nav-link">
-          <i className="fa-solid fa-piggy-bank nav-icons"></i>
-          <span className="no-display">Banking</span>
-        </NavLink>
-
+        {authUser.role === adminRole && (
+          <NavLink to={"/banking"} className="nav-link">
+            <i className="fa-solid fa-piggy-bank nav-icons"></i>
+            <span className="no-display">Banking</span>
+          </NavLink>
+        )}
         {authUser.role === adminRole && (
           <NavLink to={"/agent-wallets"} className="nav-link">
             <i className="fa-solid fa-file-invoice-dollar nav-icons"></i>

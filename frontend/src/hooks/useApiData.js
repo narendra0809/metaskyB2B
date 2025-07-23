@@ -8,8 +8,6 @@ function useApiData(url, token) {
   const refetch = useCallback(async () => {
     setLoading(true);
     try {
-      console.log(url);
-      console.log(token);
       const response = await fetch(url, {
         method: "GET",
         headers: {

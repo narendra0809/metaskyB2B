@@ -111,7 +111,7 @@ const TransportPrice = () => {
         <div className="mt-4">
           <div className="table-container">
             <div className="border-bottom">
-              <div className="row g-3 pb-3">
+              {/* <div className="row g-3 pb-3">
                 <div className="col-12 col-md-4 col-lg-3">
                   <select
                     className="form-select"
@@ -123,7 +123,7 @@ const TransportPrice = () => {
                     <option value="that-hotel">That Hotel</option>
                   </select>
                 </div>
-              </div>
+              </div> */}
             </div>
             <div className="d-flex justify-content-between align-items-center mt-3">
               <div>
@@ -155,10 +155,10 @@ const TransportPrice = () => {
                 <table className="table table-hover text-center">
                   <thead>
                     <tr>
-                      <th>Company Name</th>
+                      <th>Transporter Name</th>
                       <th>City</th>
-                      <th>Room Types</th>
-                      <th>Room Cost</th>
+                      <th>Vehicle Types</th>
+                      <th>Vehicle Cost</th>
                     </tr>
                   </thead>
                   <tbody className="bg-white">
@@ -174,10 +174,8 @@ const TransportPrice = () => {
               </div>
               <div className="d-flex justify-content-between align-items-center">
                 <small>
-                  Showing {(currPageNo + 1) * perPage - (perPage - 1)} to{" "}
-                  {(currPageNo + 1) * perPage < filteredData?.length
-                    ? (currPageNo + 1) * perPage
-                    : filteredData?.length}{" "}
+                  Showing {currPageNo * perPage + 1} to{" "}
+                  {Math.min((currPageNo + 1) * perPage, filteredData?.length)}{" "}
                   of {filteredData?.length} entries
                 </small>
                 <ul className="pagination mt-4">

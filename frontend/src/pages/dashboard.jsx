@@ -57,6 +57,25 @@ const Dashboard = () => {
     return thisData.customer_status?.toLowerCase() === "confirmed";
   });
 
+  let transports = 0,
+    sightseeings = 0,
+    tickets = 0,
+    destinations;
+
+  const transportData = useApiData(
+    `${base_url}/api/transportations`,
+    authToken
+  );
+  const sightseeingData = useApiData(`${base_url}/api/sightseeings`, authToken);
+  const ticketData = useApiData(`${base_url}/api/tickets`, authToken);
+  const destinationsData = useApiData(
+    `${base_url}/api/getdestinations`,
+    authToken
+  );
+  transports = transportData.data?.data?.length;
+  sightseeings = sightseeingData.data?.data?.length;
+  tickets = ticketData.data?.data?.length;
+  destinations = destinationsData.data?.destinations?.length;
   // user data states
   const [userDataLoading, setUserDataLoading] = useState(false);
   const [userData, setUserData] = useState(null);
@@ -337,9 +356,7 @@ const Dashboard = () => {
                   />
                 </div>
                 <div className="card-content-vertical">
-                  <span className="nums">
-                    {data ? confirmed?.length : "..."}
-                  </span>
+                  <span className="nums">{data ? destinations : "..."}</span>
                   <small>Destinations</small>
                 </div>
               </article>
@@ -352,10 +369,8 @@ const Dashboard = () => {
                   <img src={hotelsLogo} alt="Hotels" className="card-icon" />
                 </div>
                 <div className="card-content-vertical">
-                  <span className="nums">
-                    {data ? confirmed?.length : "..."}
-                  </span>
-                  <small>Hotels</small>
+                  <span className="nums">{data ? tickets : "..."}</span>
+                  <small>Tickets</small>
                 </div>
               </article>
 
@@ -371,9 +386,7 @@ const Dashboard = () => {
                   />
                 </div>
                 <div className="card-content-vertical">
-                  <span className="nums">
-                    {data ? confirmed?.length : "..."}
-                  </span>
+                  <span className="nums">{data ? sightseeings : "..."}</span>
                   <small>Sightseeings</small>
                 </div>
               </article>
@@ -390,9 +403,7 @@ const Dashboard = () => {
                   />
                 </div>
                 <div className="card-content-vertical">
-                  <span className="nums">
-                    {data ? confirmed?.length : "..."}
-                  </span>
+                  <span className="nums">{data ? transports : "..."}</span>
                   <small>Transportation</small>
                 </div>
               </article>

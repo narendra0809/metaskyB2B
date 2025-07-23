@@ -3,7 +3,6 @@ import useApiData from "../hooks/useApiData";
 import useSendData from "../hooks/useSendData";
 import Alert from "../components/Alert";
 import { useAuth } from "../context/AuthContext";
-import Table from "react-bootstrap/Table";
 
 const primeSlots = [
   "3:30 PM - 4:00 PM",
@@ -33,7 +32,7 @@ const Calculator = () => {
     `${base_url}/api/getdestinations`,
     authToken
   );
-  const hotelsData = useApiData(`${base_url}/api/hotels`, authToken);
+  // const hotelsData = useApiData(`${base_url}/api/hotels`, authToken);
   const transportData = useApiData(
     `${base_url}/api/transportations`,
     authToken
@@ -43,8 +42,6 @@ const Calculator = () => {
   const subFormData = useSendData(`${base_url}/api/addbooking`, authToken);
 
   const tickets = useApiData(`${base_url}/api/tickets`, authToken);
-
-  console.log("Tickets : ", tickets?.data?.data);
 
   // Memoize the default form object
   const defaultForm = useMemo(
@@ -56,35 +53,35 @@ const Calculator = () => {
       travel_date_to: "",
       no_adults: 0,
       no_children: 0,
-      hotel_info: [
-        {
-          destination_id: "",
-          hotel_id: "",
-          room_type: "",
-          rooms: 0,
-          ex_adults: 0,
-          ex_children: 0,
-          check_in: "",
-          check_out: "",
-          room_type_cost: 0,
-          ex_adult_cost: 0,
-          ex_children_cost: 0,
-          meals: [],
-        },
-      ],
+      // hotel_info: [
+      //   {
+      //     destination_id: "",
+      //     hotel_id: "",
+      //     room_type: "",
+      //     rooms: 0,
+      //     ex_adults: 0,
+      //     ex_children: 0,
+      //     check_in: "",
+      //     check_out: "",
+      //     room_type_cost: 0,
+      //     ex_adult_cost: 0,
+      //     ex_children_cost: 0,
+      //     meals: [],
+      //   },
+      // ],
       ticket_info: [
-        {
-          id: "",
-          name: "",
-          category: "",
-          time_slot: "",
-          transfer_option: "",
-          adults: 0,
-          children: 0,
-          date: "",
-          adult_price: 0,
-          child_price: 0,
-        },
+        // {
+        //   id: "",
+        //   name: "",
+        //   category: "",
+        //   time_slot: "",
+        //   transfer_option: "",
+        //   adults: 0,
+        //   children: 0,
+        //   date: "",
+        //   adult_price: 0,
+        //   child_price: 0,
+        // },
       ],
       transport_info: [],
       sightseeing_info: [],
@@ -101,6 +98,7 @@ const Calculator = () => {
 
   const [formData, setFormData] = useState({ ...defaultForm });
   const [showTransportPrompt, setShowTransportPrompt] = useState(true);
+  const [showTicketPrompt, setShowTicketPrompt] = useState(true);
   const [showSightseeingPrompt, setShowSightseeingPrompt] = useState(true);
 
   // Calculate values
@@ -140,27 +138,27 @@ const Calculator = () => {
   const handleAddInfo = (type) => {
     setToSubmit(false);
     switch (type) {
-      case "hotel":
-        setFormData((prev) => ({
-          ...prev,
-          hotel_info: [
-            ...prev.hotel_info,
-            {
-              destination_id: "",
-              hotel_id: "",
-              room_type: "",
-              rooms: 0,
-              ex_adults: 0,
-              ex_children: 0,
-              check_in: "",
-              check_out: "",
-              room_type_cost: 0,
-              ex_adult_cost: 0,
-              ex_children_cost: 0,
-            },
-          ],
-        }));
-        break;
+      // case "hotel":
+      //   setFormData((prev) => ({
+      //     ...prev,
+      //     hotel_info: [
+      //       ...prev.hotel_info,
+      //       {
+      //         destination_id: "",
+      //         hotel_id: "",
+      //         room_type: "",
+      //         rooms: 0,
+      //         ex_adults: 0,
+      //         ex_children: 0,
+      //         check_in: "",
+      //         check_out: "",
+      //         room_type_cost: 0,
+      //         ex_adult_cost: 0,
+      //         ex_children_cost: 0,
+      //       },
+      //     ],
+      //   }));
+      //   break;
       case "transport":
         setShowTransportPrompt(false);
         setFormData((prev) => ({
@@ -196,19 +194,21 @@ const Calculator = () => {
         }));
         break;
       case "ticket":
-        setFormData((prev) => ({
-          ...prev,
-          ticket_info: [
-            ...(prev.ticket_info || []),
-            {
-              ticket_id: "",
-              time_slot: "",
-              transfer_option: "",
-              adults: 0,
-              children: 0,
-            },
-          ],
-        }));
+        setShowTicketPrompt(false);
+        if (!formData.ticket_info || formData.ticket_info.length === 0) {
+          setFormData((prev) => ({
+            ...prev,
+            ticket_info: [
+              ...(prev.ticket_info || []),
+              {
+                time_slot: "",
+                transfer_option: "",
+                adults: 0,
+                children: 0,
+              },
+            ],
+          }));
+        }
         break;
       default:
         console.warn(`Unhandled type: ${type}`);
@@ -229,6 +229,9 @@ const Calculator = () => {
     if (key === "sightseeing_info" && data[key].length === 0) {
       setShowSightseeingPrompt(true);
     }
+    if (key === "ticket_info" && data[key].length === 0) {
+      setShowTicketPrompt(true);
+    }
   };
 
   // Handle Data Change
@@ -236,6 +239,15 @@ const Calculator = () => {
     setToSubmit(false);
     const { name, value } = currentTarget;
     let filteredValue = value;
+
+    if (
+      (name == "no_adults" ||
+        name == "no_children" ||
+        name == "no_of_people") &&
+      value < 0
+    ) {
+      return;
+    }
 
     if (name == "travel_date_from") {
       formData.travel_date_to = "";
@@ -260,64 +272,62 @@ const Calculator = () => {
     const data = { ...formData };
 
     if (infoType == "hotel_info") {
-      switch (name) {
-        case "check_in":
-          data.hotel_info[index].check_out = "";
-          break;
-        case "destination_id":
-          data.hotel_info[index].hotel_id = "";
-          data.hotel_info[index].ex_adult_cost = "";
-          data.hotel_info[index].ex_children_cost = "";
-          data.hotel_info[index].room_type = "";
-          data.hotel_info[index].room_type_cost = "";
-          break;
-        case "hotel_id":
-          data.hotel_info[index].ex_adult_cost = "";
-          data.hotel_info[index].ex_children_cost = "";
-          data.hotel_info[index].room_type = "";
-          data.hotel_info[index].room_type_cost = "";
-          data.hotel_info[index].meals = [];
-
-          // Select Hotel
-          const s_hotel = hotelsData.data?.data?.find(
-            (hotel) => hotel.id == value
-          );
-          if (s_hotel) {
-            // Assign rate
-            data.hotel_info[index].ex_adult_cost = s_hotel.ex_adult_rate;
-            data.hotel_info[index].ex_children_cost = s_hotel.ex_child_rate;
-
-            // Assign Meals
-            s_hotel.meals?.forEach((meal) => {
-              data.hotel_info[index].meals = [
-                ...data.hotel_info[index].meals,
-                {
-                  name: meal.name,
-                  isChecked: false,
-                  rate: meal.rate,
-                },
-              ];
-            });
-          }
-          break;
-        case "room_type":
-          // Select Hotel
-          const selectedHotel = hotelsData.data?.data?.find(
-            (hotel) => hotel.id == data.hotel_info[index].hotel_id
-          );
-          if (selectedHotel) {
-            // Select Room Type
-            const selectedRoomType = selectedHotel.room_types.find(
-              (room_type) => room_type.type == value
-            );
-            // Assign rate
-            data.hotel_info[index].room_type_cost = selectedRoomType?.rate;
-          }
-          break;
-        default:
-          console.warn(`Unhandled case in hotel_info: ${name}`);
-          break;
-      }
+      // switch (name) {
+      //   case "check_in":
+      //     data.hotel_info[index].check_out = "";
+      //     break;
+      //   case "destination_id":
+      //     data.hotel_info[index].hotel_id = "";
+      //     data.hotel_info[index].ex_adult_cost = "";
+      //     data.hotel_info[index].ex_children_cost = "";
+      //     data.hotel_info[index].room_type = "";
+      //     data.hotel_info[index].room_type_cost = "";
+      //     break;
+      //   case "hotel_id":
+      //     data.hotel_info[index].ex_adult_cost = "";
+      //     data.hotel_info[index].ex_children_cost = "";
+      //     data.hotel_info[index].room_type = "";
+      //     data.hotel_info[index].room_type_cost = "";
+      //     data.hotel_info[index].meals = [];
+      //     // Select Hotel
+      //     const s_hotel = hotelsData.data?.data?.find(
+      //       (hotel) => hotel.id == value
+      //     );
+      //     if (s_hotel) {
+      //       // Assign rate
+      //       data.hotel_info[index].ex_adult_cost = s_hotel.ex_adult_rate;
+      //       data.hotel_info[index].ex_children_cost = s_hotel.ex_child_rate;
+      //       // Assign Meals
+      //       s_hotel.meals?.forEach((meal) => {
+      //         data.hotel_info[index].meals = [
+      //           ...data.hotel_info[index].meals,
+      //           {
+      //             name: meal.name,
+      //             isChecked: false,
+      //             rate: meal.rate,
+      //           },
+      //         ];
+      //       });
+      //     }
+      //     break;
+      //   case "room_type":
+      //     // Select Hotel
+      //     const selectedHotel = hotelsData.data?.data?.find(
+      //       (hotel) => hotel.id == data.hotel_info[index].hotel_id
+      //     );
+      //     if (selectedHotel) {
+      //       // Select Room Type
+      //       const selectedRoomType = selectedHotel.room_types.find(
+      //         (room_type) => room_type.type == value
+      //       );
+      //       // Assign rate
+      //       data.hotel_info[index].room_type_cost = selectedRoomType?.rate;
+      //     }
+      //     break;
+      //   default:
+      //     console.warn(`Unhandled case in hotel_info: ${name}`);
+      //     break;
+      // }
     } else if (infoType == "transport_info") {
       switch (name) {
         case "destination_id":
@@ -379,7 +389,7 @@ const Calculator = () => {
           ...data.ticket_info[index],
           id: value,
           name: tickets.data?.data?.find((t) => t.id == value)?.name || "",
-          category: "",
+          category: [],
           time_slot: "",
           transfer_option: "",
           adult_price: 0,
@@ -484,60 +494,58 @@ const Calculator = () => {
       taxAmount = 0,
       finalAmount = 0;
 
-    let hotelInfoAdults = 0,
-      transportInfoAdults = 0,
+    let transportInfoAdults = 0,
       sightseeingInfoAdults = 0;
-    let hotelInfoChildren = 0,
-      transportInfoChildren = 0,
+    let transportInfoChildren = 0,
       sightseeingInfoChildren = 0;
 
-    formData.hotel_info.forEach((hotel) => {
-      const checkInOutDays = getDaysBetweenDates(
-        hotel.check_in,
-        hotel.check_out
-      );
-      let mealsCost = 0;
-      let adultAmountRoom = 0,
-        adultAmountFood = 0;
-      let childrenAmountRoom = 0,
-        childrenAmountFood = 0;
+    // formData.hotel_info.forEach((hotel) => {
+    //   const checkInOutDays = getDaysBetweenDates(
+    //     hotel.check_in,
+    //     hotel.check_out
+    //   );
+    //   let mealsCost = 0;
+    //   let adultAmountRoom = 0,
+    //     adultAmountFood = 0;
+    //   let childrenAmountRoom = 0,
+    //     childrenAmountFood = 0;
 
-      // Cost for Adult's room
-      adultAmountRoom +=
-        Number(hotel.rooms) *
-          Number(hotel.room_type_cost || 0) *
-          checkInOutDays +
-        checkInOutDays * Number(hotel.ex_adult_cost) * Number(hotel.ex_adults);
+    //   // Cost for Adult's room
+    //   adultAmountRoom +=
+    //     Number(hotel.rooms) *
+    //       Number(hotel.room_type_cost || 0) *
+    //       checkInOutDays +
+    //     checkInOutDays * Number(hotel.ex_adult_cost) * Number(hotel.ex_adults);
 
-      // Children rooms cost
-      childrenAmountRoom +=
-        checkInOutDays *
-        Number(hotel.ex_children_cost) *
-        Number(hotel.ex_children);
+    //   // Children rooms cost
+    //   childrenAmountRoom +=
+    //     checkInOutDays *
+    //     Number(hotel.ex_children_cost) *
+    //     Number(hotel.ex_children);
 
-      // Per hotel meals cost
-      hotel.meals
-        .filter((meal) => meal.isChecked)
-        .forEach((meal) => {
-          mealsCost += Number(meal.rate);
-        });
+    //   // Per hotel meals cost
+    //   hotel.meals
+    //     .filter((meal) => meal.isChecked)
+    //     .forEach((meal) => {
+    //       mealsCost += Number(meal.rate);
+    //     });
 
-      // Adult Meals cost
-      adultAmountFood +=
-        mealsCost *
-        (Number(formData.no_adults) + Number(hotel.ex_adults)) *
-        checkInOutDays;
+    //   // Adult Meals cost
+    //   adultAmountFood +=
+    //     mealsCost *
+    //     (Number(formData.no_adults) + Number(hotel.ex_adults)) *
+    //     checkInOutDays;
 
-      // Children Meals cost
-      childrenAmountFood +=
-        mealsCost *
-        (Number(formData.no_children) + Number(hotel.ex_children)) *
-        checkInOutDays;
+    //   // Children Meals cost
+    //   childrenAmountFood +=
+    //     mealsCost *
+    //     (Number(formData.no_children) + Number(hotel.ex_children)) *
+    //     checkInOutDays;
 
-      // Total Adult Hotel Cost
-      hotelInfoAdults += adultAmountRoom + adultAmountFood;
-      hotelInfoChildren += childrenAmountRoom + childrenAmountFood;
-    });
+    //   // // Total Adult Hotel Cost
+    //   // hotelInfoAdults += adultAmountRoom + adultAmountFood;
+    //   // hotelInfoChildren += childrenAmountRoom + childrenAmountFood;
+    // });
 
     formData.transport_info.forEach((transport) => {
       transportInfoAdults += Number(transport.transport_cost);
@@ -565,34 +573,24 @@ const Calculator = () => {
     // Totalling
     // adults
     adultsTotal =
-      hotelInfoAdults +
-      transportInfoAdults +
-      sightseeingInfoAdults +
-      ticketInfoAdults;
+      transportInfoAdults + sightseeingInfoAdults + ticketInfoAdults;
     // Per adult
     perAdult =
       Math.round(
-        (hotelInfoAdults +
-          transportInfoAdults +
-          sightseeingInfoAdults +
-          ticketInfoAdults) /
+        (transportInfoAdults + sightseeingInfoAdults + ticketInfoAdults) /
           Number(formData.no_adults)
       ) || 0;
 
     // Children
     childrenTotal =
-      hotelInfoChildren +
-      transportInfoChildren +
-      sightseeingInfoChildren +
-      ticketInfoChildren;
+      transportInfoChildren + sightseeingInfoChildren + ticketInfoChildren;
     // Per child
     if (formData.no_children <= 0) {
       perChild = 0;
     } else {
       perChild =
         Math.round(
-          (hotelInfoChildren +
-            transportInfoChildren +
+          (transportInfoChildren +
             sightseeingInfoChildren +
             ticketInfoChildren) /
             Number(formData.no_children)
@@ -600,12 +598,10 @@ const Calculator = () => {
     }
     // Total
     total =
-      hotelInfoAdults +
-        transportInfoAdults +
+      transportInfoAdults +
         sightseeingInfoAdults +
         ticketInfoAdults +
         ticketInfoChildren +
-        hotelInfoChildren +
         transportInfoChildren +
         sightseeingInfoChildren || 0;
 
@@ -633,7 +629,7 @@ const Calculator = () => {
   };
 
   // Submit
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (!(Number(calc.finalAmount) >= 1)) {
@@ -647,8 +643,9 @@ const Calculator = () => {
     data.final_payment = Number(calc.finalAmount);
     data.total_per_adult = Number(calc.perAdult);
     data.total_per_child = Number(calc.perChild);
-
-    subFormData.sendData(data);
+    console.log("Data to be sent: ", data);
+    const result = await subFormData.sendData(data);
+    console.log("Response from server : ", result);
   };
 
   useEffect(() => {
@@ -730,7 +727,7 @@ const Calculator = () => {
                   <input
                     type="date"
                     id="travel_date_from"
-                    className="form-control mt-1"
+                    className="form-control mt-1 text-white"
                     min={today}
                     name="travel_date_from"
                     value={formData.travel_date_from}
@@ -1138,10 +1135,29 @@ const Calculator = () => {
                 <span>Tickets</span>
               </div>
 
-              {tickets.loading ? (
-                <p>Loading tickets...</p>
-              ) : tickets.error ? (
-                <p>Error loading tickets</p>
+              {showTicketPrompt ? (
+                <div
+                  className="mb-3 p-3 rounded"
+                  style={{ border: "1px solid #16acbf" }}
+                >
+                  <p className="mb-2 fw-bold">
+                    Would you like to add any tickets to your package?
+                  </p>
+                  <button
+                    className="btn btn-main"
+                    onClick={() => {
+                      setShowTicketPrompt(false);
+                      if (
+                        !formData.ticket_info ||
+                        formData.ticket_info.length === 0
+                      ) {
+                        handleAddInfo("ticket");
+                      }
+                    }}
+                  >
+                    <i className="fas fa-ticket me-2"></i> Add Ticket
+                  </button>
+                </div>
               ) : (
                 <>
                   {formData.ticket_info?.length > 0 ? (
@@ -1395,7 +1411,9 @@ const Calculator = () => {
                   {formData.ticket_info?.length > 0 && (
                     <button
                       className="btn btn-info"
-                      onClick={() => handleAddInfo("ticket")}
+                      onClick={() => {
+                        handleAddInfo("ticket");
+                      }}
                     >
                       Add Another Ticket
                     </button>

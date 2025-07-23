@@ -29,7 +29,7 @@ class Booking extends Model
         'travel_date_to',
         'no_adults',
         'no_children',
-        'hotel_info',
+        'ticket_info',
         'transport_info',
         'sightseeing_info',
         'remarks',
@@ -51,7 +51,7 @@ class Booking extends Model
     protected $casts = [
         'travel_date_from' => 'date',
         'travel_date_to' => 'date',
-        'hotel_info' => 'array',
+        'ticket_info' => 'array',
         'transport_info' => 'array',
         'sightseeing_info' => 'array',
         'taxes' => 'array',
@@ -77,5 +77,5 @@ class Booking extends Model
     {
         return $this->hasMany(Payment::class, 'booking_id');
     }
-    
+
 }

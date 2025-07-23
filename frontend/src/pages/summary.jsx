@@ -21,7 +21,6 @@ const Summary = () => {
     `${base_url}/api/getdestinations`,
     authToken
   );
-  const hotelsData = useApiData(`${base_url}/api/hotels`, authToken);
 
   const { data, loading, error, refetch } = useApiData(
     `${base_url}/api/${
@@ -49,6 +48,28 @@ const Summary = () => {
     }
   }
 
+  // Helper function to get location details
+  const getLocationDetails = (destination_id) => {
+    const destination = destinationsData.data?.destinations?.find(
+      (des) => des.id === destination_id
+    );
+    if (!destination) return "N/A";
+
+    const city = countriesData.data?.cities.find(
+      (c) => c.id === destination.city_id
+    );
+    const state = countriesData.data?.states.find(
+      (s) => s.id === destination.state_id
+    );
+    const country = countriesData.data?.countries.find(
+      (c) => c.id === destination.country_id
+    );
+
+    return `${city?.name || "N/A"}, ${state?.name || "N/A"}, ${
+      country?.name || "N/A"
+    }`;
+  };
+
   if (
     loading ||
     transportData.loading ||
@@ -67,7 +88,7 @@ const Summary = () => {
   }
 
   if (items && items.length >= 1) {
-    const hotels = JSON.parse(item.hotel_info);
+    const tickets = JSON.parse(item.ticket_info);
     const transports = JSON.parse(item.transport_info);
     const sightseeings = JSON.parse(item.sightseeing_info);
 
@@ -96,7 +117,6 @@ const Summary = () => {
                 </div>
                 <div className="col">
                   <p className="fw-bold lh-1 mb-2">Duration</p>
-                  {/* <p>7 Nights, 8 Day</p> */}
                   <p>
                     {getDaysBetweenDates(
                       item.travel_date_from,
@@ -119,178 +139,268 @@ const Summary = () => {
               </div>
             </div>
 
-            {/* Hotels */}
-            <div className="container-fluid">
-              <div className="title-line">
-                <span>Hotels</span>
-              </div>
-              {hotels.map((item, index) => {
-                const tempDes = destinationsData.data?.destinations?.find(
-                  (destination) => destination.id == item.destination_id
-                );
-
-                const thisDes = countriesData.data?.cities.find(
-                  (city) => city.id === tempDes.city_id
-                );
-
-                const thisHotel = hotelsData.data?.data?.find(
-                  (hotel) => hotel.id == item.hotel_id
-                );
-
-                return (
-                  <div
-                    key={index}
-                    className={`${
-                      hotels.length != index + 1
-                        ? "border-bottom pb-4 mb-5"
-                        : ""
-                    }`}
-                  >
-                    <div className="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4">
-                      <div className="col">
-                        <p className="fw-bold lh-1 mb-2">Check In</p>
-                        <p>{item.check_in}</p>
-                      </div>
-                      <div className="col">
-                        <p className="fw-bold lh-1 mb-2">Check Out</p>
-                        <p>{item.check_out}</p>
-                      </div>
-                      <div className="col">
-                        <p className="fw-bold lh-1 mb-2">Destination</p>
-                        {/* <p>7 Nights, 8 Day</p> */}
-                        <p>{thisDes?.name}</p>
-                      </div>
-                      <div className="col">
-                        <p className="fw-bold lh-1 mb-2">Hotel</p>
-                        <p>{thisHotel?.name}</p>
-                      </div>
-                      <div className="col">
-                        <p className="fw-bold lh-1 mb-2">Room Type</p>
-                        <p className="mb-0">{item.room_type}</p>
-                        <p>₹ {item.room_type_cost}/-</p>
-                      </div>
-                      <div className="col">
-                        <p className="fw-bold lh-1 mb-2">Rooms</p>
-                        <p className="mb-0">{item.rooms}</p>
-                      </div>
-                      <div className="col">
-                        <p className="fw-bold lh-1 mb-2">Ex Adults</p>
-                        <p className="mb-0">{item.ex_adults || 0}</p>
-                      </div>
-                      <div className="col">
-                        <p className="fw-bold lh-1 mb-2">Ex Children</p>
-                        <p className="mb-0">{item.ex_children || 0}</p>
-                      </div>
-                    </div>
-                    <div className="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4">
-                      <div className="col">
-                        <p className="fw-bold lh-1 mb-2">Meals</p>
-                        <div className="d-flex row-gap-1 column-gap-4 flex-wrap mt-1">
-                          {item.meals?.map((meal, i) => (
-                            <div className="form-check" key={i}>
-                              <p className="text-capitalize mb-0">
-                                {meal.name}
-                              </p>
-                              <p>₹ {meal.rate}/-</p>
+            {/* Tickets Section */}
+            {tickets.length > 0 && (
+              <div className="container-fluid mt-4">
+                <div className="title-line">
+                  <span>Tickets</span>
+                </div>
+                <div>
+                  <div className="listing-card-container">
+                    {tickets.length === 0 ? (
+                      <p className="text-center">No ticket record found!</p>
+                    ) : (
+                      tickets.map((ticket, i) => (
+                        <div className="listing-card mb-4" key={i}>
+                          <div className="listing-card--head">
+                            <p className="fw-bold lh-1 my-2">{ticket.date}</p>
+                          </div>
+                          <div className="listing-card--body">
+                            <div className="container px-4">
+                              <div className="row pb-2 border-bottom">
+                                <div className="col-12 col-sm-6">
+                                  <p className="fw-bold">{ticket.name}</p>
+                                  <p>
+                                    <span className="text-muted">
+                                      Category:
+                                    </span>{" "}
+                                    {ticket.category}
+                                  </p>
+                                  <p>
+                                    <span className="text-muted">
+                                      Time Slot:
+                                    </span>{" "}
+                                    {ticket.time_slot}
+                                  </p>
+                                  <p>
+                                    <span className="text-muted">
+                                      Transfer:
+                                    </span>{" "}
+                                    {ticket.transfer_option}
+                                  </p>
+                                </div>
+                                <div className="col-12 col-sm-6 mt-3 mt-sm-0">
+                                  <p>
+                                    <span className="text-muted">Adults:</span>{" "}
+                                    {ticket.adults} × {ticket.adult_price} AED
+                                  </p>
+                                  <p>
+                                    <span className="text-muted">
+                                      Children:
+                                    </span>{" "}
+                                    {ticket.children} × {ticket.child_price} AED
+                                  </p>
+                                  <div className="mt-2 pt-2 border-top">
+                                    <p className="fw-bold">
+                                      Total:{" "}
+                                      {ticket.adults * ticket.adult_price +
+                                        ticket.children *
+                                          ticket.child_price}{" "}
+                                      AED
+                                    </p>
+                                  </div>
+                                </div>
+                              </div>
                             </div>
-                          ))}
+                          </div>
                         </div>
-                      </div>
-                    </div>
+                      ))
+                    )}
                   </div>
-                );
-              })}
-            </div>
+                </div>
+              </div>
+            )}
 
             {/* Transportations */}
-            <div className="container-fluid mt-4">
-              <div className="title-line">
-                <span>Transportations</span>
-              </div>
-              <div>
-                <div className="listing-card-container">
-                  {transports.length == 1 && !transports[0].destination_id ? (
-                    <p className="text-center">
-                      No transportation record found!
-                    </p>
-                  ) : (
-                    transports.map((transport, i) => {
-                      const thisTransport = transportData.data.data.find(
-                        (item) => item.id == transport.transport_id
-                      );
+            {transports.length > 0 && (
+              <div className="container-fluid mt-4">
+                <div className="title-line">
+                  <span>Transportations</span>
+                </div>
+                <div>
+                  <div className="listing-card-container">
+                    {transports.length == 0 ? (
+                      <p className="text-center">
+                        No transportation record found!
+                      </p>
+                    ) : (
+                      transports.map((transport, i) => {
+                        const thisTransport = transportData.data.data.find(
+                          (item) => item.id == transport.transport_id
+                        );
 
-                      return (
-                        <div className="listing-card mb-4" key={i}>
-                          <div className="listing-card--head">
-                            <p className="fw-bold lh-1 my-2">
-                              {transport.date}
-                            </p>
-                            {/* <p className="lh-1 mb-0">{transport.date}</p> */}
-                          </div>
-                          <div className="listing-card--body">
-                            <div className="container px-4">
-                              <div className="row pb-2 border-bottom">
-                                <div className="col-12 col-sm-6">
-                                  {thisTransport?.transport}
-                                </div>
-                                <div className="col-12 col-sm-6 mt-3 mt-sm-0">
-                                  {transport.v_type}
+                        return (
+                          <div className="listing-card mb-4" key={i}>
+                            <div className="listing-card--head">
+                              <p className="fw-bold lh-1 my-2">
+                                {transport.date}
+                              </p>
+                            </div>
+                            <div className="listing-card--body">
+                              <div className="container px-4">
+                                <div className="row pb-2 border-bottom">
+                                  <div className="col-12 col-sm-6">
+                                    <p className="fw-bold">
+                                      <span className="fw-normal">
+                                        Transporter :
+                                      </span>{" "}
+                                      {thisTransport?.company_name}
+                                    </p>
+                                    <p>
+                                      <span className="text-muted">
+                                        Vehicle:
+                                      </span>{" "}
+                                      {thisTransport?.transport} (
+                                      {thisTransport?.vehicle_type})
+                                    </p>
+                                    <p>
+                                      <span className="text-muted">
+                                        Location:
+                                      </span>{" "}
+                                      {getLocationDetails(
+                                        thisTransport?.destination_id
+                                      )}
+                                    </p>
+                                    <p>
+                                      <span className="text-muted">
+                                        Address:
+                                      </span>{" "}
+                                      {thisTransport?.address}
+                                    </p>
+                                  </div>
+                                  <div className="col-12 col-sm-6 mt-3 mt-sm-0">
+                                    {thisTransport?.options?.length > 0 && (
+                                      <>
+                                        <p className="fw-bold">Options:</p>
+                                        {thisTransport.options.map(
+                                          (option, idx) => (
+                                            <p key={idx}>
+                                              {option.type}: {option.rate} AED
+                                            </p>
+                                          )
+                                        )}
+                                      </>
+                                    )}
+                                  </div>
                                 </div>
                               </div>
                             </div>
                           </div>
-                        </div>
-                      );
-                    })
-                  )}
+                        );
+                      })
+                    )}
+                  </div>
                 </div>
               </div>
-            </div>
-
+            )}
             {/* Sightseeings */}
-            <div className="container-fluid mt-4">
-              <div className="title-line">
-                <span>Sightseeings</span>
-              </div>
-              <div>
-                <div className="listing-card-container">
-                  {sightseeings.length == 1 &&
-                  !sightseeings[0].destination_id ? (
-                    <p className="text-center">No sightseeing record found!</p>
-                  ) : (
-                    sightseeings.map((sightseeing, i) => {
-                      const thissightseeing = sightseeingData.data.data.find(
-                        (item) => item.id == sightseeing.sightseeing_id
-                      );
+            {sightseeings.length > 0 && (
+              <div className="container-fluid mt-4">
+                <div className="title-line">
+                  <span>Sightseeings</span>
+                </div>
+                <div>
+                  <div className="listing-card-container">
+                    {sightseeings.length === 0 ? (
+                      <p className="text-center">
+                        No sightseeing record found!
+                      </p>
+                    ) : (
+                      sightseeings.map((sightseeing, i) => {
+                        const thisSightseeing = sightseeingData.data.data.find(
+                          (item) => item.id == sightseeing.sightseeing_id
+                        );
 
-                      return (
-                        <div className="listing-card mb-4" key={i}>
-                          <div className="listing-card--head">
-                            <p className="fw-bold lh-1 my-2">
-                              {sightseeing.date}
-                            </p>
-                          </div>
-                          <div className="listing-card--body">
-                            <div className="container px-4">
-                              <div className="row pb-2 border-bottom">
-                                <div className="col-12 col-sm-6">
-                                  {thissightseeing?.description}
-                                </div>
-                                <div className="col-12 col-sm-6 mt-3 mt-sm-0">
-                                  {sightseeing.adults} Adults{" "}
-                                  {sightseeing.children >= 1 &&
-                                    `+ ${item.children} Children`}
+                        return (
+                          <div className="listing-card mb-4" key={i}>
+                            <div className="listing-card--head">
+                              <p className="fw-bold lh-1 my-2">
+                                {sightseeing.date}
+                              </p>
+                            </div>
+                            <div className="listing-card--body">
+                              <div className="container px-4">
+                                <div className="row pb-2 border-bottom">
+                                  <div className="col-12 col-sm-6">
+                                    <p className="fw-bold">
+                                      <span className="fw-normal">
+                                        Sightseeing Authority :{" "}
+                                      </span>
+                                      {thisSightseeing?.company_name}
+                                    </p>
+                                    <p>
+                                      <span className="text-muted">
+                                        Description:
+                                      </span>{" "}
+                                      {thisSightseeing?.description}
+                                    </p>
+                                    <p>
+                                      <span className="text-muted">
+                                        Location:
+                                      </span>{" "}
+                                      {getLocationDetails(
+                                        thisSightseeing?.destination_id
+                                      )}
+                                    </p>
+                                    <p>
+                                      <span className="text-muted">
+                                        Address:
+                                      </span>{" "}
+                                      {thisSightseeing?.address}
+                                    </p>
+                                  </div>
+                                  <div className="col-12 col-sm-6 mt-3 mt-sm-0">
+                                    <p>
+                                      <span className="text-muted">
+                                        Adult Rate:
+                                      </span>{" "}
+                                      {thisSightseeing?.rate_adult} AED
+                                    </p>
+                                    <p>
+                                      <span className="text-muted">
+                                        Child Rate:
+                                      </span>{" "}
+                                      {thisSightseeing?.rate_child} AED
+                                    </p>
+                                    <div className="mt-2 pt-2 border-top">
+                                      <p>
+                                        {sightseeing.adults} Adults ×{" "}
+                                        {thisSightseeing?.rate_adult} AED ={" "}
+                                        {sightseeing.adults *
+                                          thisSightseeing?.rate_adult}{" "}
+                                        AED
+                                      </p>
+                                      {sightseeing.children >= 1 && (
+                                        <p>
+                                          {sightseeing.children} Children ×{" "}
+                                          {thisSightseeing?.rate_child} AED ={" "}
+                                          {sightseeing.children *
+                                            thisSightseeing?.rate_child}{" "}
+                                          AED
+                                        </p>
+                                      )}
+                                      <p className="fw-bold">
+                                        Total:{" "}
+                                        {sightseeing.adults *
+                                          thisSightseeing?.rate_adult +
+                                          (sightseeing.children *
+                                            thisSightseeing?.rate_child ||
+                                            0)}{" "}
+                                        AED
+                                      </p>
+                                    </div>
+                                  </div>
                                 </div>
                               </div>
                             </div>
                           </div>
-                        </div>
-                      );
-                    })
-                  )}
+                        );
+                      })
+                    )}
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
           </div>
         </section>
       </>

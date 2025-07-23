@@ -18,93 +18,87 @@ use App\Models\Booking;
 
 class BookingController extends Controller
 {
-  
-     
+
+
     public function addBooking(Request $request)
     {
         // Log::info('Incoming Request Data:', $request->all());
 
         try {
-            // Validate the incoming request
             $validatedData = $request->validate([
-                'user_id' => 'required|exists:users,id',
-                'customer_name' => 'required|string',
-                'phone_no' => 'required|string',
-                'travel_date_from' => 'required|date',
-                'travel_date_to' => 'required|date',
-                'no_adults' => 'required|integer',
-                'no_children' => 'required|integer',
-                'hotel_info' => 'nullable|array',
-                'hotel_info.*.destination_id' => 'nullable|exists:destinations,id',
-                'hotel_info.*.hotel_id' => 'nullable|exists:hotels,id',
-                'hotel_info.*.room_type' => 'nullable|string',
-                'hotel_info.*.ex_adult_cost' => 'nullable|string',
-                'hotel_info.*.ex_children_cost' => 'nullable|string',
-                'hotel_info.*.rooms' => 'nullable|integer',
-                'hotel_info.*.ex_adults' => 'nullable|integer',
-                'hotel_info.*.ex_children' => 'nullable|integer',
-                'hotel_info.*.check_in' => 'nullable|date',
-                'hotel_info.*.check_out' => 'nullable|date',
-                'hotel_info.*.room_type_cost' => 'nullable|numeric',
-                'hotel_info.*.meals' => 'nullable|array', // Add support for meal info
-                'hotel_info.*.meals.*.name' => 'required|string', // Validate meal name
-                'hotel_info.*.meals.*.rate' => 'required|numeric', // Validate meal rate
-                'hotel_info.*.meals.*.isChecked' => 'required|boolean', // Validate isChecked field
-                'transport_info' => 'nullable|array',
-                'transport_info.*.destination_id' => 'nullable|exists:destinations,id',
-                'transport_info.*.transport_id' => 'nullable|exists:transportations,id',
-                'transport_info.*.no_of_people' => 'nullable|integer',
-                'transport_info.*.v_type' => 'nullable|string',
-                'transport_info.*.date' => 'nullable|date',
-                'transport_info.*.transport_cost' => 'nullable|numeric',
-                'sightseeing_info' => 'nullable|array',
-                'sightseeing_info.*.destination_id' => 'nullable|exists:destinations,id',
-                'sightseeing_info.*.sightseeing_id' => 'nullable|exists:sightseeings,id',
-                'sightseeing_info.*.adults' => 'nullable|integer',
-                'sightseeing_info.*.children' => 'nullable|integer',
-                'sightseeing_info.*.date' => 'nullable|date',
-                'sightseeing_info.*.adult_cost' => 'nullable|numeric',
-                'sightseeing_info.*.children_cost' => 'nullable|numeric',
-                'remarks' => 'nullable|string',
-                'taxes' => 'nullable|array',
-                'taxes.*.tax_name' => 'nullable|string',
-                'taxes.*.tax_value' => 'nullable|numeric',
-                'final_payment' => 'required|numeric',
-                'total_per_adult' => 'required|numeric',
-                'total_per_child' => 'required|numeric',
-                'customer_status' => 'required|in:pending,confirmed,cancelled',
-                'payment_status' => 'required|in:unpaid,paid',
-            ]);
-    
-            // Encode nested arrays as JSON
-            $hotelInfo = $validatedData['hotel_info'] ? json_encode($validatedData['hotel_info']) : null;
-            $transportInfo = $validatedData['transport_info'] ? json_encode($validatedData['transport_info']) : null;
-            $sightseeingInfo = $validatedData['sightseeing_info'] ? json_encode($validatedData['sightseeing_info']) : null;
-            $taxes = $validatedData['taxes'] ? json_encode($validatedData['taxes']) : null;
-    
-            // Create the booking
-            $booking = Booking::create([
-                'user_id' => $validatedData['user_id'],
-                'customer_name' => $validatedData['customer_name'],
-                'phone_no' => $validatedData['phone_no'],
-                'travel_date_from' => $validatedData['travel_date_from'],
-                'travel_date_to' => $validatedData['travel_date_to'],
-                'no_adults' => $validatedData['no_adults'],
-                'no_children' => $validatedData['no_children'],
-                'hotel_info' => $hotelInfo,
-                'transport_info' => $transportInfo,
-                'sightseeing_info' => $sightseeingInfo,
-                'remarks' => $validatedData['remarks'] ?? null,
-                'taxes' => $taxes,
-                'final_payment' => $validatedData['final_payment'],
-                'total_per_adult' => $validatedData['total_per_adult'],
-                'total_per_child' => $validatedData['total_per_child'],
-                'customer_status' => 'pending', // Booking status set to pending
-                'payment_status' => $validatedData['payment_status'],
-                'created_date' => now(),
-                'converted_date' => null,
-            ]);
-    
+            'user_id' => 'required|exists:users,id',
+            'customer_name' => 'required|string',
+            'phone_no' => 'required|string',
+            'travel_date_from' => 'required|date',
+            'travel_date_to' => 'required|date',
+            'no_adults' => 'required|integer',
+            'no_children' => 'required|integer',
+            'ticket_info' => 'nullable|array',
+            'ticket_info.*.id' => 'required|string',
+            'ticket_info.*.name' => 'required|string',
+            'ticket_info.*.date' => 'required|date',
+            'ticket_info.*.time_slot' => 'required|string',
+            'ticket_info.*.category' => 'required|string',
+            'ticket_info.*.transfer_option' => 'required|string',
+            'ticket_info.*.adult_price' => 'required|numeric',
+            'ticket_info.*.child_price' => 'required|numeric',
+            'ticket_info.*.adults' => 'required|string',
+            'ticket_info.*.children' => 'required|string',
+            'transport_info' => 'nullable|array',
+            'transport_info.*.destination_id' => 'nullable|exists:destinations,id',
+            'transport_info.*.transport_id' => 'nullable|exists:transportations,id',
+            'transport_info.*.no_of_people' => 'nullable|integer',
+            'transport_info.*.v_type' => 'nullable|string',
+            'transport_info.*.date' => 'nullable|date',
+            'transport_info.*.transport_cost' => 'nullable|numeric',
+            'sightseeing_info' => 'nullable|array',
+            'sightseeing_info.*.destination_id' => 'nullable|exists:destinations,id',
+            'sightseeing_info.*.sightseeing_id' => 'nullable|exists:sightseeings,id',
+            'sightseeing_info.*.adults' => 'nullable|integer',
+            'sightseeing_info.*.children' => 'nullable|integer',
+            'sightseeing_info.*.date' => 'nullable|date',
+            'sightseeing_info.*.adult_cost' => 'nullable|numeric',
+            'sightseeing_info.*.children_cost' => 'nullable|numeric',
+            'remarks' => 'nullable|string',
+            'taxes' => 'nullable|array',
+            'taxes.*.tax_name' => 'nullable|string',
+            'taxes.*.tax_value' => 'nullable|numeric',
+            'final_payment' => 'required|numeric',
+            'total_per_adult' => 'required|numeric',
+            'total_per_child' => 'required|numeric',
+            'customer_status' => 'required|in:pending,confirmed,cancelled',
+            'payment_status' => 'required|in:unpaid,paid',
+        ]);
+
+    // Encode nested arrays as JSON
+    $ticketInfo = $validatedData['ticket_info'] ? json_encode($validatedData['ticket_info']) : null;
+    $transportInfo = $validatedData['transport_info'] ? json_encode($validatedData    ['transport_info']) : null;
+    $sightseeingInfo = $validatedData['sightseeing_info'] ? json_encode($validatedData    ['sightseeing_info']) : null;
+    $taxes = $validatedData['taxes'] ? json_encode($validatedData['taxes']) : null;
+
+             // Create the booking
+             $booking = Booking::create([
+             'user_id' => $validatedData['user_id'],
+             'customer_name' => $validatedData['customer_name'],
+             'phone_no' => $validatedData['phone_no'],
+             'travel_date_from' => $validatedData['travel_date_from'],
+             'travel_date_to' => $validatedData['travel_date_to'],
+             'no_adults' => $validatedData['no_adults'],
+             'no_children' => $validatedData['no_children'],
+             'ticket_info' => $ticketInfo,
+             'transport_info' => $transportInfo,
+             'sightseeing_info' => $sightseeingInfo,
+             'remarks' => $validatedData['remarks'] ?? null,
+             'taxes' => $taxes,
+             'final_payment' => $validatedData['final_payment'],
+             'total_per_adult' => $validatedData['total_per_adult'],
+             'total_per_child' => $validatedData['total_per_child'],
+             'customer_status' => 'pending',
+             'payment_status' => $validatedData['payment_status'],
+             'created_date' => now(),
+             'converted_date' => null,
+             ]);
+
             // Create related records (Payment and Transaction)
             $payment = Payment::create([
                 'user_id' => $validatedData['user_id'],
@@ -115,7 +109,7 @@ class BookingController extends Controller
                 'mode' => 'manual',
                 'status' => 'pending',
             ]);
-    
+
             $transaction = Trasaction::create([
                 'user_id' => $validatedData['user_id'],
                 'booking_id' => $booking->id,
@@ -125,7 +119,7 @@ class BookingController extends Controller
                 'mode' => 'manual',
                 'status' => 'pending',
             ]);
-    
+
             return response()->json([
                 'success' => true,
                 'message' => 'Booking added successfully. Waiting for admin approval.',
@@ -135,7 +129,7 @@ class BookingController extends Controller
             ], 201);
         } catch (\Exception $e) {
             Log::error('Error adding booking: ' . $e->getMessage());
-    
+
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to add booking. Please try again.',
@@ -143,7 +137,7 @@ class BookingController extends Controller
             ], 500);
         }
     }
-    
+
 
 
 
@@ -152,7 +146,7 @@ class BookingController extends Controller
     try {
         // Get the authenticated user
         $user = Auth::user();
-    
+
         // Check if the authenticated user is an admin or the user requesting their own bookings
         if ($user->role !== 'admin' && $user->id !== (int) $user_id) {
             // Unauthorized response for non-admins or non-matching users
@@ -164,7 +158,7 @@ class BookingController extends Controller
 
         // Get all bookings related to the user_id
         $bookings = Booking::where('user_id', $user_id)->get();
-        
+
         // Check if bookings exist for the user
         if ($bookings->isEmpty()) {
             return response()->json([
@@ -172,19 +166,19 @@ class BookingController extends Controller
                 'message' => 'No bookings found for this user.',
             ], 404); // 404 Not Found
         }
-        
+
         // Fetch the transactions and payments for each booking
         $bookingsWithDetails = $bookings->map(function ($booking) {
             $transaction = Trasaction::where('booking_id', $booking->id)->first();
             $payment = Payment::where('booking_id', $booking->id)->first();
-            
+
             return [
                 'booking' => $booking,
                 'transaction' => $transaction,
                 'payment' => $payment,
             ];
         });
-    
+
         // Return the bookings with transaction and payment details
         return response()->json([
             'success' => true,
@@ -194,7 +188,7 @@ class BookingController extends Controller
     } catch (\Exception $e) {
         // Log the error for debugging
         Log::error('Error retrieving bookings: ' . $e->getMessage());
-    
+
         // Return a general error response
         return response()->json([
             'success' => false,
@@ -260,16 +254,16 @@ public function approveBooking($bookingId)
         if($booking->customer_status=="pending"){
             $status = 'confirmed';
         $booking->customer_status = $status;
-        $booking->converted_date = now(); 
+        $booking->converted_date = now();
         $booking->save();
         }else{
             return response()->json([
                 'success' => false,
                 'message' => 'Already booking approval. '
-            ], 500);  
+            ], 500);
         }
-        
-   
+
+
 
         return response()->json([
             'success' => true,
@@ -360,7 +354,7 @@ public function bookingPayment($bookingId)
                 return response()->json([
                     'success' => false,
                     'message' => 'Already Paid Amount. '
-                ], 500);  
+                ], 500);
             }
             // Update transaction status
             if ($transaction->status === 'pending') {

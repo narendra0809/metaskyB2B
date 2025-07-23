@@ -307,7 +307,7 @@ const ConfirmationList = () => {
         {/* Table */}
         <div className="mt-4">
           <div className="table-container">
-            <div className="border-bottom">
+            {/* <div className="border-bottom">
               <div className="row g-3 pb-3">
                 <div className="col-12 col-md-4 col-lg-3">
                   <select
@@ -323,7 +323,7 @@ const ConfirmationList = () => {
                   </select>
                 </div>
               </div>
-            </div>
+            </div> */}
             <div className="d-flex justify-content-between align-items-center mt-3">
               <div>
                 <select

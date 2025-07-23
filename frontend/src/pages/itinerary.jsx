@@ -1,14 +1,12 @@
 import { useParams } from "react-router-dom";
 import useApiData from "../hooks/useApiData";
-import { createDateArray, getDaysBetweenDates } from "../functions/date";
+import { createDateArray } from "../functions/date";
 import Loader from "../Loader";
 import "../Loader.css";
 import { useAuth } from "../context/AuthContext";
 
 const Itinerary = () => {
   const { id } = useParams();
-
-  // User Data
   const base_url = import.meta.env.VITE_API_URL;
   const { authUser, authToken } = useAuth();
   const adminRole = "admin";
@@ -23,9 +21,8 @@ const Itinerary = () => {
     `${base_url}/api/getdestinations`,
     authToken
   );
-  const hotelsData = useApiData(`${base_url}/api/hotels`, authToken);
 
-  const { data, loading, error, refetch } = useApiData(
+  const { data, loading } = useApiData(
     `${base_url}/api/${
       authUser.role === adminRole
         ? "showbookings"
@@ -51,6 +48,27 @@ const Itinerary = () => {
     }
   }
 
+  const getLocationDetails = (destination_id) => {
+    const destination = destinationsData.data?.destinations?.find(
+      (des) => des.id === destination_id
+    );
+    if (!destination) return "N/A";
+
+    const city = countriesData.data?.cities.find(
+      (c) => c.id === destination.city_id
+    );
+    const state = countriesData.data?.states.find(
+      (s) => s.id === destination.state_id
+    );
+    const country = countriesData.data?.countries.find(
+      (c) => c.id === destination.country_id
+    );
+
+    return `${city?.name || "N/A"}, ${state?.name || "N/A"}, ${
+      country?.name || "N/A"
+    }`;
+  };
+
   if (
     loading ||
     transportData.loading ||
@@ -59,189 +77,347 @@ const Itinerary = () => {
     countriesData.loading
   ) {
     return (
-      <>
-        <div className="title">Itinerary</div>
-        <section className="page-section">
-          <div className="px-2 py-2 px-md-4 text-center">
-            <Loader />{" "}
-          </div>
-        </section>
-      </>
+      <div className="container py-4">
+        <h1 className="h3 mb-4">Itinerary</h1>
+        <div className="text-center">
+          <Loader />
+        </div>
+      </div>
     );
   }
 
   if (items && items.length >= 1) {
+    const tickets = JSON.parse(item.ticket_info);
     const transports = JSON.parse(item.transport_info);
     const sightseeings = JSON.parse(item.sightseeing_info);
 
     const dates = createDateArray(item.travel_date_from, item.travel_date_to);
     const transportsDates = transports.map(({ date }) => date);
     const sightseeingsDates = sightseeings.map(({ date }) => date);
+    const ticketsDates = tickets.map(({ date }) => date);
 
     const itinDates = dates.filter(
       (item) =>
         transportsDates.some((tDate) => tDate === item.date) ||
-        sightseeingsDates.some((sDate) => sDate === item.date)
+        sightseeingsDates.some((sDate) => sDate === item.date) ||
+        ticketsDates.some((tDate) => tDate === item.date)
     );
 
-    console.log(itinDates);
-
     return (
-      <>
-        <div className="title">Itinerary</div>
-        <section className="page-section">
-          <div className="px-2 py-2 px-md-4">
-            {/* Summary */}
-            <div className="container-fluid">
-              <div className="title-line">
-                <span>Summary</span>
-              </div>
-              <div className="row row-cols-1 row-cols-sm-3 row-cols-md-4 row-cols-lg-5">
+      <div className="container py-4">
+        <h1 className="h3 mb-4">Itinerary</h1>
+        <div className="mb-4">
+          <div className="card">
+            <div className="card-body">
+              <h5 className="card-title">Trip Summary</h5>
+              <div className="row row-cols-1 row-cols-sm-3 row-cols-md-4 row-cols-lg-5 g-3">
                 <div className="col">
-                  <p className="fw-bold lh-1 mb-2">Travel Date</p>
-                  <p>{item.travel_date_from.split("T")[0]}</p>
+                  <div className="border p-2 rounded">
+                    <p className="fw-bold mb-1 small">Travel Date</p>
+                    <p className="mb-0">
+                      {item.travel_date_from.split("T")[0]}
+                    </p>
+                  </div>
                 </div>
                 <div className="col">
-                  <p className="fw-bold lh-1 mb-2">Guest Name</p>
-                  <p>
-                    {item.customer_name}
-                    <br />
-                    {item.phone_no}
-                  </p>
+                  <div className="border p-2 rounded">
+                    <p className="fw-bold mb-1 small">Guest Name</p>
+                    <p className="mb-0">
+                      {item.customer_name}
+                      <br />
+                      {item.phone_no}
+                    </p>
+                  </div>
                 </div>
                 <div className="col">
-                  <p className="fw-bold lh-1 mb-2">Duration</p>
-                  {/* <p>7 Nights, 8 Day</p> */}
-                  <p>
-                    {
-                      createDateArray(
-                        item.travel_date_from,
-                        item.travel_date_to
-                      ).length
-                    }{" "}
-                    Days
-                  </p>
+                  <div className="border p-2 rounded">
+                    <p className="fw-bold mb-1 small">Duration</p>
+                    <p className="mb-0">
+                      {
+                        createDateArray(
+                          item.travel_date_from,
+                          item.travel_date_to
+                        ).length
+                      }{" "}
+                      Days
+                    </p>
+                  </div>
                 </div>
                 <div className="col">
-                  <p className="fw-bold lh-1 mb-2">PAX</p>
-                  <p>
-                    {item.no_adults} Adults{" "}
-                    {item.no_children >= 1 && `+ ${item.no_children} Children`}
-                  </p>
+                  <div className="border p-2 rounded">
+                    <p className="fw-bold mb-1 small">PAX</p>
+                    <p className="mb-0">
+                      {item.no_adults} Adults{" "}
+                      {item.no_children >= 1 &&
+                        `+ ${item.no_children} Children`}
+                    </p>
+                  </div>
                 </div>
                 <div className="col">
-                  <p className="fw-bold lh-1 mb-2">Payment Status</p>
-                  <p>{item.payment_status}</p>
-                </div>
-              </div>
-            </div>
-
-            {/* Transportations & Activities */}
-            <div className="container-fluid mt-4">
-              <div className="title-line">
-                <span>Transportations & Activities</span>
-              </div>
-              <div>
-                <div className="listing-card-container">
-                  {itinDates.length > 1 ? (
-                    <p className="text-center">No record found!</p>
-                  ) : (
-                    itinDates.map((item, i) => {
-                      return (
-                        <div className="listing-card mb-4" key={i}>
-                          <div className="listing-card--head text-center">
-                            <p className="fw-bold lh-1 my-2">Day {item.day}</p>
-                            <p className="lh-1 mb-0 fs-8">{item.date}</p>
-                          </div>
-                          <div className="listing-card--body">
-                            <div className="container px-4">
-                              {transports.map((transport) => {
-                                const thisTransport =
-                                  transportData.data.data.find(
-                                    (transItem) =>
-                                      transItem.id == transport.transport_id
-                                  );
-
-                                if (transport.date === item.date) {
-                                  return (
-                                    <div className="row pb-2 border-bottom">
-                                      <div className="col-12 col-sm-6">
-                                        {thisTransport?.transport}
-                                      </div>
-                                      <div className="col-12 col-sm-6 mt-3 mt-sm-0">
-                                        {transport.v_type}
-                                      </div>
-                                    </div>
-                                  );
-                                }
-                              })}
-                              {sightseeings.map((sightseeing) => {
-                                const thissightseeing =
-                                  sightseeingData.data.data.find(
-                                    (item) =>
-                                      item.id == sightseeing.sightseeing_id
-                                  );
-
-                                if (sightseeing.date === item.date) {
-                                  return (
-                                    <div className="row pb-2 border-bottom">
-                                      <div className="col-12 col-sm-6">
-                                        {thissightseeing?.description}
-                                      </div>
-                                      <div className="col-12 col-sm-6 mt-3 mt-sm-0">
-                                        {sightseeing.adults} Adults{" "}
-                                        {sightseeing.children >= 1 &&
-                                          `+ ${sightseeing.children} Children`}
-                                      </div>
-                                    </div>
-                                  );
-                                }
-                              })}
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    })
-                  )}
+                  <div className="border p-2 rounded">
+                    <p className="fw-bold mb-1 small">Payment Status</p>
+                    <p className="mb-0">{item.payment_status}</p>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
-        </section>
-      </>
+        </div>
+
+        <div>
+          <div className="card">
+            <div className="card-body">
+              {itinDates.length === 0 ? (
+                <div className="text-center py-4">
+                  <p className="text-muted">No activities scheduled</p>
+                </div>
+              ) : (
+                <div>
+                  {itinDates.map((day, i) => {
+                    const dayTransports = transports.filter(
+                      (t) => t.date === day.date
+                    );
+                    const daySightseeings = sightseeings.filter(
+                      (s) => s.date === day.date
+                    );
+                    const dayTickets = tickets.filter(
+                      (t) => t.date === day.date
+                    );
+
+                    return (
+                      <div key={day.date} className="list-group-item mb-3">
+                        <h5 className="mb-3">
+                          Day {day.day} - {day.date}
+                        </h5>
+                        <div
+                          className="overflow-auto"
+                          style={{ maxHeight: "400px" }}
+                        >
+                          {dayTickets.length > 0 && (
+                            <div className="card mb-3">
+                              <div className="card-header  text-dark">
+                                <h6 className="mb-0">Tickets</h6>
+                              </div>
+                              <div className="card-body">
+                                {dayTickets.map((ticket, idx) => (
+                                  <div
+                                    key={idx}
+                                    className="mb-3 pb-3 border-bottom"
+                                  >
+                                    <div className="row">
+                                      <div className="col-md-6">
+                                        <h6 className="fw-bold">
+                                          {ticket.name}
+                                        </h6>
+                                        <p className="mb-1">
+                                          <span className="text-muted">
+                                            Category:
+                                          </span>{" "}
+                                          {ticket.category}
+                                        </p>
+                                        <p className="mb-1">
+                                          <span className="text-muted">
+                                            Time:
+                                          </span>{" "}
+                                          {ticket.time_slot}
+                                        </p>
+                                        <p className="mb-1">
+                                          <span className="text-muted">
+                                            Transfer:
+                                          </span>{" "}
+                                          {ticket.transfer_option}
+                                        </p>
+                                      </div>
+                                      <div className="col-md-6">
+                                        <p>
+                                          <span className="text-muted">
+                                            Adults:
+                                          </span>{" "}
+                                          {ticket.adults} × {ticket.adult_price}{" "}
+                                          AED
+                                        </p>
+                                        <p>
+                                          <span className="text-muted">
+                                            Children:
+                                          </span>{" "}
+                                          {ticket.children} ×{" "}
+                                          {ticket.child_price} AED
+                                        </p>
+                                        <p className="fw-bold">
+                                          Total:{" "}
+                                          {ticket.adults * ticket.adult_price +
+                                            ticket.children *
+                                              ticket.child_price}{" "}
+                                          AED
+                                        </p>
+                                      </div>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+
+                          {dayTransports.length > 0 && (
+                            <div className="card mb-3">
+                              <div className="card-header  text-dark">
+                                <h6 className="mb-0">Transportation</h6>
+                              </div>
+                              <div className="card-body">
+                                {dayTransports.map((transport, idx) => {
+                                  const thisTransport =
+                                    transportData.data.data.find(
+                                      (item) =>
+                                        item.id == transport.transport_id
+                                    );
+
+                                  return (
+                                    <div
+                                      key={idx}
+                                      className="mb-3 pb-3 border-bottom"
+                                    >
+                                      <div className="row">
+                                        <div className="col-md-6">
+                                          <h6 className="fw-bold">
+                                            {thisTransport?.transport}
+                                          </h6>
+                                          <p className="mb-1">
+                                            <span className="text-muted">
+                                              Transporter:
+                                            </span>{" "}
+                                            {thisTransport?.company_name}
+                                          </p>
+                                          <p className="mb-1">
+                                            <span className="text-muted">
+                                              Vehicle Type:
+                                            </span>{" "}
+                                            {transport.v_type}
+                                          </p>
+                                          <p className="mb-1">
+                                            <span className="text-muted">
+                                              Location:
+                                            </span>{" "}
+                                            {getLocationDetails(
+                                              thisTransport?.destination_id
+                                            )}
+                                          </p>
+                                        </div>
+                                        <div className="col-md-6">
+                                          {thisTransport?.options?.length >
+                                            0 && (
+                                            <>
+                                              <p className="fw-bold">
+                                                Options:
+                                              </p>
+                                              {thisTransport.options.map(
+                                                (option, optIdx) => (
+                                                  <p
+                                                    key={optIdx}
+                                                    className="mb-1"
+                                                  >
+                                                    {option.type}: {option.rate}{" "}
+                                                    AED
+                                                  </p>
+                                                )
+                                              )}
+                                            </>
+                                          )}
+                                        </div>
+                                      </div>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          )}
+
+                          {daySightseeings.length > 0 && (
+                            <div className="card mb-3">
+                              <div className="card-header  text-dark">
+                                <h6 className="mb-0">Sightseeing</h6>
+                              </div>
+                              <div className="card-body">
+                                {daySightseeings.map((sightseeing, idx) => {
+                                  const thisSightseeing =
+                                    sightseeingData.data.data.find(
+                                      (item) =>
+                                        item.id == sightseeing.sightseeing_id
+                                    );
+
+                                  return (
+                                    <div
+                                      key={idx}
+                                      className="mb-3 pb-3 border-bottom"
+                                    >
+                                      <div className="row">
+                                        <div className="col-md-6">
+                                          <h6 className="fw-bold">
+                                            {thisSightseeing?.company_name}
+                                          </h6>
+                                          <p className="mb-1">
+                                            <span className="text-muted">
+                                              Description:
+                                            </span>{" "}
+                                            {thisSightseeing?.description}
+                                          </p>
+                                          <p className="mb-1">
+                                            <span className="text-muted">
+                                              Location:
+                                            </span>{" "}
+                                            {getLocationDetails(
+                                              thisSightseeing?.destination_id
+                                            )}
+                                          </p>
+                                        </div>
+                                        <div className="col-md-6">
+                                          <p>
+                                            <span className="text-muted">
+                                              Adult Rate:
+                                            </span>{" "}
+                                            {thisSightseeing?.rate_adult} AED
+                                          </p>
+                                          <p>
+                                            <span className="text-muted">
+                                              Child Rate:
+                                            </span>{" "}
+                                            {thisSightseeing?.rate_child} AED
+                                          </p>
+                                          <p className="fw-bold">
+                                            Total:{" "}
+                                            {sightseeing.adults *
+                                              thisSightseeing?.rate_adult +
+                                              (sightseeing.children *
+                                                thisSightseeing?.rate_child ||
+                                                0)}{" "}
+                                            AED
+                                          </p>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
     );
   }
 
   return (
-    <>
-      <div className="title">Itinerary</div>
-      <section className="page-section">
-        <div className="px-2 py-2 px-md-4 text-center">No data Found!</div>
-      </section>
-    </>
+    <div className="container py-4">
+      <h1 className="h3 mb-4">Itinerary</h1>
+      <div className="text-center">No data Found!</div>
+    </div>
   );
 };
-export default Itinerary;
 
-{
-  /* <div className="listing-card mb-4" key={i}>
-                          <div className="listing-card--head">
-                            <p className="fw-bold lh-1 my-2">
-                              {transport.date}
-                            </p>
-                            <p className="lh-1 mb-0">{transport.date}</p>
-                          </div>
-                          <div className="listing-card--body">
-                            <div className="container px-4">
-                              <div className="row pb-2 border-bottom">
-                                <div className="col-12 col-sm-6">
-                                  {thisTransport?.transport}
-                                </div>
-                                <div className="col-12 col-sm-6 mt-3 mt-sm-0">
-                                  {transport.v_type}
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        </div> */
-}
+export default Itinerary;

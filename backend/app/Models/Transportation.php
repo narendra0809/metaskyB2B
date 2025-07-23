@@ -12,8 +12,6 @@ class Transportation extends Model
         'destination_id',
         'company_name',
         'company_document',
-        'email',
-        'contact_no',
         'address',
         'transport',
         'vehicle_type',

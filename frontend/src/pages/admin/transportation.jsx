@@ -24,10 +24,7 @@ const Transportation = () => {
   const [currPageNo, setCurrPageNo] = useState(0);
 
   // Form Data State
-  const addForm = useSendFile(
-    `${base_url}/api/transportation`, // URL to send data to
-    token // Auth token
-  );
+  const addForm = useSendFile(`${base_url}/api/transportation`, token);
 
   const [editRes, setEditRes] = useState(null);
   const [editLoading, setEditLoading] = useState(false);
@@ -46,8 +43,6 @@ const Transportation = () => {
       destination_id: "",
       company_name: "",
       company_document: null,
-      email: "",
-      contact_no: "",
       address: "",
       transport: "",
       vehicle_type: "",
@@ -58,8 +53,6 @@ const Transportation = () => {
       destination_id: "",
       company_name: "",
       company_document: null,
-      email: "",
-      contact_no: "",
       address: "",
       transport: "",
       vehicle_type: "",
@@ -148,7 +141,6 @@ const Transportation = () => {
     }));
   };
   const removeOptions = (formType, type) => {
-    // Filter out the options with the specified type
     const updatedOptions = formData[formType].options.filter(
       (option) => option.type !== type
     );
@@ -156,7 +148,7 @@ const Transportation = () => {
       ...prev,
       [formType]: {
         ...prev[formType],
-        options: updatedOptions, // Update the options list
+        options: updatedOptions,
       },
     }));
   };
@@ -173,7 +165,6 @@ const Transportation = () => {
 
     Object.entries(formData[formType]).forEach(([key, value]) => {
       if (key === "options") {
-        // If the key is 'options', iterate through each option and append it separately
         value.forEach((option, index) => {
           submitData.append(`options[${index}][type]`, option.type);
           submitData.append(`options[${index}][rate]`, option.rate);
@@ -194,8 +185,6 @@ const Transportation = () => {
             destination_id: "",
             company_name: "",
             company_document: null,
-            email: "",
-            contact_no: "",
             address: "",
             transport: "",
             vehicle_type: "",
@@ -265,20 +254,17 @@ const Transportation = () => {
           handleClose={() => toggleModal("addModalOpen", false)}
           title="Add Transportation"
         >
-          {/* Modal content */}
           <div className="container p-3">
-            {/* Country */}
             <div className="container border-bottom border-light-subtle">
-              {/* Add Form Transportation */}
               <div className="mb-3">
                 <label htmlFor="company_name" className="form-label">
-                  Company Name
+                  Transporter Name
                 </label>
                 <input
                   type="text"
                   className="form-control"
                   id="company_name"
-                  placeholder="Company name..."
+                  placeholder="Transporter Name..."
                   name="company_name"
                   value={formData.addFormData.company_name}
                   onChange={handleFormDataChange("addFormData")}
@@ -286,44 +272,15 @@ const Transportation = () => {
               </div>
               <div className="mb-3">
                 <label htmlFor="company_document" className="form-label">
-                  Company Documents
+                  Vehicle Documents
                 </label>
                 <input
                   type="file"
                   className="form-control"
                   id="company_document"
-                  placeholder="Company Documents..."
+                  placeholder="Vehicle Documents..."
                   name="company_document"
                   ref={inputDocs}
-                  onChange={handleFormDataChange("addFormData")}
-                />
-              </div>
-              <div className="mb-3">
-                <label htmlFor="email" className="form-label">
-                  Email
-                </label>
-                <input
-                  type="text"
-                  className="form-control"
-                  id="email"
-                  placeholder="Email..."
-                  name="email"
-                  value={formData.addFormData.email}
-                  onChange={handleFormDataChange("addFormData")}
-                />
-              </div>
-              <div className="mb-3">
-                <label htmlFor="contact_no" className="form-label">
-                  Contact Number
-                </label>
-                <input
-                  type="text"
-                  className="form-control"
-                  id="contact_no"
-                  placeholder="Contact Number..."
-                  name="contact_no"
-                  maxLength={10}
-                  value={formData.addFormData.contact_no}
                   onChange={handleFormDataChange("addFormData")}
                 />
               </div>
@@ -478,19 +435,17 @@ const Transportation = () => {
           handleClose={() => toggleModal("editModalOpen", false)}
           title="Edit Transportation"
         >
-          {/* Modal content */}
           <div className="container p-3">
             <div className="container border-bottom border-light-subtle">
-              {/* Edit Form Transportation */}
               <div className="mb-3">
                 <label htmlFor="company_name" className="form-label">
-                  Company Name
+                  Transporter Name
                 </label>
                 <input
                   type="text"
                   className="form-control"
                   id="company_name"
-                  placeholder="Company name..."
+                  placeholder="Transporter Name..."
                   name="company_name"
                   value={formData.editFormData.company_name}
                   onChange={handleFormDataChange("editFormData")}
@@ -498,43 +453,14 @@ const Transportation = () => {
               </div>
               <div className="mb-3">
                 <label htmlFor="hotel_type" className="form-label">
-                  Company Documents
+                  Vehicle Documents
                 </label>
                 <input
                   type="file"
                   className="form-control"
                   id="company_document"
-                  placeholder="Company Documents..."
+                  placeholder="Vehicle Documents..."
                   name="company_document"
-                  onChange={handleFormDataChange("editFormData")}
-                />
-              </div>
-              <div className="mb-3">
-                <label htmlFor="email" className="form-label">
-                  Email
-                </label>
-                <input
-                  type="text"
-                  className="form-control"
-                  id="email"
-                  placeholder="Email..."
-                  name="email"
-                  value={formData.editFormData.email}
-                  onChange={handleFormDataChange("editFormData")}
-                />
-              </div>
-              <div className="mb-3">
-                <label htmlFor="contact_no" className="form-label">
-                  Contact Number
-                </label>
-                <input
-                  type="text"
-                  className="form-control"
-                  id="contact_no"
-                  placeholder="Contact Number..."
-                  name="contact_no"
-                  maxLength={10}
-                  value={formData.editFormData.contact_no}
                   onChange={handleFormDataChange("editFormData")}
                 />
               </div>
@@ -715,7 +641,7 @@ const Transportation = () => {
             <table className="table table-bordered table-hover">
               <thead className="table-dark">
                 <tr>
-                  <th>Company Name</th>
+                  <th>Transporter Name</th>
                   <th>Transport</th>
                   <th>Vehicle Type</th>
                   <th>Address</th>
@@ -735,19 +661,10 @@ const Transportation = () => {
                 ) : paginatedData.length > 0 ? (
                   paginatedData.map((item) => (
                     <tr key={item.id}>
-                      {/* Find the company_name */}
                       <td>{item.company_name}</td>
-
-                      {/* Find the transport */}
                       <td>{item.transport}</td>
-
-                      {/* Find the vehicle_type */}
                       <td>{item.vehicle_type}</td>
-
-                      {/* Find the address */}
                       <td>{item.address}</td>
-
-                      {/* Destination */}
                       <td>
                         {countriesData.data?.cities.find(
                           (city) =>
@@ -757,7 +674,6 @@ const Transportation = () => {
                             ).city_id
                         )?.name || "N/A"}
                       </td>
-
                       <td style={{ width: "1%" }}>
                         <div className="d-flex">
                           <button

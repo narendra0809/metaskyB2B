@@ -10,10 +10,7 @@ class Sightseeing extends Model
     protected $fillable = [
         'destination_id',
         'company_name',
-        'scompany_document',
-        'contact_no',
         'address',
-        'email',
         'description',
         'rate_adult',
         'rate_child',

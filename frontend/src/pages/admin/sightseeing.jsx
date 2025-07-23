@@ -39,15 +39,11 @@ const Sightseeing = () => {
   });
 
   // Form data for add/edit
-  const inputDocs = useRef();
   const [formData, setFormData] = useState({
     addFormData: {
       destination_id: "",
       company_name: "",
       address: "",
-      scompany_document: null,
-      contact_no: "",
-      email: "",
       description: "",
       rate_adult: "",
       rate_child: "",
@@ -57,9 +53,6 @@ const Sightseeing = () => {
       destination_id: "",
       company_name: "",
       address: "",
-      scompany_document: null,
-      contact_no: "",
-      email: "",
       description: "",
       rate_adult: "",
       rate_child: "",
@@ -118,7 +111,7 @@ const Sightseeing = () => {
         ...prev,
         [formType]: {
           ...prev[formType],
-          [name]: type == "file" ? e.target.files[0] : filteredValue,
+          [name]: filteredValue,
         },
       };
     });
@@ -135,13 +128,7 @@ const Sightseeing = () => {
     const submitData = new FormData();
 
     Object.entries(formData[formType]).forEach(([key, value]) => {
-      if (key === "options") {
-        // If the key is 'options', iterate through each option and append it separately
-        value.forEach((option, index) => {
-          submitData.append(`options[${index}][type]`, option.type);
-          submitData.append(`options[${index}][rate]`, option.rate);
-        });
-      } else {
+      if (value !== null) {
         submitData.append(key, value);
       }
     });
@@ -157,9 +144,6 @@ const Sightseeing = () => {
             destination_id: "",
             company_name: "",
             address: "",
-            scompany_document: null,
-            contact_no: "",
-            email: "",
             description: "",
             rate_adult: "",
             rate_child: "",
@@ -233,58 +217,15 @@ const Sightseeing = () => {
               {/* Add Form Sightseeing */}
               <div className="mb-3">
                 <label htmlFor="company_name" className="form-label">
-                  Company Name
+                  Sightseeing Authority
                 </label>
                 <input
                   type="text"
                   className="form-control"
                   id="company_name"
-                  placeholder="Company name..."
+                  placeholder="Sightseeing Authority..."
                   name="company_name"
                   value={formData.addFormData.company_name}
-                  onChange={handleFormDataChange("addFormData")}
-                />
-              </div>
-              <div className="mb-3">
-                <label htmlFor="scompany_document" className="form-label">
-                  Company Documents
-                </label>
-                <input
-                  type="file"
-                  className="form-control"
-                  id="scompany_document"
-                  placeholder="Company Documents..."
-                  name="scompany_document"
-                  ref={inputDocs}
-                  onChange={handleFormDataChange("addFormData")}
-                />
-              </div>
-              <div className="mb-3">
-                <label htmlFor="email" className="form-label">
-                  Email
-                </label>
-                <input
-                  type="text"
-                  className="form-control"
-                  id="email"
-                  placeholder="Email..."
-                  name="email"
-                  value={formData.addFormData.email}
-                  onChange={handleFormDataChange("addFormData")}
-                />
-              </div>
-              <div className="mb-3">
-                <label htmlFor="contact_no" className="form-label">
-                  Contact Number
-                </label>
-                <input
-                  type="text"
-                  className="form-control"
-                  id="contact_no"
-                  placeholder="Contact Number..."
-                  name="contact_no"
-                  maxLength={10}
-                  value={formData.addFormData.contact_no}
                   onChange={handleFormDataChange("addFormData")}
                 />
               </div>
@@ -296,7 +237,7 @@ const Sightseeing = () => {
                   type="text"
                   className="form-control"
                   id="address"
-                  placeholder="Transport Address..."
+                  placeholder="Sightseeing Address..."
                   name="address"
                   value={formData.addFormData.address}
                   onChange={handleFormDataChange("addFormData")}
@@ -402,58 +343,15 @@ const Sightseeing = () => {
               {/* Add Form Sightseeing */}
               <div className="mb-3">
                 <label htmlFor="company_name" className="form-label">
-                  Company Name
+                  Sightseeing Authority
                 </label>
                 <input
                   type="text"
                   className="form-control"
                   id="company_name"
-                  placeholder="Company name..."
+                  placeholder="Sightseeing Authority..."
                   name="company_name"
                   value={formData.editFormData.company_name}
-                  onChange={handleFormDataChange("editFormData")}
-                />
-              </div>
-              <div className="mb-3">
-                <label htmlFor="scompany_document" className="form-label">
-                  Company Documents
-                </label>
-                <input
-                  type="file"
-                  className="form-control"
-                  id="scompany_document"
-                  placeholder="Company Documents..."
-                  name="scompany_document"
-                  ref={inputDocs}
-                  onChange={handleFormDataChange("editFormData")}
-                />
-              </div>
-              <div className="mb-3">
-                <label htmlFor="email" className="form-label">
-                  Email
-                </label>
-                <input
-                  type="text"
-                  className="form-control"
-                  id="email"
-                  placeholder="Email..."
-                  name="email"
-                  value={formData.editFormData.email}
-                  onChange={handleFormDataChange("editFormData")}
-                />
-              </div>
-              <div className="mb-3">
-                <label htmlFor="contact_no" className="form-label">
-                  Contact Number
-                </label>
-                <input
-                  type="text"
-                  className="form-control"
-                  id="contact_no"
-                  placeholder="Contact Number..."
-                  name="contact_no"
-                  maxLength={10}
-                  value={formData.editFormData.contact_no}
                   onChange={handleFormDataChange("editFormData")}
                 />
               </div>
@@ -591,10 +489,10 @@ const Sightseeing = () => {
             <table className="table table-bordered table-hover">
               <thead className="table-dark">
                 <tr>
-                  <th>Company Name</th>
-                  <th>Email</th>
-                  <th>Contact</th>
+                  <th>Sightseeing Authority</th>
                   <th>Address</th>
+                  <th>Adult Rate</th>
+                  <th>Child Rate</th>
                   <th>Destination</th>
                   <th style={{ width: "1%" }}>Action</th>
                 </tr>
@@ -611,17 +509,17 @@ const Sightseeing = () => {
                 ) : paginatedData.length > 0 ? (
                   paginatedData.map((item) => (
                     <tr key={item.id}>
-                      {/* Find the company_name */}
+                      {/* Sightseeing Authority */}
                       <td>{item.company_name}</td>
 
-                      {/* Find the email */}
-                      <td>{item.email}</td>
-
-                      {/* Find the contact_no */}
-                      <td>{item.contact_no}</td>
-
-                      {/* Find the address */}
+                      {/* Address */}
                       <td>{item.address}</td>
+
+                      {/* Adult Rate */}
+                      <td>{item.rate_adult || "N/A"}</td>
+
+                      {/* Child Rate */}
+                      <td>{item.rate_child || "N/A"}</td>
 
                       {/* Destination */}
                       <td>

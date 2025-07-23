@@ -1,19 +1,21 @@
 .display-section {
   --display-section-padding: 10px;
 
-  background-color:#000A2F;
+  background-color: #000a2f;
   border-radius: 5px;
   border: 1px solid rgba(0, 0, 0, 0.1);
 }
 
 .btn-primary {
-  --bs-btn-bg: #1cb3be; 
-  --bs-btn-border-color: #0d6a70; 
-  --bs-btn-color: #fff; 
-  --bs-btn-hover-bg: #2e787e; --bs-btn-active-bg: #2e787e; /* Even darker brown on active state */
+  --bs-btn-bg: #1cb3be;
+  --bs-btn-border-color: #0d6a70;
+  --bs-btn-color: #fff;
+  --bs-btn-hover-bg: #2e787e;
+  --bs-btn-active-bg: #2e787e; /* Even darker brown on active state */
   --bs-btn-active-color: #fff; /* White text on active state */
   --bs-btn-active-border-color: #2e787e;
-  transition: transform 0.3s ease, box-shadow 0.3s ease, background-color 0.3s ease, color 0.3s ease; /* Smooth transition */
+  transition: transform 0.3s ease, box-shadow 0.3s ease,
+    background-color 0.3s ease, color 0.3s ease; /* Smooth transition */
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Default shadow */
   border-radius: 8px; /* Rounded corners */
   border: 2px solid transparent; /* Transparent border */
@@ -34,21 +36,24 @@
 }
 
 .btn-info {
-  --bs-btn-bg: #1cb3be; 
-  --bs-btn-border-color: #0d6a70; 
-  --bs-btn-color: #fff; 
-  --bs-btn-hover-bg: #2e787e; --bs-btn-active-bg: #2e787e; /* Even darker brown on active state */
+  --bs-btn-bg: #1cb3be;
+  --bs-btn-border-color: #0d6a70;
+  --bs-btn-color: #fff;
+  --bs-btn-hover-bg: #2e787e;
+  --bs-btn-active-bg: #2e787e; /* Even darker brown on active state */
   --bs-btn-active-color: #fff; /* White text on active state */
   --bs-btn-active-border-color: #2e787e;
-  transition: transform 0.3s ease, box-shadow 0.3s ease, background-color 0.3s ease, color 0.3s ease; /* Smooth transition */
+  transition: transform 0.3s ease, box-shadow 0.3s ease,
+    background-color 0.3s ease, color 0.3s ease; /* Smooth transition */
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Default shadow */
   border-radius: 8px; /* Rounded corners */
   border: 2px solid transparent; /* Transparent border */
 }
-.icon{
-  color: #FFFFFF;
+.icon {
+  color: #ffffff;
 }
-.fa-solid, .fas {
+.fa-solid,
+.fas {
   color: white;
   font-weight: 900;
 }
@@ -67,10 +72,9 @@
   --bs-btn-active-color: #fff; /* White text on active state */
 }
 
-.page-wrapper{
-    color: #FFFFFF;
+.page-wrapper {
+  color: #ffffff;
 }
-
 
 .display-header {
   display: flex;
@@ -88,8 +92,8 @@
   padding: var(--display-section-padding);
 }
 
-.page-title{
-  Color:#ffffff;
+.page-title {
+  color: #ffffff;
 }
 
 .display-title {
@@ -98,8 +102,8 @@
   margin: 0px;
 }
 .display-search {
-  border:1px solid #15A2B0;
-  background-color: #000A2F;
+  border: 1px solid #15a2b0;
+  background-color: #000a2f;
   max-width: 250px;
   width: 100%;
 }
@@ -107,7 +111,7 @@
 
 .loader {
   border: 4px solid #f3f3f3; /* Light grey */
-  border-top: 4px solid #FF7D34; /* Blue */
+  border-top: 4px solid #ff7d34; /* Blue */
   border-radius: 50%;
   width: 20px; /* Size of the loader */
   height: 20px; /* Size of the loader */
@@ -117,9 +121,9 @@
 }
 
 .form-control {
-  border: 1px solid #15A2B0;
+  border: 1px solid #15a2b0;
   color: #ffffff;
-  background-color: #000A2F;
+  background-color: #000a2f;
 }
 
 .form-control::placeholder {
@@ -128,15 +132,15 @@
 }
 
 .form-control:focus {
-  background-color: #000A2F;
+  background-color: #000a2f;
   color: #ffffff;
-  border-color: #15A2B0;
+  border-color: #15a2b0;
   box-shadow: none;
 }
 /* Target the password reveal icon */
 .input-password-toggle .input-group-text {
   background-color: transparent;
-  border-color: #15A2B0;
+  border-color: #15a2b0;
   color: #ffffff;
 }
 
@@ -147,12 +151,24 @@
   color: #ffffff !important;
 }
 
+input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(1);
+  opacity: 0.8;
+  cursor: pointer;
+}
 
-
+/* For Firefox */
+input[type="date"] {
+  color-scheme: light;
+}
 
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 /* end */
 
@@ -176,8 +192,7 @@
   background-color: #4f5f6f;
   opacity: 1;
 }
-.p-3{
+.p-3 {
   background: #000d3d;
   color: white;
 }
-

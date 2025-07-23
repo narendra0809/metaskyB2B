@@ -15,49 +15,43 @@ class SightseeingController extends Controller
             // Validate the incoming data
             $validatedData = $request->validate([
                 'destination_id' => 'required|exists:destinations,id', // Ensure destination_id exists in destinations table
-                'company_name' => 'required|string|max:255',
+                'company_name' => 'required|string|max:255', //? Sightseeing Name
                 'address' => 'required|string|max:255',
-                // 'scompany_document' => 'required|file|mimes:jpeg,jpg,png,doc,docx,pdf',
-                'contact_no' => 'required|string|max:15',
-                'email' => 'required|email|unique:sightseeings,email',
                 'description' => 'nullable|string',
                 'rate_adult' => 'required|numeric|min:0',
                 'rate_child' => 'required|numeric|min:0',
             ]);
-    
+
             // Handle document upload
-            if ($request->file('scompany_document')) {
-                try {
-                    $sDocumentsPath = 'scompany_document/' . time() . '_' . $request->file('scompany_document')->getClientOriginalName();
-                    $request->file('scompany_document')->move(public_path('scompany_document'), $sDocumentsPath);
-                } catch (\Exception $e) {
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'File upload error: ' . $e->getMessage(),
-                    ], 500);
-                }
-            }
-    
+            // if ($request->file('scompany_document')) {
+            //     try {
+            //         $sDocumentsPath = 'scompany_document/' . time() . '_' . $request->file('scompany_document')->getClientOriginalName();
+            //         $request->file('scompany_document')->move(public_path('scompany_document'), $sDocumentsPath);
+            //     } catch (\Exception $e) {
+            //         return response()->json([
+            //             'success' => false,
+            //             'message' => 'File upload error: ' . $e->getMessage(),
+            //         ], 500);
+            //     }
+            // }
+
             // Create the sightseeing entry
             $sightseeing = Sightseeing::create([
                 'destination_id' => $validatedData['destination_id'],
                 'company_name' => $validatedData['company_name'],
-                'scompany_document' => $sDocumentsPath,
-                'contact_no' => $validatedData['contact_no'],
                 'address' => $validatedData['address'],
-                'email' => $validatedData['email'],
                 'description' => $validatedData['description'],
                 'rate_adult' => $validatedData['rate_adult'],
                 'rate_child' => $validatedData['rate_child'],
             ]);
-    
+
             // Return success response
             return response()->json([
                 'success' => true,
                 'message' => 'Sightseeing created successfully',
                 'sightseeing' => $sightseeing,
             ], 201);
-    
+
         } catch (\Illuminate\Validation\ValidationException $e) {
             // Return validation errors
             return response()->json([
@@ -68,7 +62,7 @@ class SightseeingController extends Controller
         } catch (\Exception $e) {
             // Log the error for debugging
             Log::error('Error creating sightseeing: ' . $e->getMessage());
-    
+
             // Return failure response with message
             return response()->json([
                 'success' => false,
@@ -76,7 +70,7 @@ class SightseeingController extends Controller
             ], 500);
         }
     }
-    
+
 
     public function showsightseeing($id)
     {
@@ -123,9 +117,6 @@ public function updatesightseeing(Request $request, $id)
             'destination_id' => 'required|exists:destinations,id',
             'company_name' => 'required|string|max:255',
             'address' => 'required|string|max:255',
-            'scompany_document' => 'nullable|file|mimes:jpeg,jpg,png,doc,docx,pdf',
-            'contact_no' => 'required|string|max:15',
-            'email' => 'required|email',
             'description' => 'nullable|string',
             'rate_adult' => 'required|numeric|min:0',
             'rate_child' => 'required|numeric|min:0',
@@ -135,23 +126,21 @@ public function updatesightseeing(Request $request, $id)
         $sightseeing = Sightseeing::findOrFail($id);
 
         // Handle document upload if provided
-        if ($request->hasFile('scompany_document')) {
-            // Delete the old document file if it exists
-            if ($sightseeing->scompany_document && file_exists(public_path($sightseeing->scompany_document))) {
-                unlink(public_path($sightseeing->scompany_document));
-            }
+        // if ($request->hasFile('scompany_document')) {
+        //     // Delete the old document file if it exists
+        //     if ($sightseeing->scompany_document && file_exists(public_path($sightseeing->scompany_document))) {
+        //         unlink(public_path($sightseeing->scompany_document));
+        //     }
 
-            $sDocumentsPath = 'scompany_document/' . time() . '_' . $request->file('scompany_document')->getClientOriginalName();
-            $request->file('scompany_document')->move(public_path('scompany_document'), $sDocumentsPath);
-            $sightseeing->scompany_document = $sDocumentsPath;
-        }
+        //     $sDocumentsPath = 'scompany_document/' . time() . '_' . $request->file('scompany_document')->getClientOriginalName();
+        //     $request->file('scompany_document')->move(public_path('scompany_document'), $sDocumentsPath);
+        //     $sightseeing->scompany_document = $sDocumentsPath;
+        // }
 
         // Update the remaining attributes
         $sightseeing->destination_id = $validatedData['destination_id'];
         $sightseeing->company_name = $validatedData['company_name'];
-        $sightseeing->contact_no = $validatedData['contact_no'];
         $sightseeing->address = $validatedData['address'];
-        $sightseeing->email = $validatedData['email'];
         $sightseeing->description = $validatedData['description'];
         $sightseeing->rate_adult = $validatedData['rate_adult'];
         $sightseeing->rate_child = $validatedData['rate_child'];
@@ -184,17 +173,17 @@ public function updatesightseeing(Request $request, $id)
     }
 }
 
-    
-    
+
+
 public function destroy($id)
 {
     try {
         $sightseeing = Sightseeing::findOrFail($id);
 
-        // Optionally delete associated files if needed
-        if (!empty($sightseeing->scompany_document) && file_exists(public_path($sightseeing->scompany_document))) {
-            @unlink(public_path($sightseeing->scompany_document));
-        }
+        // // Optionally delete associated files if needed
+        // if (!empty($sightseeing->scompany_document) && file_exists(public_path($sightseeing->scompany_document))) {
+        //     @unlink(public_path($sightseeing->scompany_document));
+        // }
 
         // Delete the record
         $sightseeing->delete();
@@ -218,7 +207,7 @@ public function destroy($id)
 public function getsswithcity()
 {
     try {
-        
+
         $sightseeing = Sightseeing::with([
             'destination.city:id,name' // Fetch city name from cities table
         ])
@@ -233,7 +222,7 @@ public function getsswithcity()
                     'rate_child' => $sightseeing->rate_child,
 
                         ];
-                
+
             });
 
         return response()->json([

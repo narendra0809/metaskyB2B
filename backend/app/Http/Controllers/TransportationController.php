@@ -22,8 +22,6 @@ class TransportationController extends Controller
                 'destination_id' => 'required|exists:destinations,id',
                 'company_name' => 'required|string|max:255',
                 'company_document' => 'nullable|file|mimes:jpeg,jpg,png,doc,docx,pdf', // Valid file types for the document
-                'email' => 'required|email|unique:transportations,email',
-                'contact_no' => 'required|string|max:15',
                 'address' => 'required|string|max:255',
                 'transport' => 'required|string|max:255',
                 'vehicle_type' => 'required|string|max:100',
@@ -31,7 +29,7 @@ class TransportationController extends Controller
                 'options.*.type' => 'required|string|max:255', // Validate each option type
                 'options.*.rate' => 'required|numeric|min:0', // Validate rate for each option
             ]);
-    
+
             // Handle document upload if provided
             $documentPath = null;
             if ($request->hasFile('company_document')) {
@@ -51,7 +49,7 @@ class TransportationController extends Controller
                     ], 500);
                 }
             }
-    
+
             // Process 'options' field to match the desired format
             $processedOptions = array_map(function ($option) {
                 return [
@@ -59,37 +57,35 @@ class TransportationController extends Controller
                     'rate' => $option['rate'],
                 ];
             }, $validatedData['options']);
-    
+
             Log::info('Processed Options:', [
                 'processed_options' => $processedOptions,
             ]);
-    
+
             // Create the transportation entry
             $transportation = Transportation::create([
                 'destination_id' => $validatedData['destination_id'],
                 'company_name' => $validatedData['company_name'],
                 'company_document' => $documentPath,
-                'email' => $validatedData['email'],
-                'contact_no' => $validatedData['contact_no'],
                 'address' => $validatedData['address'],
                 'transport' => $validatedData['transport'],
                 'vehicle_type' => $validatedData['vehicle_type'],
                 'options' => $processedOptions, // Store options as JSON
             ]);
-    
+
             // Return success response
             return response()->json([
                 'success' => true,
                 'message' => 'Transportation created successfully',
                 'transportation' => $transportation,
             ], 201);
-    
+
         } catch (\Illuminate\Validation\ValidationException $e) {
             // Log validation errors
             Log::error('Validation error:', [
                 'errors' => $e->errors(),
             ]);
-    
+
             // Return validation error response
             return response()->json([
                 'success' => false,
@@ -101,7 +97,7 @@ class TransportationController extends Controller
             Log::error('Transportation creation failed: ' . $e->getMessage(), [
                 'request_data' => $request->all(),
             ]);
-    
+
             // Return failure response
             return response()->json([
                 'success' => false,
@@ -109,14 +105,14 @@ class TransportationController extends Controller
             ], 500);
         }
     }
-    
+
 
     public function showtransportation($id)
     {
         try {
             // Fetch the transportation entry with related destination
             $transportation = Transportation::with('destination')->findOrFail($id);
-    
+
             // Return success response
             return response()->json([
                 'success' => true,
@@ -128,7 +124,7 @@ class TransportationController extends Controller
             Log::error('Transportation not found: ' . $e->getMessage(), [
                 'id' => $id,
             ]);
-    
+
             // Return not found error response
             return response()->json([
                 'success' => false,
@@ -140,7 +136,7 @@ class TransportationController extends Controller
                 'id' => $id,
                 'error' => $e->getMessage(),
             ]);
-    
+
             // Return failure response
             return response()->json([
                 'success' => false,
@@ -148,8 +144,8 @@ class TransportationController extends Controller
             ], 500);
         }
     }
-    
-    
+
+
 
     public function destroy($id)
     {
@@ -159,7 +155,7 @@ class TransportationController extends Controller
         if ($transportation->company_document && file_exists(public_path($transportation->company_document))) {
             unlink(public_path($transportation->company_document));
         }
-        
+
         // Delete the record
         $transportation->delete();
 
@@ -178,9 +174,7 @@ class TransportationController extends Controller
                 'destination_id' => $transportation->destination_id,
                 'company_name' => $transportation->company_name,
                 'company_document' => $transportation->company_document,
-                'contact_no' => $transportation->contact_no,
                 'address' => $transportation->address,
-                'email' => $transportation->email,
                 'transport' => $transportation->transport,
                 'vehicle_type' => $transportation->vehicle_type,
                 // 'created_at' => $transportation->created_at,
@@ -222,8 +216,6 @@ class TransportationController extends Controller
                 'destination_id' => 'required|exists:destinations,id',
                 'company_name' => 'required|string|max:255',
                 'company_document' => 'nullable|file|mimes:jpeg,jpg,png,doc,docx,pdf', // Valid file types for the document
-                'email' => 'email|max:255', // Ensure email is unique except for this record
-                'contact_no' => 'required|string|max:15',
                 'address' => 'required|string|max:255',
                 'transport' => 'required|string|max:255',
                 'vehicle_type' => 'required|string|max:100',
@@ -231,10 +223,10 @@ class TransportationController extends Controller
                 'options.*.type' => 'required|string|max:255', // Validate each option type
                 'options.*.rate' => 'required|numeric|min:0', // Validate rate for each option
             ]);
-    
+
             // Find the transportation entry to update
             $transportation = Transportation::find($id);
-    
+
             // Handle document upload if provided
             $documentPath = $transportation->company_document; // Keep the existing document if no new one is uploaded
             if ($request->hasFile('company_document')) {
@@ -255,7 +247,7 @@ class TransportationController extends Controller
                     ], 500);
                 }
             }
-    
+
             // Process 'options' field to match the desired format
             $processedOptions = array_map(function ($option) {
                 return [
@@ -263,37 +255,35 @@ class TransportationController extends Controller
                     'rate' => $option['rate'],
                 ];
             }, $validatedData['options']);
-    
+
             Log::info('Processed Options:', [
                 'processed_options' => $processedOptions,
             ]);
-    
+
             // Update the transportation entry
             $transportation->update([
                 'destination_id' => $validatedData['destination_id'],
                 'company_name' => $validatedData['company_name'],
                 'company_document' => $documentPath, // Store the file path (updated if a new document was uploaded)
-                'email' => $validatedData['email'],
-                'contact_no' => $validatedData['contact_no'],
                 'address' => $validatedData['address'],
                 'transport' => $validatedData['transport'],
                 'vehicle_type' => $validatedData['vehicle_type'],
                 'options' => $processedOptions, // Store options as a JSON string
             ]);
-    
+
             // Return success response
             return response()->json([
                 'success' => true,
                 'message' => 'Transportation updated successfully',
                 'transportation' => $transportation,
             ], 200);
-    
+
         } catch (\Illuminate\Validation\ValidationException $e) {
             // Log validation errors
             Log::error('Validation error:', [
                 'errors' => $e->errors(),
             ]);
-    
+
             // Return validation error response
             return response()->json([
                 'success' => false,
@@ -305,7 +295,7 @@ class TransportationController extends Controller
             Log::error('Transportation update failed: ' . $e->getMessage(), [
                 'request_data' => $request->all(),
             ]);
-    
+
             // Return failure response
             return response()->json([
                 'success' => false,
@@ -313,7 +303,7 @@ class TransportationController extends Controller
             ], 500);
         }
     }
-    
+
     public function getTransportWithCity()
     {
         try {
@@ -337,15 +327,15 @@ class TransportationController extends Controller
                     })->toArray()
                 ];
             });
-    
+
             return response()->json([
                 'success' => true,
                 'transport' => $transports
             ], 200);
-    
+
         } catch (\Exception $e) {
             Log::error('Error fetching transport data: ' . $e->getMessage());
-    
+
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to fetch transport data. Please try again.',
@@ -353,6 +343,6 @@ class TransportationController extends Controller
             ], 500);
         }
     }
-    
+
 
 }
