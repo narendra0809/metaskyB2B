@@ -8,17 +8,10 @@ const RoomPrice = () => {
   const base_url = import.meta.env.VITE_API_URL;
   const { authToken } = useAuth();
 
-  /* -- variables -- */
   let output, outputData, filteredData;
   let totalPageNo = 0;
 
-  /* -- fetch data -- */
-  const { data, loading } = useApiData(
-    `${base_url}/api/getHotelsWithCity`,
-    authToken
-  );
-
-  /* -- state variables -- */
+  const { data, loading } = useApiData(`${base_url}/api/tickets`, authToken);
   const [filterValue, setFilterValue] = useState({
     search: "",
     hotels: "",
@@ -26,13 +19,11 @@ const RoomPrice = () => {
   let [perPage, setPerPage] = useState(10);
   let [currPageNo, setCurrPageNo] = useState(0);
 
-  /* -- render data -- */
   if (!loading) {
-    // Check if data and data.hotels are available
-    if (data && data.hotels) {
+    if (data && data.data) {
       // filtering
-      filteredData = data.hotels.filter((item) =>
-        item.hotel_name.toLowerCase().includes(filterValue.search.toLowerCase())
+      filteredData = data.data.filter((item) =>
+        item.name.toLowerCase().includes(filterValue.search.toLowerCase())
       );
 
       totalPageNo = Math.ceil(filteredData.length / perPage);
@@ -44,18 +35,25 @@ const RoomPrice = () => {
       );
 
       // render
+      console.log(outputData);
       output = outputData.map((item, index) => (
         <tr key={index}>
-          <td className="align-middle">{item.hotel_name}</td>
-          <td className="align-middle">{item.city}</td>
-          <td>
-            {item.room_types.map((room, i) => (
-              <p key={i}>{room.type}</p>
+          <td className="align-middle">{item.name}</td>
+          <td className="align-middle">
+            {item.transfer_options.map((option) => (
+              <p key={option.option}>
+                {option.option} |{" "}
+                <span>Adult Rate : {option.adult_price} AED</span> |{" "}
+                <span>Child Rate : {option.child_price} AED</span>
+              </p>
             ))}
           </td>
           <td>
-            {item.room_types.map((room, i) => (
-              <p key={i}>₹ {room.rate} /-</p>
+            {item.time_slots.map((time, i) => (
+              <p key={i}>
+                {time.slot} | <span>Adult Rate : {time.adult_price} AED</span> |{" "}
+                <span>Child Rate : {time.child_price} AED</span>
+              </p>
             ))}
           </td>
         </tr>
@@ -109,27 +107,12 @@ const RoomPrice = () => {
     <>
       <section className="page-section">
         <div className="page-header">
-          <h1 className="page-title">Room Price</h1>
+          <h1 className="page-title">Ticket Price</h1>
         </div>
 
         {/* Table */}
         <div className="mt-4">
           <div className="table-container">
-            {/* <div className="border-bottom">
-              <div className="row g-3 pb-3">
-                <div className="col-12 col-md-4 col-lg-3">
-                  <select
-                    className="form-select"
-                    name="hotels"
-                    onChange={handleFilter}
-                  >
-                    <option value="">All Hotels</option>
-                    <option value="this-hotel">This Hotel</option>
-                    <option value="that-hotel">That Hotel</option>
-                  </select>
-                </div>
-              </div>
-            </div> */}
             <div className="d-flex justify-content-between align-items-center mt-3">
               <div>
                 <select
@@ -160,10 +143,11 @@ const RoomPrice = () => {
                 <table className="table table-hover text-center">
                   <thead>
                     <tr>
-                      <th>Hotel Name</th>
-                      <th>City</th>
-                      <th>Room Types</th>
-                      <th>Room Cost</th>
+                      <th>Name</th>
+                      <th>Transfer Options</th>
+                      <th>Time Slots</th>
+                      {/* <th>Total Adult Rate</th>
+                      <th>Total Child Rate</th> */}
                     </tr>
                   </thead>
                   <tbody className="bg-white">

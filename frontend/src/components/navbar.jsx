@@ -5,7 +5,7 @@ import { useAuth } from "../context/AuthContext";
 import { NavContext } from "../context/NavContext";
 import arrow from "../public/images/arrow.png";
 import "./navbar.css";
-import NavLinkDropdown from "./NavLinkDropdown";
+import NavLinkDropdown from "./navLinkDropdown";
 
 const Navbar = () => {
   const adminRole = "admin";
@@ -139,7 +139,7 @@ const Navbar = () => {
               alt="Dropdown Arrow"
               className="nav-dropdown-icons"
             />
-            Room Price
+            Ticket Price
           </NavLink>
           <NavLink to="/transport-price" className="nav-dropdown-link">
             {/* <i className="fa-solid fa-chevron-right nav-dropdown-icons"></i> */}
