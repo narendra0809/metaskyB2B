@@ -26,7 +26,8 @@ class TransportationController extends Controller
                 'transport' => 'required|string|max:255',
                 'vehicle_type' => 'required|string|max:100',
                 'options' => 'required|array', // Ensure options is an array
-                'options.*.type' => 'required|string|max:255', // Validate each option type
+                'options.*.from' => 'required|string|max:255', // Validate each option type
+                'options.*.to' => 'required|string|max:255', // Validate each option type
                 'options.*.rate' => 'required|numeric|min:0', // Validate rate for each option
             ]);
 
@@ -53,7 +54,8 @@ class TransportationController extends Controller
             // Process 'options' field to match the desired format
             $processedOptions = array_map(function ($option) {
                 return [
-                    'type' => $option['type'],
+                    'from' => $option['from'],
+                    'to' => $option['to'],
                     'rate' => $option['rate'],
                 ];
             }, $validatedData['options']);
@@ -208,101 +210,86 @@ class TransportationController extends Controller
     }
 }
 
-    public function updatetransportation(Request $request, $id)
-    {
-        try {
-            // Validate the incoming data
-            $validatedData = $request->validate([
-                'destination_id' => 'required|exists:destinations,id',
-                'company_name' => 'required|string|max:255',
-                'company_document' => 'nullable|file|mimes:jpeg,jpg,png,doc,docx,pdf', // Valid file types for the document
-                'address' => 'required|string|max:255',
-                'transport' => 'required|string|max:255',
-                'vehicle_type' => 'required|string|max:100',
-                'options' => 'required|array', // Ensure options is an array
-                'options.*.type' => 'required|string|max:255', // Validate each option type
-                'options.*.rate' => 'required|numeric|min:0', // Validate rate for each option
-            ]);
+   public function updatetransportation(Request $request, $id)
+{
+    try {
+        $validatedData = $request->validate([
+            'destination_id' => 'required|exists:destinations,id',
+            'company_name' => 'required|string|max:255',
+            'company_document' => 'nullable|file|mimes:jpeg,jpg,png,doc,docx,pdf',
+            'address' => 'required|string|max:255',
+            'transport' => 'required|string|max:255',
+            'vehicle_type' => 'required|string|max:100',
+            'options' => 'required|array',
+            'options.*.from' => 'required|string|max:255',
+            'options.*.to' => 'required|string|max:255',
+            'options.*.rate' => 'required|numeric|min:0',
+        ]);
 
-            // Find the transportation entry to update
-            $transportation = Transportation::find($id);
+        $transportation = Transportation::find($id);
+        $documentPath = $transportation->company_document;
 
-            // Handle document upload if provided
-            $documentPath = $transportation->company_document; // Keep the existing document if no new one is uploaded
-            if ($request->hasFile('company_document')) {
-                try {
-                    // Generate a unique name for the uploaded document
-                    $documentPath = 'tcompany_document/' . time() . '_' . $request->file('company_document')->getClientOriginalName();
-                    $request->file('company_document')->move(public_path('tcompany_document'), $documentPath);
-                } catch (\Exception $e) {
-                    // Log any file upload errors
-                    Log::error('File upload error: ' . $e->getMessage(), [
-                        'file_name' => $request->file('company_document')->getClientOriginalName(),
-                        'error' => $e->getMessage(),
-                    ]);
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'File upload error: ' . $e->getMessage(),
-                        'error' => $e->getMessage(),
-                    ], 500);
-                }
+        if ($request->hasFile('company_document')) {
+            try {
+                $documentPath = 'tcompany_document/' . time() . '_' . $request->file('company_document')->getClientOriginalName();
+                $request->file('company_document')->move(public_path('tcompany_document'), $documentPath);
+            } catch (\Exception $e) {
+                Log::error('File upload error: ' . $e->getMessage(), [
+                    'file_name' => $request->file('company_document')->getClientOriginalName(),
+                    'error' => $e->getMessage(),
+                ]);
+                return response()->json([
+                    'success' => false,
+                    'message' => 'File upload error: ' . $e->getMessage(),
+                    'error' => $e->getMessage(),
+                ], 500);
             }
-
-            // Process 'options' field to match the desired format
-            $processedOptions = array_map(function ($option) {
-                return [
-                    'type' => $option['type'],
-                    'rate' => $option['rate'],
-                ];
-            }, $validatedData['options']);
-
-            Log::info('Processed Options:', [
-                'processed_options' => $processedOptions,
-            ]);
-
-            // Update the transportation entry
-            $transportation->update([
-                'destination_id' => $validatedData['destination_id'],
-                'company_name' => $validatedData['company_name'],
-                'company_document' => $documentPath, // Store the file path (updated if a new document was uploaded)
-                'address' => $validatedData['address'],
-                'transport' => $validatedData['transport'],
-                'vehicle_type' => $validatedData['vehicle_type'],
-                'options' => $processedOptions, // Store options as a JSON string
-            ]);
-
-            // Return success response
-            return response()->json([
-                'success' => true,
-                'message' => 'Transportation updated successfully',
-                'transportation' => $transportation,
-            ], 200);
-
-        } catch (\Illuminate\Validation\ValidationException $e) {
-            // Log validation errors
-            Log::error('Validation error:', [
-                'errors' => $e->errors(),
-            ]);
-
-            // Return validation error response
-            return response()->json([
-                'success' => false,
-                'message' => 'Validation failed',
-                'errors' => $e->errors(),
-            ], 422);
-        } catch (\Exception $e) {
-            // Log unexpected errors
-            Log::error('Transportation update failed: ' . $e->getMessage(), [
-                'request_data' => $request->all(),
-            ]);
-
-            // Return failure response
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to update transportation. Please try again.',
-            ], 500);
         }
+
+        // Consistently process options to use from, to, rate
+        $processedOptions = array_map(function ($option) {
+            return [
+                'from' => $option['from'],
+                'to' => $option['to'],
+                'rate' => $option['rate'],
+            ];
+        }, $validatedData['options']);
+
+        $transportation->update([
+            'destination_id' => $validatedData['destination_id'],
+            'company_name' => $validatedData['company_name'],
+            'company_document' => $documentPath,
+            'address' => $validatedData['address'],
+            'transport' => $validatedData['transport'],
+            'vehicle_type' => $validatedData['vehicle_type'],
+            'options' => $processedOptions,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Transportation updated successfully',
+            'transportation' => $transportation,
+        ], 200);
+
+    } catch (\Illuminate\Validation\ValidationException $e) {
+        Log::error('Validation error:', [
+            'errors' => $e->errors(),
+        ]);
+        return response()->json([
+            'success' => false,
+            'message' => 'Validation failed',
+            'errors' => $e->errors(),
+        ], 422);
+    } catch (\Exception $e) {
+        Log::error('Transportation update failed: ' . $e->getMessage(), [
+            'request_data' => $request->all(),
+        ]);
+        return response()->json([
+            'success' => false,
+            'message' => 'Failed to update transportation. Please try again.',
+        ], 500);
     }
+}
 
     public function getTransportWithCity()
     {
@@ -319,8 +306,9 @@ class TransportationController extends Controller
                     'city' => optional($transports->destination->city)->name ?? 'Unknown', // Safe way to access city name
                        'options' => collect($transports->options ?? [])->map(function ($option) {
                         return [
-                            'type' => $option['type'] ?? 'Unknown',
-                            'rate' => $option['rate'] ?? 0
+                           'from' => $option['from'] ?? 'Unknown',
+                           'to' => $option['to'] ?? 'Unknown',
+                           'rate' => $option['rate'] ?? 0,
                         ];
 
 

@@ -20,6 +20,7 @@ const Tickets = () => {
   const categories = [
     { id: 1, name: "Prime" },
     { id: 2, name: "Non prime" },
+    { id: 3, name: "All" },
   ];
 
   const transferOptions = [
@@ -48,8 +49,7 @@ const Tickets = () => {
   });
   const [transferOptionTemp, setTransferOptionTemp] = useState({
     option: "",
-    adult_price: "",
-    child_price: "",
+    price: "",
   });
   const [categoryOption, setCategoryOption] = useState({ option: "" });
   // Modal state
@@ -113,41 +113,40 @@ const Tickets = () => {
 
   // Update time slots based on category selection
   const updateTimeSlots = (category, isEdit = false) => {
+    const primeSlots = [
+      "3:30 PM - 4:00 PM",
+      "4:00 PM - 4:30 PM",
+      "4:30 PM - 5:00 PM",
+      "5:00 PM - 5:30 PM",
+      "5:30 PM - 6:00 PM",
+      "6:00 PM - 6:30 PM",
+      "6:30 PM - 7:00 PM",
+    ];
+    const nonPrimeSlots = [
+      "7:30 AM - 8:00 AM",
+      "8:00 AM - 8:30 AM",
+      "8:30 AM - 9:00 AM",
+      "11:00 AM - 11:30 AM",
+    ];
+
+    let newSlots = [];
+
     if (category === "Prime") {
-      const primeSlots = [
-        "3:30 PM - 4:00 PM",
-        "4:00 PM - 4:30 PM",
-        "4:30 PM - 5:00 PM",
-        "5:00 PM - 5:30 PM",
-        "5:30 PM - 6:00 PM",
-        "6:00 PM - 6:30 PM",
-        "6:30 PM - 7:00 PM",
-      ];
-      if (isEdit) {
-        setEditAvailableTimeSlots((prev) => [...prev, ...primeSlots]);
-      } else {
-        setAvailableTimeSlots((prev) => [...prev, ...primeSlots]);
-      }
+      newSlots = [...primeSlots];
     } else if (category === "Non prime") {
-      const nonPrimeSlots = [
-        "7:30 AM - 8:00 AM",
-        "8:00 AM - 8:30 AM",
-        "8:30 AM - 9:00 AM",
-        "11:00 AM - 11:30 AM",
-      ];
-      if (isEdit) {
-        setEditAvailableTimeSlots((prev) => [...prev, ...nonPrimeSlots]);
-      } else {
-        setAvailableTimeSlots((prev) => [...prev, ...nonPrimeSlots]);
-      }
+      newSlots = [...nonPrimeSlots];
+    } else if (category === "All") {
+      newSlots = [...nonPrimeSlots, ...primeSlots];
+    }
+
+    if (isEdit) {
+      setEditAvailableTimeSlots(newSlots);
     } else {
-      if (isEdit) {
-        setEditAvailableTimeSlots([]);
-      } else {
-        setAvailableTimeSlots([]);
-      }
+      setAvailableTimeSlots(newSlots);
     }
   };
+
+  console.log("Edit time slots :", editAvailableTimeSlots);
 
   // Handle form data changes
   const handleFormDataChange = (formType) => (e) => {
@@ -194,11 +193,7 @@ const Tickets = () => {
   };
 
   const addTimeSlot = (formType) => {
-    if (
-      timeSlotTemp.slot === "" ||
-      timeSlotTemp.adult_price === "" ||
-      timeSlotTemp.child_price === ""
-    ) {
+    if (timeSlotTemp.adult_price === "" || timeSlotTemp.child_price === "") {
       return;
     }
     setFormData((prev) => ({
@@ -229,7 +224,7 @@ const Tickets = () => {
     const { name, value } = e.target;
     let filteredValue = value;
 
-    if (name === "adult_price" || name === "child_price") {
+    if (name === "price") {
       filteredValue = value.replace(/[^0-9.]/g, "").replace(/(\..*)\./g, "$1");
     }
 
@@ -241,11 +236,7 @@ const Tickets = () => {
   };
 
   const addTransferOption = (formType) => {
-    if (
-      transferOptionTemp.option === "" ||
-      transferOptionTemp.adult_price === "" ||
-      transferOptionTemp.child_price === ""
-    ) {
+    if (transferOptionTemp.option === "" || transferOptionTemp.price === "") {
       return;
     }
     setFormData((prev) => ({
@@ -258,30 +249,33 @@ const Tickets = () => {
         ],
       },
     }));
-    setTransferOptionTemp({ option: "", adult_price: "", child_price: "" });
+    setTransferOptionTemp({
+      option: "",
+      price: "",
+    });
   };
 
   const addCategoryOption = (formType) => {
-    if (categoryOption.option === "") {
-      return;
-    }
-    const found = formData[formType].category.find(
-      (item) => item === categoryOption.option
+    if (categoryOption.option === "") return;
+    const isEdit = formType === "editFormData";
+    const categoryExists = formData[formType].category.includes(
+      categoryOption.option
     );
-    if (found) return;
-    updateTimeSlots(categoryOption.option, formType === "editFormData");
+    if (categoryExists) return;
     setFormData((prev) => ({
       ...prev,
       [formType]: {
         ...prev[formType],
-        category: [
-          ...(prev[formType]["category"] || []),
-          categoryOption.option,
-        ],
+        category: [...prev[formType].category, categoryOption.option],
       },
     }));
+    setTimeout(() => {
+      updateTimeSlots(categoryOption.option, isEdit);
+    }, 0);
+
     setCategoryOption({ option: "" });
   };
+
   const removeTimeSlotByCategory = (isEdit = false, category) => {
     if (category === "Prime") {
       const primeSlots = [
@@ -318,6 +312,8 @@ const Tickets = () => {
           prev.filter((slot) => !nonPrimeSlots.includes(slot))
         );
       }
+    } else if (category === "All") {
+      setAvailableTimeSlots([]);
     }
   };
   const removeCategoryOption = (formType, option) => {
@@ -377,6 +373,13 @@ const Tickets = () => {
   const submitFormData = async (formType) => {
     switch (formType) {
       case "addFormData":
+        if (formData.addFormData.category.length === 0) {
+          const timeSlots = formData.addFormData.time_slots.map((timeData) => ({
+            adult_price: timeData.adult_price,
+            child_price: timeData.child_price,
+          }));
+          formData["addFormData"].time_slots = timeSlots;
+        }
         await addForm.sendData(formData["addFormData"]);
 
         setFormData((item) => ({
@@ -393,7 +396,15 @@ const Tickets = () => {
       case "editFormData":
         setEditLoading(true);
         try {
-          // Make sure we're sending the complete data in the correct format
+          if (formData.editFormData.category.length === 0) {
+            const timeSlots = formData.editFormData.time_slots.map(
+              (timeData) => ({
+                adult_price: timeData.adult_price,
+                child_price: timeData.child_price,
+              })
+            );
+            formData["editFormData"].time_slots = timeSlots;
+          }
           const dataToSend = {
             ...formData.editFormData,
             _method: "POST",
@@ -424,7 +435,7 @@ const Tickets = () => {
           const result = await res.json();
           console.log("Parsed response:", result);
           setEditRes(result);
-
+          console.log(result);
           if (result.success) {
             toggleModal("editModalOpen", false);
             mainData.refetch();
@@ -454,7 +465,7 @@ const Tickets = () => {
     }
 
     setTimeSlotTemp({ slot: "", adult_price: "", child_price: "" });
-    setTransferOptionTemp({ option: "", adult_price: "", child_price: "" });
+    setTransferOptionTemp({ option: "", price: "" });
 
     mainData.refetch();
   };
@@ -489,6 +500,8 @@ const Tickets = () => {
     }
     setIsConfirm(false);
   };
+
+  console.log(formData.addFormData);
   return (
     <>
       <section className="display-section">
@@ -536,33 +549,24 @@ const Tickets = () => {
                       ))}
                     </select>
                   </div>
-                  <div className="col-4">
-                    <input
-                      type="text"
-                      className="form-control"
-                      placeholder="Adult Rate"
-                      name="adult_price"
-                      value={transferOptionTemp.adult_price}
-                      onChange={handleTransferOption}
-                    />
-                  </div>
-                  <div className="col-4">
-                    <input
-                      type="text"
-                      className="form-control"
-                      placeholder="Child Rate"
-                      name="child_price"
-                      value={transferOptionTemp.child_price}
-                      onChange={handleTransferOption}
-                    />
-                  </div>
+                  {transferOptionTemp.option !== "without transfer" && (
+                    <div className="col-4">
+                      <input
+                        type="text"
+                        className="form-control"
+                        placeholder="Vehicle Price"
+                        name="price"
+                        value={transferOptionTemp.price}
+                        onChange={handleTransferOption}
+                      />
+                    </div>
+                  )}
                 </div>
                 <div>
                   {formData.addFormData.transfer_options?.map((item, index) => (
                     <div className="row m-0 mt-2" key={index}>
                       <div className="col-4">{item.option}</div>
-                      <div className="col-3">Adult: ${item.adult_price}</div>
-                      <div className="col-3">Child: ${item.child_price}</div>
+                      <div className="col-3">Price: ${item.price}</div>
                       <div className="col-2">
                         <button
                           className="btn flex-shrink-0"
@@ -596,7 +600,9 @@ const Tickets = () => {
                   name="category"
                   value={categoryOption.option}
                   onChange={handleCategoryOption}
-                  disabled={formData.addFormData.category.length === 2}
+                  disabled={formData.addFormData.category.find(
+                    (cate) => cate === "All"
+                  )}
                 >
                   <option value="">-- select --</option>
                   {categories.map((category) => (
@@ -633,24 +639,28 @@ const Tickets = () => {
               </div>
               <div className="mb-3">
                 <label htmlFor="time_slot" className="form-label">
-                  Time Slot
+                  {formData.addFormData.category.length === 0
+                    ? "Add Rates"
+                    : "Time Slot"}
                 </label>
                 <div className="row g-2">
-                  <div className="col-4">
-                    <select
-                      className="form-control"
-                      name="slot"
-                      value={timeSlotTemp.slot}
-                      onChange={handleTimeSlot}
-                    >
-                      <option value="">-- select time --</option>
-                      {availableTimeSlots.map((slot, index) => (
-                        <option key={index} value={slot}>
-                          {slot}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
+                  {formData.addFormData.category.length !== 0 && (
+                    <div className="col-4">
+                      <select
+                        className="form-control"
+                        name="slot"
+                        value={timeSlotTemp.slot}
+                        onChange={handleTimeSlot}
+                      >
+                        <option value="">-- select time --</option>
+                        {availableTimeSlots.map((slot, index) => (
+                          <option key={index} value={slot}>
+                            {slot}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
                   <div className="col-4">
                     <input
                       type="text"
@@ -691,13 +701,16 @@ const Tickets = () => {
                     </div>
                   ))}
                 </div>
+
                 <button
                   className="btn btn-success mt-3"
                   onClick={() => {
                     addTimeSlot("addFormData");
                   }}
                 >
-                  Add Time Slot
+                  {formData.addFormData.category.length !== 0
+                    ? "Add Time Slot"
+                    : "Add Rate"}
                 </button>
               </div>
               <div className="mb-3">
@@ -788,19 +801,9 @@ const Tickets = () => {
                     <input
                       type="text"
                       className="form-control"
-                      placeholder="Adult Rate"
-                      name="adult_price"
-                      value={transferOptionTemp.adult_price}
-                      onChange={handleTransferOption}
-                    />
-                  </div>
-                  <div className="col-4">
-                    <input
-                      type="text"
-                      className="form-control"
-                      placeholder="Child Rate"
-                      name="child_price"
-                      value={transferOptionTemp.child_price}
+                      placeholder="Price"
+                      name="price"
+                      value={transferOptionTemp.price}
                       onChange={handleTransferOption}
                     />
                   </div>
@@ -810,8 +813,7 @@ const Tickets = () => {
                     (item, index) => (
                       <div className="row m-0 mt-2" key={index}>
                         <div className="col-4">{item.option}</div>
-                        <div className="col-3">Adult: ${item.adult_price}</div>
-                        <div className="col-3">Child: ${item.child_price}</div>
+                        <div className="col-3">Adult: ${item.price}</div>
                         <div className="col-2">
                           <button
                             className="btn flex-shrink-0"
@@ -845,7 +847,9 @@ const Tickets = () => {
                   name="category"
                   value={categoryOption.option}
                   onChange={handleCategoryOption}
-                  disabled={formData.editFormData?.category?.length === 2}
+                  disabled={formData.editFormData.category.find(
+                    (cate) => cate === "All"
+                  )}
                 >
                   <option value="">-- select --</option>
                   {categories.map((category) => (
@@ -883,24 +887,28 @@ const Tickets = () => {
 
               <div className="mb-3">
                 <label htmlFor="time_slot" className="form-label">
-                  Time Slot
+                  {formData.editFormData.category.length === 0
+                    ? "Add Rates"
+                    : "Time Slot"}
                 </label>
                 <div className="row g-2">
-                  <div className="col-4">
-                    <select
-                      className="form-control"
-                      name="slot"
-                      value={timeSlotTemp.slot}
-                      onChange={handleTimeSlot}
-                    >
-                      <option value="">-- select time --</option>
-                      {editAvailableTimeSlots.map((slot, index) => (
-                        <option key={index} value={slot}>
-                          {slot}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
+                  {formData.editFormData.category.length !== 0 && (
+                    <div className="col-4">
+                      <select
+                        className="form-control"
+                        name="slot"
+                        value={timeSlotTemp.slot}
+                        onChange={handleTimeSlot}
+                      >
+                        <option value="">-- select time --</option>
+                        {editAvailableTimeSlots.map((slot, index) => (
+                          <option key={index} value={slot}>
+                            {slot}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
                   <div className="col-4">
                     <input
                       type="text"
@@ -925,7 +933,9 @@ const Tickets = () => {
                 <div>
                   {formData.editFormData.time_slots?.map((item, index) => (
                     <div className="row m-0 mt-2" key={index}>
-                      <div className="col-4">{item.slot}</div>
+                      {formData.editFormData.category.length !== 0 && (
+                        <div className="col-4">{item.slot}</div>
+                      )}
                       <div className="col-3">Adult: ${item.adult_price}</div>
                       <div className="col-3">Child: ${item.child_price}</div>
                       <div className="col-2">

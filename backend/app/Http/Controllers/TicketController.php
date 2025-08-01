@@ -19,15 +19,14 @@ class TicketController extends Controller
             'name' => 'required|string|max:255',
             'status' => 'required|in:Active,Inactive',
             'transfer_options' => 'required|array',
-            'category' => 'required|array',
+            'category' => 'array',
             'category.*' => 'string|max:100',
-            'transfer_options.*.option' => 'required|string|max:100',
-            'transfer_options.*.adult_price' => 'required|numeric',
-            'transfer_options.*.child_price' => 'required|numeric',
-            'time_slots' => 'required|array',
-            'time_slots.*.slot' => 'required|string|max:100',
-            'time_slots.*.adult_price' => 'required|numeric',
-            'time_slots.*.child_price' => 'required|numeric',
+            'transfer_options.*.option' => 'string|max:100',
+            'transfer_options.*.price' => 'numeric',
+            'time_slots' => 'array',
+            'time_slots.*.slot' => 'string|max:100',
+            'time_slots.*.adult_price' => 'numeric',
+            'time_slots.*.child_price' => 'numeric',
         ]);
 
         // If validation fails, return error response
@@ -97,23 +96,20 @@ class TicketController extends Controller
      */
     public function update(Request $request, $id)
     {
-        // Validate the request data
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
-            'category' => 'required|array',
+            'category' => 'nullable|array',
             'category.*' => 'string|max:100',
             'status' => 'required|in:Active,Inactive',
             'transfer_options' => 'required|array',
             'transfer_options.*.option' => 'required|string|max:100',
-            'transfer_options.*.adult_price' => 'required|numeric',
-            'transfer_options.*.child_price' => 'required|numeric',
-            'time_slots' => 'required|array',
-            'time_slots.*.slot' => 'required|string|max:100',
+            'transfer_options.*.price' => 'required|numeric',
+            'time_slots' => 'nullable|array',
+            'time_slots.*.slot' => 'string|max:100',
             'time_slots.*.adult_price' => 'required|numeric',
             'time_slots.*.child_price' => 'required|numeric',
         ]);
 
-        // If validation fails, return error response
         if ($validator->fails()) {
             return response()->json(['errors' => $validator->errors()], 422);
         }
@@ -124,7 +120,6 @@ class TicketController extends Controller
             return response()->json(['message' => 'Ticket not found'], 404);
         }
 
-        // Update the ticket
         $ticket->update([
             'name' => $request->name,
             'category' => $request->category,

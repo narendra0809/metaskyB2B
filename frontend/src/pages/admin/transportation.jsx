@@ -37,7 +37,7 @@ const Transportation = () => {
 
   // Form data for add/edit
   const inputDocs = useRef();
-  const [options, setOptions] = useState({ type: "", rate: "" });
+  const [options, setOptions] = useState({ from: "", to: "", rate: "" });
   const [formData, setFormData] = useState({
     addFormData: {
       destination_id: "",
@@ -106,7 +106,7 @@ const Transportation = () => {
 
   /* Options */
   const addOptions = (formType) => {
-    if (!options.type || !options.rate) {
+    if (!options.from || !options.to || !options.rate) {
       return;
     }
 
@@ -140,9 +140,9 @@ const Transportation = () => {
       [name]: filteredValue,
     }));
   };
-  const removeOptions = (formType, type) => {
+  const removeOptions = (formType, from, to) => {
     const updatedOptions = formData[formType].options.filter(
-      (option) => option.type !== type
+      (option) => option.from !== from && option.to !== to
     );
     setFormData((prev) => ({
       ...prev,
@@ -166,7 +166,8 @@ const Transportation = () => {
     Object.entries(formData[formType]).forEach(([key, value]) => {
       if (key === "options") {
         value.forEach((option, index) => {
-          submitData.append(`options[${index}][type]`, option.type);
+          submitData.append(`options[${index}][from]`, option.from);
+          submitData.append(`options[${index}][to]`, option.to);
           submitData.append(`options[${index}][rate]`, option.rate);
         });
       } else {
@@ -212,7 +213,7 @@ const Transportation = () => {
         break;
     }
 
-    setOptions({ type: "", rate: "" });
+    setOptions({ from: "", to: "", rate: "" });
 
     mainData.refetch();
   };
@@ -321,7 +322,7 @@ const Transportation = () => {
               </div>
               <div className="mb-3">
                 <label htmlFor="transport" className="form-label">
-                  Transport
+                  Vehicle Name
                 </label>
                 <input
                   type="text"
@@ -335,7 +336,7 @@ const Transportation = () => {
               </div>
               <div className="mb-3">
                 <label htmlFor="vehicle_type" className="form-label">
-                  Vehicle Type
+                  Vehicle Capacity
                 </label>
                 <input
                   type="text"
@@ -357,9 +358,9 @@ const Transportation = () => {
                     <input
                       type="text"
                       className="form-control"
-                      placeholder="Type..."
-                      name="type"
-                      value={options.type}
+                      placeholder="From ..."
+                      name="from"
+                      value={options.from}
                       onChange={handleOptions}
                     />
                   </div>
@@ -367,7 +368,17 @@ const Transportation = () => {
                     <input
                       type="text"
                       className="form-control"
-                      placeholder="Rate..."
+                      placeholder="To ..."
+                      name="to"
+                      value={options.to}
+                      onChange={handleOptions}
+                    />
+                  </div>
+                  <div className="col-6">
+                    <input
+                      type="text"
+                      className="form-control"
+                      placeholder="Rate ..."
                       name="rate"
                       value={options.rate}
                       onChange={handleOptions}
@@ -377,17 +388,18 @@ const Transportation = () => {
                 <div>
                   {formData.addFormData.options.map((item) => (
                     <div
-                      className="row m-0 mt-2"
-                      key={`${item.type} ${item.rate}`}
+                      className="d-flex align-items-center gap-2 mt-2"
+                      key={`${item.from} ${item.to} ${item.rate}`}
                     >
-                      <div className="col-5">{item.type}</div>
-                      <div className="col-5">{item.rate}</div>
-                      <div className="col-2">
+                      <div className="flex-grow-1">{item.from}</div>
+                      <div className="flex-grow-1">{item.to}</div>
+                      <div className="flex-grow-1">{item.rate}</div>
+                      <div>
                         <button
-                          className="btn flex-shrink-0"
-                          onClick={() => {
-                            removeOptions("addFormData", item.type);
-                          }}
+                          className="btn p-1"
+                          onClick={() =>
+                            removeOptions("addFormData", item.from, item.to)
+                          }
                         >
                           <i className="fa-solid fa-trash-can text-danger"></i>
                         </button>
@@ -501,13 +513,13 @@ const Transportation = () => {
               </div>
               <div className="mb-3">
                 <label htmlFor="transport" className="form-label">
-                  Transport
+                  Vehicle Name
                 </label>
                 <input
                   type="text"
                   className="form-control"
                   id="transport"
-                  placeholder="Transport..."
+                  placeholder="Vehicle Name..."
                   name="transport"
                   value={formData.editFormData.transport}
                   onChange={handleFormDataChange("editFormData")}
@@ -515,13 +527,13 @@ const Transportation = () => {
               </div>
               <div className="mb-3">
                 <label htmlFor="vehicle_type" className="form-label">
-                  Vehicle Type
+                  Vehicle Capacity
                 </label>
                 <input
                   type="text"
                   className="form-control"
                   id="vehicle_type"
-                  placeholder="Transport..."
+                  placeholder="Vehicle Capacity..."
                   name="vehicle_type"
                   value={formData.editFormData.vehicle_type}
                   onChange={handleFormDataChange("editFormData")}
@@ -537,8 +549,18 @@ const Transportation = () => {
                     <input
                       type="text"
                       className="form-control"
-                      placeholder="Type..."
-                      name="type"
+                      placeholder="From ..."
+                      name="from"
+                      value={options.form}
+                      onChange={handleOptions}
+                    />
+                  </div>
+                  <div className="col-6">
+                    <input
+                      type="text"
+                      className="form-control"
+                      placeholder="To ..."
+                      name="to"
                       value={options.type}
                       onChange={handleOptions}
                     />
@@ -557,17 +579,18 @@ const Transportation = () => {
                 <div>
                   {formData.editFormData.options.map((item) => (
                     <div
-                      className="row m-0 mt-2"
-                      key={`${item.type} ${item.rate}`}
+                      className="d-flex align-items-center gap-2 mt-2"
+                      key={`${item.from} ${item.to} ${item.rate}`}
                     >
-                      <div className="col-5">{item.type}</div>
-                      <div className="col-5">{item.rate}</div>
-                      <div className="col-2">
+                      <div className="flex-grow-1">{item.from}</div>
+                      <div className="flex-grow-1">{item.to}</div>
+                      <div className="flex-grow-1">{item.rate}</div>
+                      <div>
                         <button
-                          className="btn flex-shrink-0"
-                          onClick={() => {
-                            removeOptions("editFormData", item.type);
-                          }}
+                          className="btn p-1"
+                          onClick={() =>
+                            removeOptions("addFormData", item.from, item.to)
+                          }
                         >
                           <i className="fa-solid fa-trash-can text-danger"></i>
                         </button>
