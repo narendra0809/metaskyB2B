@@ -146,7 +146,7 @@ const Ticket = () => {
       case "child_price":
         filteredValue = value
           .replace(/[^0-9.]/g, "")
-          .replace(/(\..*)\./g, "$1");
+          .replace(/(\..*)\./g, "AED1");
         break;
       default:
         filteredValue = value;
@@ -168,7 +168,9 @@ const Ticket = () => {
     let filteredValue = value;
 
     if (name === "adult_price" || name === "child_price") {
-      filteredValue = value.replace(/[^0-9.]/g, "").replace(/(\..*)\./g, "$1");
+      filteredValue = value
+        .replace(/[^0-9.]/g, "")
+        .replace(/(\..*)\./g, "AED1");
     }
 
     setTimeSlotTemp((item) => ({ ...item, [name]: filteredValue }));
@@ -211,7 +213,9 @@ const Ticket = () => {
     let filteredValue = value;
 
     if (name === "adult_price" || name === "child_price") {
-      filteredValue = value.replace(/[^0-9.]/g, "").replace(/(\..*)\./g, "$1");
+      filteredValue = value
+        .replace(/[^0-9.]/g, "")
+        .replace(/(\..*)\./g, "AED1");
     }
 
     setTransferOptionTemp((item) => ({ ...item, [name]: filteredValue }));
@@ -450,8 +454,8 @@ const Ticket = () => {
                   {formData.addFormData.transfer_options?.map((item, index) => (
                     <div className="row m-0 mt-2" key={index}>
                       <div className="col-4">{item.option}</div>
-                      <div className="col-3">Adult: ${item.adult_price}</div>
-                      <div className="col-3">Child: ${item.child_price}</div>
+                      <div className="col-3">Adult: AED {item.adult_price}</div>
+                      <div className="col-3">Child: AED {item.child_price}</div>
                       <div className="col-2">
                         <button
                           className="btn flex-shrink-0"
@@ -549,8 +553,8 @@ const Ticket = () => {
                   {formData.addFormData.time_slots?.map((item, index) => (
                     <div className="row m-0 mt-2" key={index}>
                       <div className="col-4">{item.slot}</div>
-                      <div className="col-3">Adult: ${item.adult_price}</div>
-                      <div className="col-3">Child: ${item.child_price}</div>
+                      <div className="col-3">Adult: AED {item.adult_price}</div>
+                      <div className="col-3">Child: AED {item.child_price}</div>
                       <div className="col-2">
                         <button
                           className="btn flex-shrink-0"
@@ -684,8 +688,12 @@ const Ticket = () => {
                     (item, index) => (
                       <div className="row m-0 mt-2" key={index}>
                         <div className="col-4">{item.option}</div>
-                        <div className="col-3">Adult: ${item.adult_price}</div>
-                        <div className="col-3">Child: ${item.child_price}</div>
+                        <div className="col-3">
+                          Adult: AED {item.adult_price}
+                        </div>
+                        <div className="col-3">
+                          Child: AED {item.child_price}
+                        </div>
                         <div className="col-2">
                           <button
                             className="btn flex-shrink-0"
@@ -750,8 +758,8 @@ const Ticket = () => {
                   {formData.editFormData.time_slots?.map((item, index) => (
                     <div className="row m-0 mt-2" key={index}>
                       <div className="col-4">{item.slot}</div>
-                      <div className="col-3">Adult: ${item.adult_price}</div>
-                      <div className="col-3">Child: ${item.child_price}</div>
+                      <div className="col-3">Adult: AED {item.adult_price}</div>
+                      <div className="col-3">Child: AED {item.child_price}</div>
                       <div className="col-2">
                         <button
                           className="btn flex-shrink-0"
@@ -888,8 +896,8 @@ const Ticket = () => {
                       <td>
                         {item.transfer_options?.map((transferOption, index) => (
                           <div key={index}>
-                            {transferOption.option} (Adult: $
-                            {transferOption.adult_price}, Child: $
+                            {transferOption.option} (Adult: AED
+                            {transferOption.adult_price}, Child: AED
                             {transferOption.child_price})
                           </div>
                         ))}
@@ -897,8 +905,8 @@ const Ticket = () => {
                       <td>
                         {item.time_slots?.map((timeSlot, index) => (
                           <div key={index}>
-                            {timeSlot.slot} (Adult: ${timeSlot.adult_price},
-                            Child: ${timeSlot.child_price})
+                            {timeSlot.slot} (Adult: AED {timeSlot.adult_price},
+                            Child: AED {timeSlot.child_price})
                           </div>
                         ))}
                       </td>

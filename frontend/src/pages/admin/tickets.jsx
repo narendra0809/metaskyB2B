@@ -225,7 +225,9 @@ const Tickets = () => {
     let filteredValue = value;
 
     if (name === "price") {
-      filteredValue = value.replace(/[^0-9.]/g, "").replace(/(\..*)\./g, "$1");
+      filteredValue = value
+        .replace(/[^0-9.]/g, "")
+        .replace(/(\..*)\./g, "AED1");
     }
 
     setTransferOptionTemp((item) => ({ ...item, [name]: filteredValue }));
@@ -236,9 +238,14 @@ const Tickets = () => {
   };
 
   const addTransferOption = (formType) => {
-    if (transferOptionTemp.option === "" || transferOptionTemp.price === "") {
+    if (
+      transferOptionTemp.option === "" ||
+      (transferOptionTemp.option !== "without transfer" &&
+        transferOptionTemp.price === "")
+    ) {
       return;
     }
+    console.log("inside !");
     setFormData((prev) => ({
       ...prev,
       [formType]: {
@@ -501,10 +508,17 @@ const Tickets = () => {
     setIsConfirm(false);
   };
 
-  console.log(formData.addFormData);
   return (
     <>
       <section className="display-section">
+        {/* Optional: Centralized AED formatter */}
+        {/* Place this helper in your component scope */}
+        {/* const formatAED = (n) =>
+        `AED ${Number(n ?? 0).toLocaleString("en-AE", {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        })}`; */}
+
         {/* Add Modal */}
         <Modal
           open={modals.addModalOpen}
@@ -554,7 +568,7 @@ const Tickets = () => {
                       <input
                         type="text"
                         className="form-control"
-                        placeholder="Vehicle Price"
+                        placeholder="Vehicle Price (AED)"
                         name="price"
                         value={transferOptionTemp.price}
                         onChange={handleTransferOption}
@@ -566,7 +580,12 @@ const Tickets = () => {
                   {formData.addFormData.transfer_options?.map((item, index) => (
                     <div className="row m-0 mt-2" key={index}>
                       <div className="col-4">{item.option}</div>
-                      <div className="col-3">Price: ${item.price}</div>
+                      {item.option !== "without transfer" && (
+                        <div className="col-3">
+                          Price: AED {item.price}
+                          {/* Or: {formatAED(item.price)} */}
+                        </div>
+                      )}
                       <div className="col-2">
                         <button
                           className="btn flex-shrink-0"
@@ -589,6 +608,7 @@ const Tickets = () => {
                   Add Transfer Option
                 </button>
               </div>
+
               {/* Category */}
               <div className="mb-3">
                 <label htmlFor="category" className="form-label">
@@ -637,6 +657,7 @@ const Tickets = () => {
                   Add Category
                 </button>
               </div>
+
               <div className="mb-3">
                 <label htmlFor="time_slot" className="form-label">
                   {formData.addFormData.category.length === 0
@@ -665,7 +686,7 @@ const Tickets = () => {
                     <input
                       type="text"
                       className="form-control"
-                      placeholder="Adult Rate"
+                      placeholder="Adult Rate (AED)"
                       name="adult_price"
                       value={timeSlotTemp.adult_price}
                       onChange={handleTimeSlot}
@@ -675,7 +696,7 @@ const Tickets = () => {
                     <input
                       type="text"
                       className="form-control"
-                      placeholder="Child Rate"
+                      placeholder="Child Rate (AED)"
                       name="child_price"
                       value={timeSlotTemp.child_price}
                       onChange={handleTimeSlot}
@@ -686,8 +707,14 @@ const Tickets = () => {
                   {formData.addFormData.time_slots?.map((item, index) => (
                     <div className="row m-0 mt-2" key={index}>
                       <div className="col-4">{item.slot}</div>
-                      <div className="col-3">Adult: ${item.adult_price}</div>
-                      <div className="col-3">Child: ${item.child_price}</div>
+                      <div className="col-3">
+                        Adult: AED {item.adult_price}
+                        {/* Or: {formatAED(item.adult_price)} */}
+                      </div>
+                      <div className="col-3">
+                        Child: AED {item.child_price}
+                        {/* Or: {formatAED(item.child_price)} */}
+                      </div>
                       <div className="col-2">
                         <button
                           className="btn flex-shrink-0"
@@ -713,6 +740,7 @@ const Tickets = () => {
                     : "Add Rate"}
                 </button>
               </div>
+
               <div className="mb-3">
                 <label htmlFor="status" className="form-label">
                   Status
@@ -801,7 +829,7 @@ const Tickets = () => {
                     <input
                       type="text"
                       className="form-control"
-                      placeholder="Price"
+                      placeholder="Price (AED)"
                       name="price"
                       value={transferOptionTemp.price}
                       onChange={handleTransferOption}
@@ -813,7 +841,10 @@ const Tickets = () => {
                     (item, index) => (
                       <div className="row m-0 mt-2" key={index}>
                         <div className="col-4">{item.option}</div>
-                        <div className="col-3">Adult: ${item.price}</div>
+                        <div className="col-3">
+                          Adult: AED {item.price}
+                          {/* Or: {formatAED(item.price)} */}
+                        </div>
                         <div className="col-2">
                           <button
                             className="btn flex-shrink-0"
@@ -837,6 +868,7 @@ const Tickets = () => {
                   Add Transfer Option
                 </button>
               </div>
+
               <div className="mb-3">
                 <label htmlFor="category" className="form-label">
                   Category
@@ -913,7 +945,7 @@ const Tickets = () => {
                     <input
                       type="text"
                       className="form-control"
-                      placeholder="Adult Rate..."
+                      placeholder="Adult Rate (AED)"
                       name="adult_price"
                       value={timeSlotTemp.adult_price}
                       onChange={handleTimeSlot}
@@ -923,7 +955,7 @@ const Tickets = () => {
                     <input
                       type="text"
                       className="form-control"
-                      placeholder="Child Rate..."
+                      placeholder="Child Rate (AED)"
                       name="child_price"
                       value={timeSlotTemp.child_price}
                       onChange={handleTimeSlot}
@@ -936,8 +968,14 @@ const Tickets = () => {
                       {formData.editFormData.category.length !== 0 && (
                         <div className="col-4">{item.slot}</div>
                       )}
-                      <div className="col-3">Adult: ${item.adult_price}</div>
-                      <div className="col-3">Child: ${item.child_price}</div>
+                      <div className="col-3">
+                        Adult: AED {item.adult_price}
+                        {/* Or: {formatAED(item.adult_price)} */}
+                      </div>
+                      <div className="col-3">
+                        Child: AED {item.child_price}
+                        {/* Or: {formatAED(item.child_price)} */}
+                      </div>
                       <div className="col-2">
                         <button
                           className="btn flex-shrink-0"
@@ -1055,23 +1093,26 @@ const Tickets = () => {
                       <td>
                         {item.transfer_options?.map((transferOption, index) => (
                           <div key={index}>
-                            {transferOption.option} (Adult: $
-                            {transferOption.adult_price}, Child: $
+                            {transferOption.option} (Adult: AED{" "}
+                            {transferOption.adult_price}, Child: AED{" "}
                             {transferOption.child_price})
+                            {/* Or use formatter:
+                              {transferOption.option} (Adult: {formatAED(transferOption.adult_price)}, Child: {formatAED(transferOption.child_price)}) */}
                           </div>
                         ))}
                       </td>
                       <td>
                         {item.time_slots?.map((timeSlot, index) => (
                           <div key={index}>
-                            {timeSlot.slot} (Adult: ${timeSlot.adult_price},
-                            Child: ${timeSlot.child_price})
+                            {timeSlot.slot} (Adult: AED {timeSlot.adult_price},
+                            Child: AED {timeSlot.child_price})
+                            {/* Or: {timeSlot.slot} (Adult: {formatAED(timeSlot.adult_price)}, Child: {formatAED(timeSlot.child_price)}) */}
                           </div>
                         ))}
                       </td>
                       <td>
-                        {item.category?.map((item, idx) => (
-                          <div key={idx}>{item}</div>
+                        {item.category?.map((catItem, idx) => (
+                          <div key={idx}>{catItem}</div>
                         ))}
                       </td>
                       <td>

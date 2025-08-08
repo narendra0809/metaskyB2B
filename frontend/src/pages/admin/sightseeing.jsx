@@ -98,7 +98,7 @@ const Sightseeing = () => {
       case "rate_child":
         filteredValue = value
           .replace(/[^0-9.]/g, "")
-          .replace(/(\..*)\./g, "$1");
+          .replace(/(\..*)\./g, "AED1");
         break;
 
       default:
