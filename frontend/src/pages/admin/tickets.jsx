@@ -258,7 +258,7 @@ const Tickets = () => {
     }));
     setTransferOptionTemp({
       option: "",
-      price: "",
+      price: 0,
     });
   };
 
@@ -472,7 +472,7 @@ const Tickets = () => {
     }
 
     setTimeSlotTemp({ slot: "", adult_price: "", child_price: "" });
-    setTransferOptionTemp({ option: "", price: "" });
+    setTransferOptionTemp({ option: "", price: 0 });
 
     mainData.refetch();
   };
