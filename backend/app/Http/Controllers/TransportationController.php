@@ -216,7 +216,7 @@ class TransportationController extends Controller
         $validatedData = $request->validate([
             'destination_id' => 'required|exists:destinations,id',
             'company_name' => 'required|string|max:255',
-            'company_document' => 'file|mimes:jpeg,jpg,png,doc,docx,pdf',
+            'company_document' => 'nullable|file|mimes:jpeg,jpg,png,doc,docx,pdf',
             'address' => 'required|string|max:255',
             'transport' => 'required|string|max:255',
             'vehicle_type' => 'required|string|max:100',
