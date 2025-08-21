@@ -49,7 +49,7 @@ const Tickets = () => {
   });
   const [transferOptionTemp, setTransferOptionTemp] = useState({
     option: "",
-    price: "",
+    price: 0,
   });
   const [categoryOption, setCategoryOption] = useState({ option: "" });
   // Modal state
@@ -224,11 +224,11 @@ const Tickets = () => {
     const { name, value } = e.target;
     let filteredValue = value;
 
-    if (name === "price") {
-      filteredValue = value
-        .replace(/[^0-9.]/g, "")
-        .replace(/(\..*)\./g, "AED1");
-    }
+    // if (name === "price") {
+    //   filteredValue = value
+    //     .replace(/[^0-9.]/g, "")
+    //     .replace(/(\..*)\./g, "AED1");
+    // }
 
     setTransferOptionTemp((item) => ({ ...item, [name]: filteredValue }));
   };
