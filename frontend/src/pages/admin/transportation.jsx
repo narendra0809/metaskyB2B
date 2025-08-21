@@ -14,7 +14,6 @@ const Transportation = () => {
 
   // Fetch destination and country data
   const mainData = useApiData(`${base_url}/api/transportations`, token);
-
   const countriesData = useApiData(`${base_url}/api/countries`, token);
   const destinationsData = useApiData(`${base_url}/api/getdestinations`, token);
 
@@ -33,6 +32,12 @@ const Transportation = () => {
   const [modals, setModals] = useState({
     addModalOpen: false,
     editModalOpen: false,
+  });
+
+  // Form error state
+  const [formErrors, setFormErrors] = useState({
+    addFormErrors: {},
+    editFormErrors: {},
   });
 
   // Form data for add/edit
@@ -92,16 +97,22 @@ const Transportation = () => {
   // Handle form data changes
   const handleFormDataChange = (formType) => (e) => {
     const { name, value, type } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [formType]: {
+        ...prev[formType],
+        [name]: type === "file" ? e.target.files[0] : value,
+      },
+    }));
 
-    setFormData((prev) => {
-      return {
-        ...prev,
-        [formType]: {
-          ...prev[formType],
-          [name]: type == "file" ? e.target.files[0] : value,
-        },
-      };
-    });
+    // Clear error for the changing field
+    setFormErrors((prev) => ({
+      ...prev,
+      [formType.replace("Data", "Errors")]: {
+        ...prev[formType.replace("Data", "Errors")],
+        [name]: undefined,
+      },
+    }));
   };
 
   /* Options */
@@ -117,7 +128,7 @@ const Transportation = () => {
         options: [...prev[formType]["options"], options],
       },
     }));
-    setOptions({ type: "", rate: "" });
+    setOptions({ from: "", to: "", rate: "" });
   };
   const handleOptions = (e) => {
     const { name, value } = e.target;
@@ -142,7 +153,7 @@ const Transportation = () => {
   };
   const removeOptions = (formType, from, to) => {
     const updatedOptions = formData[formType].options.filter(
-      (option) => option.from !== from && option.to !== to
+      (option) => option.from !== from || option.to !== to
     );
     setFormData((prev) => ({
       ...prev,
@@ -156,33 +167,17 @@ const Transportation = () => {
   // Handle modal open/close
   const toggleModal = (modalType, isOpen) => {
     setEditRes(null);
+    setFormErrors((prev) => ({
+      ...prev,
+      addFormErrors: {},
+      editFormErrors: {},
+    }));
     setModals((prev) => ({ ...prev, [modalType]: isOpen }));
-  };
-
-  // submit form
-  const submitFormData = async (formType) => {
-    const submitData = new FormData();
-
-    Object.entries(formData[formType]).forEach(([key, value]) => {
-      if (key === "options") {
-        value.forEach((option, index) => {
-          submitData.append(`options[${index}][from]`, option.from);
-          submitData.append(`options[${index}][to]`, option.to);
-          submitData.append(`options[${index}][rate]`, option.rate);
-        });
-      } else {
-        submitData.append(key, value);
-      }
-    });
-
-    switch (formType) {
-      case "addFormData":
-        await addForm.sendData(submitData);
-
-        setFormData((item) => ({
-          ...item,
-          [formType]: {
-            ...(formType === "editFormData" && { id: null }),
+    if (!isOpen) {
+      if (modalType === "addModalOpen") {
+        setFormData((prev) => ({
+          ...prev,
+          addFormData: {
             destination_id: "",
             company_name: "",
             company_document: null,
@@ -192,6 +187,61 @@ const Transportation = () => {
             options: [],
           },
         }));
+        setOptions({ from: "", to: "", rate: "" });
+        if (inputDocs.current) inputDocs.current.value = "";
+      }
+      if (modalType === "editModalOpen") {
+        setFormData((prev) => ({
+          ...prev,
+          editFormData: {
+            id: null,
+            destination_id: "",
+            company_name: "",
+            company_document: null,
+            address: "",
+            transport: "",
+            vehicle_type: "",
+            options: [],
+          },
+        }));
+        setOptions({ from: "", to: "", rate: "" });
+      }
+    }
+  };
+
+  // submit form
+  const submitFormData = async (formType) => {
+    const submitData = new FormData();
+    Object.entries(formData[formType]).forEach(([key, value]) => {
+      if (key === "options") {
+        value.forEach((option, index) => {
+          submitData.append(`options[${index}][from]`, option.from);
+          submitData.append(`options[${index}][to]`, option.to);
+          submitData.append(`options[${index}][rate]`, option.rate);
+        });
+      } else if (key === "company_document") {
+        if (value) {
+          submitData.append(key, value);
+        }
+      } else {
+        submitData.append(key, value);
+      }
+    });
+
+    let response;
+    switch (formType) {
+      case "addFormData":
+        response = await addForm.sendData(submitData);
+        if (response?.success) {
+          setFormErrors((prev) => ({ ...prev, addFormErrors: {} }));
+          setModals((prev) => ({ ...prev, addModalOpen: false }));
+          mainData.refetch();
+        } else if (response?.errors) {
+          setFormErrors((prev) => ({
+            ...prev,
+            addFormErrors: response.errors,
+          }));
+        }
         break;
       case "editFormData":
         setEditLoading(true);
@@ -199,23 +249,24 @@ const Transportation = () => {
           `${base_url}/api/updatetransportation/${formData.editFormData.id}`,
           {
             method: "POST",
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
+            headers: { Authorization: `Bearer ${token}` },
             body: submitData,
           }
         );
 
         const result = await res.json();
-
         setEditRes(result);
         setEditLoading(false);
+
+        if (result?.success) {
+          setFormErrors((prev) => ({ ...prev, editFormErrors: {} }));
+          setModals((prev) => ({ ...prev, editModalOpen: false }));
+          mainData.refetch();
+        } else if (result?.errors) {
+          setFormErrors((prev) => ({ ...prev, editFormErrors: result.errors }));
+        }
         break;
     }
-
-    setOptions({ from: "", to: "", rate: "" });
-
-    mainData.refetch();
   };
 
   // Confirmation
@@ -237,7 +288,6 @@ const Transportation = () => {
             Authorization: `Bearer ${token}`,
           },
         });
-
         mainData.refetch();
       })();
     } else {
@@ -270,7 +320,13 @@ const Transportation = () => {
                   value={formData.addFormData.company_name}
                   onChange={handleFormDataChange("addFormData")}
                 />
+                {formErrors.addFormErrors.company_name && (
+                  <div className="text-danger">
+                    {formErrors.addFormErrors.company_name[0]}
+                  </div>
+                )}
               </div>
+
               <div className="mb-3">
                 <label htmlFor="company_document" className="form-label">
                   Vehicle Documents
@@ -279,12 +335,17 @@ const Transportation = () => {
                   type="file"
                   className="form-control"
                   id="company_document"
-                  placeholder="Vehicle Documents..."
                   name="company_document"
                   ref={inputDocs}
                   onChange={handleFormDataChange("addFormData")}
                 />
+                {formErrors.addFormErrors.company_document && (
+                  <div className="text-danger">
+                    {formErrors.addFormErrors.company_document[0]}
+                  </div>
+                )}
               </div>
+
               <div className="mb-3">
                 <label htmlFor="address" className="form-label">
                   Address
@@ -298,7 +359,13 @@ const Transportation = () => {
                   value={formData.addFormData.address}
                   onChange={handleFormDataChange("addFormData")}
                 />
+                {formErrors.addFormErrors.address && (
+                  <div className="text-danger">
+                    {formErrors.addFormErrors.address[0]}
+                  </div>
+                )}
               </div>
+
               <div className="mb-3">
                 <label htmlFor="destination_id" className="form-label">
                   Destination
@@ -319,7 +386,13 @@ const Transportation = () => {
                     </option>
                   ))}
                 </select>
+                {formErrors.addFormErrors.destination_id && (
+                  <div className="text-danger">
+                    {formErrors.addFormErrors.destination_id[0]}
+                  </div>
+                )}
               </div>
+
               <div className="mb-3">
                 <label htmlFor="transport" className="form-label">
                   Vehicle Name
@@ -333,7 +406,13 @@ const Transportation = () => {
                   value={formData.addFormData.transport}
                   onChange={handleFormDataChange("addFormData")}
                 />
+                {formErrors.addFormErrors.transport && (
+                  <div className="text-danger">
+                    {formErrors.addFormErrors.transport[0]}
+                  </div>
+                )}
               </div>
+
               <div className="mb-3">
                 <label htmlFor="vehicle_type" className="form-label">
                   Vehicle Capacity
@@ -342,19 +421,25 @@ const Transportation = () => {
                   type="text"
                   className="form-control"
                   id="vehicle_type"
-                  placeholder="Transport..."
+                  placeholder="Vehicle Capacity..."
                   name="vehicle_type"
                   value={formData.addFormData.vehicle_type}
                   onChange={handleFormDataChange("addFormData")}
                 />
+                {formErrors.addFormErrors.vehicle_type && (
+                  <div className="text-danger">
+                    {formErrors.addFormErrors.vehicle_type[0]}
+                  </div>
+                )}
               </div>
+
               {/* Options */}
               <div className="mb-3">
                 <label htmlFor="room_type" className="form-label">
                   Options
                 </label>
                 <div className="row g-2">
-                  <div className="col-6">
+                  <div className="col-4">
                     <input
                       type="text"
                       className="form-control"
@@ -364,7 +449,7 @@ const Transportation = () => {
                       onChange={handleOptions}
                     />
                   </div>
-                  <div className="col-6">
+                  <div className="col-4">
                     <input
                       type="text"
                       className="form-control"
@@ -374,7 +459,7 @@ const Transportation = () => {
                       onChange={handleOptions}
                     />
                   </div>
-                  <div className="col-6">
+                  <div className="col-4">
                     <input
                       type="text"
                       className="form-control"
@@ -384,6 +469,11 @@ const Transportation = () => {
                       onChange={handleOptions}
                     />
                   </div>
+                  {formErrors.addFormErrors.options && (
+                    <div className="text-danger mt-1">
+                      {formErrors.addFormErrors.options[0]}
+                    </div>
+                  )}
                 </div>
                 <div>
                   {formData.addFormData.options.map((item) => (
@@ -400,6 +490,7 @@ const Transportation = () => {
                           onClick={() =>
                             removeOptions("addFormData", item.from, item.to)
                           }
+                          type="button"
                         >
                           <i className="fa-solid fa-trash-can text-danger"></i>
                         </button>
@@ -409,31 +500,20 @@ const Transportation = () => {
                 </div>
                 <button
                   className="btn btn-success mt-3"
-                  onClick={() => {
-                    addOptions("addFormData");
-                  }}
+                  onClick={() => addOptions("addFormData")}
+                  type="button"
                 >
                   Add Option
                 </button>
               </div>
-              {addForm.response &&
-                (addForm.response?.success ? (
-                  <div className="alert alert-success">
-                    {addForm.response?.message}
-                  </div>
-                ) : (
-                  <div className="alert alert-danger">
-                    {typeof addForm.response.errors === "object"
-                      ? Object.values(addForm.response.errors)[0]
-                      : addForm.response.errors}
-                  </div>
-                ))}
             </div>
+
             <div className="container p-3">
               <button
                 className="btn btn-primary"
                 type="submit"
                 onClick={() => submitFormData("addFormData")}
+                disabled={addForm.loading}
               >
                 {addForm.loading ? "Processing..." : "Add"}
               </button>
@@ -462,20 +542,31 @@ const Transportation = () => {
                   value={formData.editFormData.company_name}
                   onChange={handleFormDataChange("editFormData")}
                 />
+                {formErrors.editFormErrors.company_name && (
+                  <div className="text-danger">
+                    {formErrors.editFormErrors.company_name[0]}
+                  </div>
+                )}
               </div>
+
               <div className="mb-3">
-                <label htmlFor="hotel_type" className="form-label">
+                <label htmlFor="company_document" className="form-label">
                   Vehicle Documents
                 </label>
                 <input
                   type="file"
                   className="form-control"
                   id="company_document"
-                  placeholder="Vehicle Documents..."
                   name="company_document"
                   onChange={handleFormDataChange("editFormData")}
                 />
+                {formErrors.editFormErrors.company_document && (
+                  <div className="text-danger">
+                    {formErrors.editFormErrors.company_document[0]}
+                  </div>
+                )}
               </div>
+
               <div className="mb-3">
                 <label htmlFor="address" className="form-label">
                   Address
@@ -489,7 +580,13 @@ const Transportation = () => {
                   value={formData.editFormData.address}
                   onChange={handleFormDataChange("editFormData")}
                 />
+                {formErrors.editFormErrors.address && (
+                  <div className="text-danger">
+                    {formErrors.editFormErrors.address[0]}
+                  </div>
+                )}
               </div>
+
               <div className="mb-3">
                 <label htmlFor="destination_id" className="form-label">
                   Destination
@@ -510,7 +607,13 @@ const Transportation = () => {
                     </option>
                   ))}
                 </select>
+                {formErrors.editFormErrors.destination_id && (
+                  <div className="text-danger">
+                    {formErrors.editFormErrors.destination_id[0]}
+                  </div>
+                )}
               </div>
+
               <div className="mb-3">
                 <label htmlFor="transport" className="form-label">
                   Vehicle Name
@@ -524,7 +627,13 @@ const Transportation = () => {
                   value={formData.editFormData.transport}
                   onChange={handleFormDataChange("editFormData")}
                 />
+                {formErrors.editFormErrors.transport && (
+                  <div className="text-danger">
+                    {formErrors.editFormErrors.transport[0]}
+                  </div>
+                )}
               </div>
+
               <div className="mb-3">
                 <label htmlFor="vehicle_type" className="form-label">
                   Vehicle Capacity
@@ -538,44 +647,55 @@ const Transportation = () => {
                   value={formData.editFormData.vehicle_type}
                   onChange={handleFormDataChange("editFormData")}
                 />
+                {formErrors.editFormErrors.vehicle_type && (
+                  <div className="text-danger">
+                    {formErrors.editFormErrors.vehicle_type[0]}
+                  </div>
+                )}
               </div>
+
               {/* Options */}
               <div className="mb-3">
                 <label htmlFor="room_type" className="form-label">
                   Options
                 </label>
                 <div className="row g-2">
-                  <div className="col-6">
+                  <div className="col-4">
                     <input
                       type="text"
                       className="form-control"
                       placeholder="From ..."
                       name="from"
-                      value={options.form}
+                      value={options.from}
                       onChange={handleOptions}
                     />
                   </div>
-                  <div className="col-6">
+                  <div className="col-4">
                     <input
                       type="text"
                       className="form-control"
                       placeholder="To ..."
                       name="to"
-                      value={options.type}
+                      value={options.to}
                       onChange={handleOptions}
                     />
                   </div>
-                  <div className="col-6">
+                  <div className="col-4">
                     <input
                       type="text"
                       className="form-control"
-                      placeholder="Rate..."
+                      placeholder="Rate ..."
                       name="rate"
                       value={options.rate}
                       onChange={handleOptions}
                     />
                   </div>
                 </div>
+                {formErrors.editFormErrors.options && (
+                  <div className="text-danger mt-1">
+                    {formErrors.editFormErrors.options[0]}
+                  </div>
+                )}
                 <div>
                   {formData.editFormData.options.map((item) => (
                     <div
@@ -589,8 +709,9 @@ const Transportation = () => {
                         <button
                           className="btn p-1"
                           onClick={() =>
-                            removeOptions("addFormData", item.from, item.to)
+                            removeOptions("editFormData", item.from, item.to)
                           }
+                          type="button"
                         >
                           <i className="fa-solid fa-trash-can text-danger"></i>
                         </button>
@@ -598,31 +719,23 @@ const Transportation = () => {
                     </div>
                   ))}
                 </div>
+
                 <button
                   className="btn btn-success mt-3"
-                  onClick={() => {
-                    addOptions("editFormData");
-                  }}
+                  onClick={() => addOptions("editFormData")} // Use "addFormData" or "editFormData" accordingly
+                  type="button"
                 >
                   Add Option
                 </button>
               </div>
-              {editRes &&
-                (editRes?.success ? (
-                  <div className="alert alert-success">{editRes?.message}</div>
-                ) : (
-                  <div className="alert alert-danger">
-                    {typeof editRes.errors === "object"
-                      ? Object.values(editRes.errors)[0]
-                      : editRes.errors}
-                  </div>
-                ))}
             </div>
+
             <div className="container p-3">
               <button
                 className="btn btn-warning"
                 type="submit"
                 onClick={() => submitFormData("editFormData")}
+                disabled={editLoading}
               >
                 {editLoading ? "Processing..." : "Update"}
               </button>
@@ -667,8 +780,10 @@ const Transportation = () => {
                   <th>Transporter Name</th>
                   <th>Transport</th>
                   <th>Vehicle Type</th>
-                  <th>Address</th>
-                  <th>Destination</th>
+                  {/* Removed Address and Destination */}
+                  <th>From</th>
+                  <th>To</th>
+                  <th>Rate</th>
                   <th style={{ width: "1%" }}>Action</th>
                 </tr>
               </thead>
@@ -677,56 +792,103 @@ const Transportation = () => {
                 destinationsData.loading ||
                 mainData.loading ? (
                   <tr>
-                    <td colSpan="6" className="text-center">
+                    <td colSpan="7" className="text-center">
                       <Loader />
                     </td>
                   </tr>
                 ) : paginatedData.length > 0 ? (
-                  paginatedData.map((item) => (
-                    <tr key={item.id}>
-                      <td>{item.company_name}</td>
-                      <td>{item.transport}</td>
-                      <td>{item.vehicle_type}</td>
-                      <td>{item.address}</td>
-                      <td>
-                        {countriesData.data?.cities.find(
-                          (city) =>
-                            city.id ===
-                            destinationsData.data?.destinations?.find(
-                              (des) => des.id === item.destination_id
-                            ).city_id
-                        )?.name || "N/A"}
-                      </td>
-                      <td style={{ width: "1%" }}>
-                        <div className="d-flex">
-                          <button
-                            className="btn flex-shrink-0"
-                            onClick={() => {
-                              setFormData((prev) => ({
-                                ...prev,
-                                editFormData: { ...item, id: item.id },
-                              }));
-
-                              toggleModal("editModalOpen", true);
-                            }}
+                  paginatedData.map((item) => {
+                    // For cases where options array is empty, show a blank row with placeholders
+                    if (!item.options || item.options.length === 0) {
+                      return (
+                        <tr key={item.id}>
+                          <td>{item.company_name}</td>
+                          <td>{item.transport}</td>
+                          <td>{item.vehicle_type}</td>
+                          <td colSpan="3" className="text-center text-muted">
+                            No options available
+                          </td>
+                          <td style={{ width: "1%" }}>
+                            <div className="d-flex">
+                              <button
+                                className="btn flex-shrink-0"
+                                onClick={() => {
+                                  setFormData((prev) => ({
+                                    ...prev,
+                                    editFormData: { ...item, id: item.id },
+                                  }));
+                                  toggleModal("editModalOpen", true);
+                                }}
+                              >
+                                <i className="fa-solid fa-pencil text-warning"></i>
+                              </button>
+                              <button
+                                className="btn flex-shrink-0"
+                                onClick={() => {
+                                  handleDeleteClick(item.id, item.transport);
+                                }}
+                              >
+                                <i className="fa-solid fa-trash-can text-danger"></i>
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    }
+                    // If multiple options, create multiple rows per option, showing company info only on first row
+                    return item.options.map((opt, index) => (
+                      <tr key={`${item.id}-${index}`}>
+                        {index === 0 && (
+                          <>
+                            <td rowSpan={item.options.length}>
+                              {item.company_name}
+                            </td>
+                            <td rowSpan={item.options.length}>
+                              {item.transport}
+                            </td>
+                            <td rowSpan={item.options.length}>
+                              {item.vehicle_type}
+                            </td>
+                          </>
+                        )}
+                        <td>{opt.from}</td>
+                        <td>{opt.to}</td>
+                        <td>{opt.rate}</td>
+                        {index === 0 && (
+                          <td
+                            rowSpan={item.options.length}
+                            style={{ width: "1%" }}
                           >
-                            <i className="fa-solid fa-pencil text-warning"></i>
-                          </button>
-                          <button
-                            className="btn flex-shrink-0"
-                            onClick={() => {
-                              handleDeleteClick(item.id, item.transport);
-                            }}
-                          >
-                            <i className="fa-solid fa-trash-can text-danger"></i>
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))
+                            <div className="d-flex">
+                              <button
+                                className="btn flex-shrink-0"
+                                onClick={() => {
+                                  setFormData((prev) => ({
+                                    ...prev,
+                                    editFormData: { ...item, id: item.id },
+                                  }));
+                                  toggleModal("editModalOpen", true);
+                                }}
+                              >
+                                <i className="fa-solid fa-pencil text-warning"></i>
+                              </button>
+                              <button
+                                className="btn flex-shrink-0"
+                                onClick={() => {
+                                  handleDeleteClick(item.id, item.transport);
+                                }}
+                              >
+                                <i className="fa-solid fa-trash-can text-danger"></i>
+                              </button>
+                            </div>
+                          </td>
+                        )}
+                      </tr>
+                    ));
+                  })
                 ) : (
                   <tr>
-                    <td colSpan="6" className="text-center">
+                    <td colSpan="7" className="text-center">
                       No record found
                     </td>
                   </tr>
