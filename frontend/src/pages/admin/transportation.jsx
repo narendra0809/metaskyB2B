@@ -209,10 +209,16 @@ const Transportation = () => {
     }
   };
 
+  async function urlToFile(url, filename, mimeType) {
+    const response = await fetch(url);
+    const blob = await response.blob();
+    return new File([blob], filename, { type: mimeType });
+  }
+
   // submit form
   const submitFormData = async (formType) => {
     const submitData = new FormData();
-    Object.entries(formData[formType]).forEach(([key, value]) => {
+    Object.entries(formData[formType]).forEach(async ([key, value]) => {
       if (key === "options") {
         value.forEach((option, index) => {
           submitData.append(`options[${index}][from]`, option.from);
@@ -220,7 +226,12 @@ const Transportation = () => {
           submitData.append(`options[${index}][rate]`, option.rate);
         });
       } else if (key === "company_document") {
-        if (value) {
+        if (typeof value === "string") {
+          const filename = value.split("/").pop();
+          const mimeType = "";
+          const fileObject = await urlToFile(value, filename, mimeType);
+          submitData.append(key, fileObject);
+        } else if (value) {
           submitData.append(key, value);
         }
       } else {
