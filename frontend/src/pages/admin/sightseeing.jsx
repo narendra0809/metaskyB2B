@@ -7,6 +7,7 @@ import { useAuth } from "../../context/AuthContext";
 import Confirm from "../../components/Confirm";
 import Loader from "../../Loader";
 import "../../Loader.css";
+import TermsConditionsModal from "../../components/TermsConditions";
 
 const Sightseeing = () => {
   const base_url = import.meta.env.VITE_API_URL;
@@ -22,7 +23,7 @@ const Sightseeing = () => {
   const [searchValue, setSearchValue] = useState("");
   const [perPage, setPerPage] = useState(10);
   const [currPageNo, setCurrPageNo] = useState(0);
-
+  const [openTermsConditions, setOpenTermsConditions] = useState(false);
   // Form Data state
   const addForm = useSendFile(
     `${base_url}/api/sightseeing`, // URL to send data to
@@ -47,6 +48,7 @@ const Sightseeing = () => {
       description: "",
       rate_adult: "",
       rate_child: "",
+      terms_and_conditions: null,
     },
     editFormData: {
       id: null,
@@ -56,6 +58,7 @@ const Sightseeing = () => {
       description: "",
       rate_adult: "",
       rate_child: "",
+      terms_and_conditions: null,
     },
   });
 
@@ -129,7 +132,11 @@ const Sightseeing = () => {
 
     Object.entries(formData[formType]).forEach(([key, value]) => {
       if (value !== null) {
-        submitData.append(key, value);
+        if (key === "terms_and_conditions") {
+          submitData.append(key, JSON.stringify(value));
+        } else {
+          submitData.append(key, value);
+        }
       }
     });
 
@@ -137,18 +144,18 @@ const Sightseeing = () => {
       case "addFormData":
         await addForm.sendData(submitData);
 
-        setFormData((item) => ({
-          ...item,
-          [formType]: {
-            ...(formType === "editFormData" && { id: null }),
-            destination_id: "",
-            company_name: "",
-            address: "",
-            description: "",
-            rate_adult: "",
-            rate_child: "",
-          },
-        }));
+        // setFormData((item) => ({
+        //   ...item,
+        //   [formType]: {
+        //     ...(formType === "editFormData" && { id: null }),
+        //     destination_id: "",
+        //     company_name: "",
+        //     address: "",
+        //     description: "",
+        //     rate_adult: "",
+        //     rate_child: "",
+        //   },
+        // }));
         break;
       case "editFormData":
         setEditLoading(true);
@@ -200,6 +207,8 @@ const Sightseeing = () => {
     }
     setIsConfirm(false);
   };
+
+  console.log(formData);
 
   return (
     <>
@@ -319,13 +328,22 @@ const Sightseeing = () => {
                   </div>
                 ))}
             </div>
-            <div className="container p-3">
+            <div className="container p-3 d-flex justify-content-between">
               <button
                 className="btn btn-primary"
                 type="submit"
                 onClick={() => submitFormData("addFormData")}
               >
                 {addForm.loading ? "Processing..." : "Add"}
+              </button>
+              <button
+                className="btn btn-primary"
+                type="button"
+                onClick={() => setOpenTermsConditions(true)}
+              >
+                {formData.addFormData.terms_and_conditions
+                  ? "Edit terms & conditions"
+                  : "Add terms & conditions"}
               </button>
             </div>
           </div>
@@ -443,13 +461,22 @@ const Sightseeing = () => {
                   </div>
                 ))}
             </div>
-            <div className="container p-3">
+            <div className="container p-3 d-flex justify-content-between">
               <button
                 className="btn btn-warning"
                 type="submit"
                 onClick={() => submitFormData("editFormData")}
               >
                 {editLoading ? "Processing..." : "Update"}
+              </button>
+              <button
+                className="btn btn-primary"
+                type="button"
+                onClick={() => setOpenTermsConditions(true)}
+              >
+                {formData.editFormData.terms_and_conditions
+                  ? "Edit terms & conditions"
+                  : "Add terms & conditions"}
               </button>
             </div>
           </div>
@@ -467,6 +494,29 @@ const Sightseeing = () => {
         >
           Are you sure you want to delete {recordToDelete?.name}?
         </Confirm>
+
+        {openTermsConditions && (
+          <TermsConditionsModal
+            open={openTermsConditions}
+            onClose={() => setOpenTermsConditions(false)}
+            initialData={
+              formData.addFormData.terms_and_conditions ||
+              formData.editFormData.terms_and_conditions
+            }
+            onSubmit={(form) => {
+              setFormData({
+                addFormData: {
+                  ...formData.addFormData,
+                  terms_and_conditions: form,
+                },
+                editFormData: {
+                  ...formData.editFormData,
+                  terms_and_conditions: form,
+                },
+              });
+            }}
+          />
+        )}
 
         <div className="display-header">
           <h2 className="display-title">Sightseeings</h2>

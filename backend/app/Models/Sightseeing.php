@@ -14,6 +14,11 @@ class Sightseeing extends Model
         'description',
         'rate_adult',
         'rate_child',
+        'terms_and_conditions'
+    ];
+
+     protected $casts = [
+        'terms_and_conditions' => 'array',
     ];
 
     // Define relationship with Destination model

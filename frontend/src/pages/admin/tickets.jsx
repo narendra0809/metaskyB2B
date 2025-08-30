@@ -7,6 +7,7 @@ import { useAuth } from "../../context/AuthContext";
 import Confirm from "../../components/Confirm";
 import Loader from "../../Loader";
 import "../../Loader.css";
+import TermsConditionsModal from "../../components/TermsConditions";
 
 const Tickets = () => {
   const base_url = import.meta.env.VITE_API_URL;
@@ -66,6 +67,7 @@ const Tickets = () => {
       time_slots: [],
       category: [],
       status: "Active",
+      terms_and_conditions: null,
     },
     editFormData: {
       id: null,
@@ -74,8 +76,11 @@ const Tickets = () => {
       time_slots: [],
       category: [],
       status: "Active",
+      terms_and_conditions: null,
     },
   });
+
+  const [openTermsConditions, setOpenTermsConditions] = useState(false);
 
   // Add state for available time slots:
   const [availableTimeSlots, setAvailableTimeSlots] = useState([]);
@@ -145,8 +150,6 @@ const Tickets = () => {
       setAvailableTimeSlots(newSlots);
     }
   };
-
-  console.log("Edit time slots :", editAvailableTimeSlots);
 
   // Handle form data changes
   const handleFormDataChange = (formType) => (e) => {
@@ -378,6 +381,12 @@ const Tickets = () => {
 
   // submit form
   const submitFormData = async (formType) => {
+    formData["addFormData"].terms_and_conditions = JSON.stringify(
+      formData.addFormData.terms_and_conditions
+    );
+    formData["editFormData"].terms_and_conditions = JSON.stringify(
+      formData.editFormData.terms_and_conditions
+    );
     switch (formType) {
       case "addFormData":
         if (formData.addFormData.category.length === 0) {
@@ -387,6 +396,7 @@ const Tickets = () => {
           }));
           formData["addFormData"].time_slots = timeSlots;
         }
+
         await addForm.sendData(formData["addFormData"]);
 
         setFormData((item) => ({
@@ -769,13 +779,22 @@ const Tickets = () => {
                   </div>
                 ))}
             </div>
-            <div className="container p-3">
+            <div className="container p-3 d-flex justify-content-between">
               <button
                 className="btn btn-primary"
                 type="submit"
                 onClick={() => submitFormData("addFormData")}
               >
                 {addForm.loading ? "Processing..." : "Add"}
+              </button>
+              <button
+                className="btn btn-primary"
+                type="button"
+                onClick={() => setOpenTermsConditions(true)}
+              >
+                {formData.addFormData.terms_and_conditions
+                  ? "Edit terms & conditions"
+                  : "Add terms & conditions"}
               </button>
             </div>
           </div>
@@ -1025,13 +1044,22 @@ const Tickets = () => {
                   </div>
                 ))}
             </div>
-            <div className="container p-3">
+            <div className="container p-3 d-flex justify-content-between">
               <button
                 className="btn btn-warning"
                 type="submit"
                 onClick={() => submitFormData("editFormData")}
               >
                 {editLoading ? "Processing..." : "Update"}
+              </button>
+              <button
+                className="btn btn-primary"
+                type="button"
+                onClick={() => setOpenTermsConditions(true)}
+              >
+                {formData.editFormData.terms_and_conditions
+                  ? "Edit terms & conditions"
+                  : "Add terms & conditions"}
               </button>
             </div>
           </div>
@@ -1049,6 +1077,29 @@ const Tickets = () => {
         >
           Are you sure you want to delete {recordToDelete?.name}?
         </Confirm>
+
+        {openTermsConditions && (
+          <TermsConditionsModal
+            open={openTermsConditions}
+            onClose={() => setOpenTermsConditions(false)}
+            onSubmit={(form) => {
+              setFormData({
+                addFormData: {
+                  ...formData.addFormData,
+                  terms_and_conditions: form,
+                },
+                editFormData: {
+                  ...formData.editFormData,
+                  terms_and_conditions: form,
+                },
+              });
+            }}
+            initialData={
+              formData.addFormData.terms_and_conditions ||
+              formData.editFormData.terms_and_conditions
+            }
+          />
+        )}
 
         <div className="display-header">
           <h2 className="display-title">Tickets</h2>

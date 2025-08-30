@@ -16,10 +16,12 @@ class Transportation extends Model
         'transport',
         'vehicle_type',
         'options',
+        'terms_and_conditions'
     ];
 
     protected $casts = [
         'options' => 'array',
+        'terms_and_conditions' => 'array',
     ];
 
     public function destination()
