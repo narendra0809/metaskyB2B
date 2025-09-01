@@ -527,6 +527,7 @@ class ComposerStaticInit8e4e7eed170f7766319a45a2f526b879
         'App\\Http\\Controllers\\UserController' => __DIR__ . '/../..' . '/app/Http/Controllers/UserController.php',
         'App\\Http\\Controllers\\WalletController' => __DIR__ . '/../..' . '/app/Http/Controllers/WalletController.php',
         'App\\Http\\Middleware\\RoleMiddleware' => __DIR__ . '/../..' . '/app/Http/Middleware/RoleMiddleware.php',
+        'App\\Models\\Bankdetail' => __DIR__ . '/../..' . '/app/Models/Bankdetail.php',
         'App\\Models\\Booking' => __DIR__ . '/../..' . '/app/Models/Booking.php',
         'App\\Models\\City' => __DIR__ . '/../..' . '/app/Models/City.php',
         'App\\Models\\Country' => __DIR__ . '/../..' . '/app/Models/Country.php',

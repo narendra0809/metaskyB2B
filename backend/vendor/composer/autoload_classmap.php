@@ -19,6 +19,7 @@ return array(
     'App\\Http\\Controllers\\UserController' => $baseDir . '/app/Http/Controllers/UserController.php',
     'App\\Http\\Controllers\\WalletController' => $baseDir . '/app/Http/Controllers/WalletController.php',
     'App\\Http\\Middleware\\RoleMiddleware' => $baseDir . '/app/Http/Middleware/RoleMiddleware.php',
+    'App\\Models\\Bankdetail' => $baseDir . '/app/Models/Bankdetail.php',
     'App\\Models\\Booking' => $baseDir . '/app/Models/Booking.php',
     'App\\Models\\City' => $baseDir . '/app/Models/City.php',
     'App\\Models\\Country' => $baseDir . '/app/Models/Country.php',
