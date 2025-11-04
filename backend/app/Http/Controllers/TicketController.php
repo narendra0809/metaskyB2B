@@ -12,6 +12,75 @@ class TicketController extends Controller
     /**
      * Store a newly created ticket in storage.
      */
+    public function import(Request $request)
+{
+    $validatedData = $request->validate([
+        'file' => 'required|file|mimes:xls,xlsx,csv',
+    ]);
+
+    if ($request->hasFile('file')) {
+        try {
+            $file = $request->file('file');
+            $rows = Excel::toArray(null,$file)[0]; // Get first sheet as plain array
+
+            if (count($rows) < 2) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Excel file contains no data',
+                ], 422);
+            }
+
+            $headers = array_map('strtolower', $rows[0]); // Get headers row in lowercase
+            unset($rows[0]); // Remove header row from data
+
+            foreach ($rows as $index => $row) {
+                // Combine header keys with each row values
+                $rowData = array_combine($headers, $row);
+
+                if (!$rowData) {
+                    Log::warning("Row #$index could not be combined with headers, skipping.");
+                    continue;
+                }
+
+                // Decode JSON columns
+                $options = isset($rowData['options']) && $rowData['options'] !== 'NULL'
+                    ? json_decode($rowData['options'], true)
+                    : [];
+
+                $terms = isset($rowData['terms_and_conditions']) && $rowData['terms_and_conditions'] !== 'NULL'
+                    ? json_decode($rowData['terms_and_conditions'], true)
+                    : null;
+
+                Transportation::create(
+                    [   'company_name' => $rowData['company_name'],
+                        'destination_id' => $rowData['destination_id'],
+                        'company_document' => $rowData['company_document'],
+                        'address' => $rowData['address'],
+                        'transport' => $rowData['transport'],
+                        'vehicle_type' => $rowData['vehicle_type'],
+                        'options' => $options,
+                        'terms_and_conditions' => $terms,
+                    ]
+                );
+
+                Log::info("Imported row #$index, company: {$rowData['company_name']}");
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Import successful',
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Import failed: ' . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Import failed',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+}
     public function store(Request $request)
     {
         Log::info('Incoming Request: ' . json_encode($request->all()));

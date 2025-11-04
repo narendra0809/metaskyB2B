@@ -1836,6 +1836,8 @@ trait Date
 
     /**
      * Set the timezone or returns the timezone name if no arguments passed.
+     *
+     * @return ($value is null ? string : static)
      */
     public function tz(DateTimeZone|string|int|null $value = null): static|string
     {
@@ -2965,7 +2967,7 @@ trait Date
     private function mutateIfMutable(CarbonInterface $date): CarbonInterface
     {
         return $this instanceof DateTimeImmutable
-            ? $this
+            ? $date
             : $this->modify('@'.$date->rawFormat('U.u'))->setTimezone($date->getTimezone());
     }
 }
