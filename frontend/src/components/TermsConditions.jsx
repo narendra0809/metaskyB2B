@@ -130,7 +130,7 @@ const TermsConditionsModal = ({
           />
         </div>
 
-        <div className="mb-3">
+        {/* <div className="mb-3">
           <div className="d-flex justify-content-between align-items-center">
             <label className="form-label mb-0">Tour Transfers</label>
             <button
@@ -203,7 +203,7 @@ const TermsConditionsModal = ({
               </div>
             </div>
           ))}
-        </div>
+        </div> */}
 
         {/* Policy arrays */}
         <div className="mb-3">

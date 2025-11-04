@@ -19,6 +19,8 @@ class SightseeingController extends Controller
                 'description' => 'nullable|string',
                 'rate_adult' => 'required|numeric|min:0',
                 'rate_child' => 'required|numeric|min:0',
+                'sharing_transfer_adult' => 'required|numeric|min:0',
+                'sharing_transfer_child' => 'required|numeric|min:0',
                 'terms_and_conditions' => 'nullable|json',
             ]);
             $terms = $request->has('terms_and_conditions') ? json_decode($request->terms_and_conditions, true) : null;
@@ -31,6 +33,8 @@ class SightseeingController extends Controller
                 'description' => $validatedData['description'],
                 'rate_adult' => $validatedData['rate_adult'],
                 'rate_child' => $validatedData['rate_child'],
+                'sharing_transfer_adult' => $validatedData['sharing_transfer_adult'],
+                'sharing_transfer_child' => $validatedData['sharing_transfer_child'],
                 'terms_and_conditions' => $terms,
             ]);
 
@@ -99,6 +103,8 @@ class SightseeingController extends Controller
                 'description' => 'nullable|string',
                 'rate_adult' => 'required|numeric|min:0',
                 'rate_child' => 'required|numeric|min:0',
+                'sharing_transfer_adult' => 'required|numeric|min:0',
+                'sharing_transfer_child' => 'required|numeric|min:0',
                 'terms_and_conditions' => 'nullable|json',
             ]);
 
@@ -112,6 +118,8 @@ class SightseeingController extends Controller
             $sightseeing->description = $validatedData['description'];
             $sightseeing->rate_adult = $validatedData['rate_adult'];
             $sightseeing->rate_child = $validatedData['rate_child'];
+            $sightseeing->sharing_transfer_adult = $validatedData['sharing_transfer_adult'];
+            $sightseeing->sharing_transfer_child = $validatedData['sharing_transfer_child'];
             $sightseeing->terms_and_conditions =  $terms;
 
             $sightseeing->save();
@@ -174,6 +182,8 @@ class SightseeingController extends Controller
                     'description' => $sightseeing->description,
                     'rate_adult' => $sightseeing->rate_adult,
                     'rate_child' => $sightseeing->rate_child,
+                    'sharing_transfer_adult' => $sightseeing->sharing_transfer_adult,
+                    'sharing_transfer_child' => $sightseeing->sharing_transfer_child,
                 ];
             });
 

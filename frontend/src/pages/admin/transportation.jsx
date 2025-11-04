@@ -7,6 +7,7 @@ import { useAuth } from "../../context/AuthContext";
 import Confirm from "../../components/Confirm";
 import Loader from "../../Loader";
 import "../../Loader.css";
+import excelFormat from "../../public/data/transportations.xls";
 import TermsConditionsModal from "../../components/TermsConditions";
 
 const Transportation = () => {
@@ -44,7 +45,12 @@ const Transportation = () => {
 
   // Form data for add/edit
   const inputDocs = useRef();
-  const [options, setOptions] = useState({ from: "", to: "", rate: "" });
+  const [options, setOptions] = useState({
+    from: "",
+    to: "",
+    rate: "",
+    transfer_type: "one_way",
+  });
   const [formData, setFormData] = useState({
     addFormData: {
       destination_id: "",
@@ -132,7 +138,7 @@ const Transportation = () => {
         options: [...prev[formType]["options"], options],
       },
     }));
-    setOptions({ from: "", to: "", rate: "" });
+    setOptions({ from: "", to: "", rate: "", transfer_type: "one_way" });
   };
   const handleOptions = (e) => {
     const { name, value } = e.target;
@@ -155,6 +161,7 @@ const Transportation = () => {
       [name]: filteredValue,
     }));
   };
+  console.log(formData.addFormData);
   const removeOptions = (formType, from, to) => {
     const updatedOptions = formData[formType].options.filter(
       (option) => option.from !== from || option.to !== to
@@ -228,6 +235,10 @@ const Transportation = () => {
           submitData.append(`options[${index}][from]`, option.from);
           submitData.append(`options[${index}][to]`, option.to);
           submitData.append(`options[${index}][rate]`, option.rate);
+          submitData.append(
+            `options[${index}][transfer_type]`,
+            option.transfer_type
+          );
         });
       } else if (key === "company_document") {
         if (typeof value === "string") {
@@ -313,6 +324,53 @@ const Transportation = () => {
       setRecordToDelete(null);
     }
     setIsConfirm(false);
+  };
+
+  const [importModalOpen, setImportModalOpen] = useState(false);
+  const [importFile, setImportFile] = useState(null);
+  const [importLoading, setImportLoading] = useState(false);
+  const [importError, setImportError] = useState(null);
+
+  const handleFileChange = (e) => {
+    setImportFile(e.target.files[0]);
+    setImportError(null);
+  };
+
+  const handleImportSubmit = async () => {
+    if (!importFile) {
+      setImportError("Please select an Excel file to import");
+      return;
+    }
+
+    setImportLoading(true);
+
+    const formData = new FormData();
+    formData.append("file", importFile);
+
+    try {
+      const res = await fetch(`${base_url}/api/transportation/import`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        body: formData,
+      });
+
+      const data = await res.json();
+
+      if (!data.success) {
+        setImportError(data.message || "Import failed");
+      } else {
+        // Optionally refresh data here
+        mainData.refetch();
+        setImportModalOpen(false);
+        setImportFile(null);
+      }
+    } catch (error) {
+      setImportError("Import failed: " + error.message);
+    }
+
+    setImportLoading(false);
   };
 
   return (
@@ -451,11 +509,31 @@ const Transportation = () => {
                   </div>
                 )}
               </div>
+              {/* <div className="mb-3">
+                <label htmlFor="transfer_type" className="form-label">
+                  Transfer Type
+                </label>
+                <select
+                  className="form-control"
+                  name="transfer_type"
+                  id="transfer_type"
+                  value={formData.addFormData.transfer_type}
+                  onChange={handleFormDataChange("addFormData")}
+                >
+                  <option value="one_way">One Way</option>
+                  <option value="two_way">Two Way</option>
+                </select>
+                {formErrors.addFormErrors.transfer_type && (
+                  <div className="text-danger">
+                    {formErrors.addFormErrors.transfer_type[0]}
+                  </div>
+                )}
+              </div> */}
 
               {/* Options */}
               <div className="mb-3">
                 <label htmlFor="room_type" className="form-label">
-                  Options
+                  Transfer Options
                 </label>
                 <div className="row g-2">
                   <div className="col-4">
@@ -488,6 +566,17 @@ const Transportation = () => {
                       onChange={handleOptions}
                     />
                   </div>
+                  <div className="col-4">
+                    <select
+                      className="form-control"
+                      name="transfer_type"
+                      id="transfer_type"
+                      onChange={handleOptions}
+                    >
+                      <option value="one_way">One Way</option>
+                      <option value="two_way">Two Way</option>
+                    </select>
+                  </div>
                   {formErrors.addFormErrors.options && (
                     <div className="text-danger mt-1">
                       {formErrors.addFormErrors.options[0]}
@@ -503,6 +592,7 @@ const Transportation = () => {
                       <div className="flex-grow-1">{item.from}</div>
                       <div className="flex-grow-1">{item.to}</div>
                       <div className="flex-grow-1">{item.rate}</div>
+                      <div className="flex-grow-1">{item.transfer_type}</div>
                       <div>
                         <button
                           className="btn p-1"
@@ -683,10 +773,31 @@ const Transportation = () => {
                 )}
               </div>
 
+              {/* <div className="mb-3">
+                <label htmlFor="transfer_type" className="form-label">
+                  Transfer Type
+                </label>
+                <select
+                  className="form-control"
+                  name="transfer_type"
+                  id="transfer_type"
+                  value={formData.editFormData.transfer_type}
+                  onChange={handleFormDataChange("editFormData")}
+                >
+                  <option value="one_way">One Way</option>
+                  <option value="two_way">Two Way</option>
+                </select>
+                {formErrors.editFormErrors.transfer_type && (
+                  <div className="text-danger">
+                    {formErrors.editFormErrors.transfer_type[0]}
+                  </div>
+                )}
+              </div> */}
+
               {/* Options */}
               <div className="mb-3">
                 <label htmlFor="room_type" className="form-label">
-                  Options
+                  Transfer Options
                 </label>
                 <div className="row g-2">
                   <div className="col-4">
@@ -719,6 +830,18 @@ const Transportation = () => {
                       onChange={handleOptions}
                     />
                   </div>
+                  <div className="col-4">
+                    <select
+                      className="form-control"
+                      name="transfer_type"
+                      id="transfer_type"
+                      value={options.transfer_type}
+                      onChange={handleOptions}
+                    >
+                      <option value="one_way">One Way</option>
+                      <option value="two_way">Two Way</option>
+                    </select>
+                  </div>
                 </div>
                 {formErrors.editFormErrors.options && (
                   <div className="text-danger mt-1">
@@ -734,6 +857,7 @@ const Transportation = () => {
                       <div className="flex-grow-1">{item.from}</div>
                       <div className="flex-grow-1">{item.to}</div>
                       <div className="flex-grow-1">{item.rate}</div>
+                      <div className="flex-grow-1">{item.transfer_type}</div>
                       <div>
                         <button
                           className="btn p-1"
@@ -781,6 +905,45 @@ const Transportation = () => {
             </div>
           </div>
         </Modal>
+        {/* Import Modal */}
+        <Modal
+          open={importModalOpen}
+          handleClose={() => {
+            setImportModalOpen(false);
+            setImportFile(null);
+            setImportError(null);
+          }}
+          title="Import Excel File"
+        >
+          <div className="mb-3">
+            <input
+              type="file"
+              accept=".xls,.xlsx"
+              className="form-control"
+              onChange={handleFileChange}
+            />
+          </div>
+          {importError && <div className="text-danger mb-2">{importError}</div>}
+          <div className="d-flex justify-content-end gap-2">
+            <button
+              className="btn btn-secondary"
+              onClick={() => {
+                setImportModalOpen(false);
+                setImportFile(null);
+                setImportError(null);
+              }}
+            >
+              Cancel
+            </button>
+            <button
+              className="btn btn-primary"
+              onClick={handleImportSubmit}
+              disabled={importLoading}
+            >
+              {importLoading ? "Importing..." : "Import"}
+            </button>
+          </div>
+        </Modal>
 
         {/* Confirm */}
         <Confirm
@@ -826,6 +989,20 @@ const Transportation = () => {
             placeholder="Search by name..."
             onChange={handleSearch}
           />
+
+          <a
+            download={"transportations.xlsx"}
+            href={excelFormat}
+            className="btn btn-sm btn-primary"
+          >
+            Download Format
+          </a>
+          <button
+            className="btn btn-sm btn-primary"
+            onClick={() => setImportModalOpen(true)}
+          >
+            Import Excel
+          </button>
           <button
             className="btn btn-sm btn-primary"
             onClick={() => toggleModal("addModalOpen", true)}
@@ -846,6 +1023,7 @@ const Transportation = () => {
                   <th>From</th>
                   <th>To</th>
                   <th>Rate</th>
+                  <th>Transfer Type</th>
                   <th style={{ width: "1%" }}>Action</th>
                 </tr>
               </thead>
@@ -916,6 +1094,7 @@ const Transportation = () => {
                         <td>{opt.from}</td>
                         <td>{opt.to}</td>
                         <td>{opt.rate}</td>
+                        <td>{opt.transfer_type}</td>
                         {index === 0 && (
                           <td
                             rowSpan={item.options.length}

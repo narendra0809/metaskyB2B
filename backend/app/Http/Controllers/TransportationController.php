@@ -1,13 +1,52 @@
 <?php
 
 namespace App\Http\Controllers;
-
+use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Http\Request;
 use App\Models\Transportation;
 use Illuminate\Support\Facades\Log;
 
 class TransportationController extends Controller
-{
+{   
+    public function import(Request $request){
+         $validatedData = $request->validate([
+        'file' => 'required|file|mimes:xls,xlsx,csv',
+    ]);
+
+    if ($request->hasFile('file')) {
+        try {
+            $file = $request->file('file');
+
+          
+            $rows = Excel::toCollection(null, $file)->first();
+
+            foreach ($rows as $row) {
+               Transportation::updateOrCreate(
+                    ['company_name' => $row['company_name']], 
+                    [
+                        'destination_id' => $row['destination_id'],
+                        'address' => $row['address'],
+                        'transport' => $row['transport'],
+                        'vehicle_type' => $row['vehicle_type'],
+                    ]
+                );
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Import successful',
+            ]);
+        } catch (\Exception $e) {
+            // \Log::error('Import error: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Import failed',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    }
     public function transportation(Request $request)
     {
         try {
@@ -21,6 +60,7 @@ class TransportationController extends Controller
                 'options' => 'required|array',
                 'options.*.from' => 'required|string|max:255',
                 'options.*.to' => 'required|string|max:255',
+                'options.*.transfer_type' => 'required|string|max:255',
                 'options.*.rate' => 'required|numeric|min:0',
                 'terms_and_conditions' => 'nullable|json',
             ]);
@@ -49,6 +89,7 @@ class TransportationController extends Controller
                     'from' => $option['from'],
                     'to' => $option['to'],
                     'rate' => $option['rate'],
+                    'transfer_type' => $option['transfer_type'],
                 ];
             }, $validatedData['options']);
 
@@ -177,6 +218,7 @@ class TransportationController extends Controller
                 'options' => 'required|array',
                 'options.*.from' => 'required|string|max:255',
                 'options.*.to' => 'required|string|max:255',
+                'options.*.transfer_type' => 'required|string|max:255',
                 'options.*.rate' => 'required|numeric|min:0',
                 'terms_and_conditions' => 'nullable|json',
             ]);
@@ -209,6 +251,7 @@ class TransportationController extends Controller
                     'from' => $option['from'],
                     'to' => $option['to'],
                     'rate' => $option['rate'],
+                    'transfer_type' => $option['transfer_type'],
                 ];
             }, $validatedData['options']);
 
@@ -260,6 +303,7 @@ class TransportationController extends Controller
                             return [
                                 'from' => $option['from'] ?? 'Unknown',
                                 'to' => $option['to'] ?? 'Unknown',
+                                'transfer_type' => $option['transfer_type'] ?? 'Unknown',
                                 'rate' => $option['rate'] ?? 0,
                             ];
                         })->toArray(),

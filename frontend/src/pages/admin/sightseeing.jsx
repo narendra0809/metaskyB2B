@@ -7,6 +7,7 @@ import { useAuth } from "../../context/AuthContext";
 import Confirm from "../../components/Confirm";
 import Loader from "../../Loader";
 import "../../Loader.css";
+import excelFormat from "../../public/data/sightseeings.xlsx";
 import TermsConditionsModal from "../../components/TermsConditions";
 
 const Sightseeing = () => {
@@ -208,8 +209,6 @@ const Sightseeing = () => {
     setIsConfirm(false);
   };
 
-  console.log(formData);
-
   return (
     <>
       <section className="display-section">
@@ -286,6 +285,31 @@ const Sightseeing = () => {
                   value={formData.addFormData.description}
                   onChange={handleFormDataChange("addFormData")}
                 />
+              </div>
+              <div className="mb-3">
+                <label className="form-label d-block">Sharing Transfer</label>
+                <div className="row g-2">
+                  <div className="col">
+                    <input
+                      type="text"
+                      className="form-control"
+                      placeholder="Adult Rate"
+                      name="sharing_transfer_adult"
+                      value={formData.addFormData.sharing_transfer_adult || ""}
+                      onChange={handleFormDataChange("addFormData")}
+                    />
+                  </div>
+                  <div className="col">
+                    <input
+                      type="text"
+                      className="form-control"
+                      placeholder="Child Rate"
+                      name="sharing_transfer_child"
+                      value={formData.addFormData.sharing_transfer_child || ""}
+                      onChange={handleFormDataChange("addFormData")}
+                    />
+                  </div>
+                </div>
               </div>
               <div className="mb-3">
                 <label htmlFor="rate_adult" className="form-label">
@@ -423,6 +447,32 @@ const Sightseeing = () => {
                 />
               </div>
               <div className="mb-3">
+                <label className="form-label d-block">Sharing Transfer</label>
+                <div className="row g-2">
+                  <div className="col">
+                    <input
+                      type="text"
+                      className="form-control"
+                      placeholder="Adult Rate"
+                      name="sharing_transfer_adult"
+                      value={formData.editFormData.sharing_transfer_adult || ""}
+                      onChange={handleFormDataChange("editFormData")}
+                    />
+                  </div>
+                  <div className="col">
+                    <input
+                      type="text"
+                      className="form-control"
+                      placeholder="Child Rate"
+                      name="sharing_transfer_child"
+                      value={formData.editFormData.sharing_transfer_child || ""}
+                      onChange={handleFormDataChange("editFormData")}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="mb-3">
                 <label htmlFor="rate_adult" className="form-label">
                   Rate Adult
                 </label>
@@ -526,6 +576,17 @@ const Sightseeing = () => {
             placeholder="Search by name..."
             onChange={handleSearch}
           />
+
+          <a
+            download={"sightseeings.xlsx"}
+            href={excelFormat}
+            className="btn btn-sm btn-primary"
+          >
+            Download Format
+          </a>
+          <button className="btn btn-sm btn-primary" onClick={() => {}}>
+            Import Excel
+          </button>
           <button
             className="btn btn-sm btn-primary"
             onClick={() => toggleModal("addModalOpen", true)}
@@ -543,6 +604,7 @@ const Sightseeing = () => {
                   <th>Address</th>
                   <th>Adult Rate</th>
                   <th>Child Rate</th>
+                  <th>Sharing Transfers</th>
                   <th>Destination</th>
                   <th style={{ width: "1%" }}>Action</th>
                 </tr>
@@ -570,6 +632,10 @@ const Sightseeing = () => {
 
                       {/* Child Rate */}
                       <td>{item.rate_child || "N/A"}</td>
+                      <td>
+                        {item.sharing_transfer_adult}(adult) &{" "}
+                        {item.sharing_transfer_child}(child)
+                      </td>
 
                       {/* Destination */}
                       <td>

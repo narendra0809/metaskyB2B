@@ -14,14 +14,12 @@ class Ticket extends Model
     'name',
     'category',
     'status',
-    'transfer_options',
     'time_slots',
     'terms_and_conditions',
 ];
 
 protected $casts = [
     'category' => 'array',
-    'transfer_options' => 'array',
     'time_slots' => 'array',
     'terms_and_conditions' => 'array',
 ];

@@ -7,6 +7,7 @@ import { useAuth } from "../../context/AuthContext";
 import Confirm from "../../components/Confirm";
 import Loader from "../../Loader";
 import "../../Loader.css";
+import excelFormat from "../../public/data/tickets.xls";
 import TermsConditionsModal from "../../components/TermsConditions";
 
 const Tickets = () => {
@@ -553,7 +554,7 @@ const Tickets = () => {
                 />
               </div>
 
-              <div className="mb-3">
+              {/* <div className="mb-3">
                 <label htmlFor="transfer_option" className="form-label">
                   Transfer Option
                 </label>
@@ -593,7 +594,7 @@ const Tickets = () => {
                       {item.option !== "without transfer" && (
                         <div className="col-3">
                           Price: AED {item.price}
-                          {/* Or: {formatAED(item.price)} */}
+                          
                         </div>
                       )}
                       <div className="col-2">
@@ -617,7 +618,7 @@ const Tickets = () => {
                 >
                   Add Transfer Option
                 </button>
-              </div>
+              </div> */}
 
               {/* Category */}
               <div className="mb-3">
@@ -824,7 +825,7 @@ const Tickets = () => {
                 />
               </div>
 
-              <div className="mb-3">
+              {/* <div className="mb-3">
                 <label htmlFor="transfer_option" className="form-label">
                   Transfer Option
                 </label>
@@ -862,7 +863,7 @@ const Tickets = () => {
                         <div className="col-4">{item.option}</div>
                         <div className="col-3">
                           Adult: AED {item.price}
-                          {/* Or: {formatAED(item.price)} */}
+                          
                         </div>
                         <div className="col-2">
                           <button
@@ -886,7 +887,7 @@ const Tickets = () => {
                 >
                   Add Transfer Option
                 </button>
-              </div>
+              </div> */}
 
               <div className="mb-3">
                 <label htmlFor="category" className="form-label">
@@ -1109,6 +1110,16 @@ const Tickets = () => {
             placeholder="Search by name..."
             onChange={handleSearch}
           />
+          <a
+            download={"tickets.xlsx"}
+            href={excelFormat}
+            className="btn btn-sm btn-primary"
+          >
+            Download Format
+          </a>
+          <button className="btn btn-sm btn-primary" onClick={() => {}}>
+            Import Excel
+          </button>
           <button
             className="btn btn-sm btn-primary"
             onClick={() => toggleModal("addModalOpen", true)}
@@ -1123,7 +1134,6 @@ const Tickets = () => {
               <thead className="table-dark">
                 <tr>
                   <th>Name</th>
-                  <th>Transfer Options</th>
                   <th>Time Slots</th>
                   <th>Category</th>
                   <th>Status</th>
@@ -1141,23 +1151,21 @@ const Tickets = () => {
                   paginatedData.map((item) => (
                     <tr key={item.id}>
                       <td>{item.name}</td>
-                      <td>
+                      {/* <td>
                         {item.transfer_options?.map((transferOption, index) => (
                           <div key={index}>
                             {transferOption.option} (Adult: AED{" "}
                             {transferOption.adult_price}, Child: AED{" "}
                             {transferOption.child_price})
-                            {/* Or use formatter:
-                              {transferOption.option} (Adult: {formatAED(transferOption.adult_price)}, Child: {formatAED(transferOption.child_price)}) */}
+                            
                           </div>
                         ))}
-                      </td>
+                      </td> */}
                       <td>
                         {item.time_slots?.map((timeSlot, index) => (
                           <div key={index}>
                             {timeSlot.slot} (Adult: AED {timeSlot.adult_price},
                             Child: AED {timeSlot.child_price})
-                            {/* Or: {timeSlot.slot} (Adult: {formatAED(timeSlot.adult_price)}, Child: {formatAED(timeSlot.child_price)}) */}
                           </div>
                         ))}
                       </td>

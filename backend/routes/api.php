@@ -77,6 +77,7 @@ Route::delete('/tickets/{id}', [TicketController::class, 'destroy']); // Delete
 
 // Protected routes for transportation management, requiring user authentication
     Route::post('/transportation',[TransportationController::class,'transportation']);
+    Route::post('/transportation/import',[TransportationController::class,'import']);
     Route::get('/showtransportation/{id}',[TransportationController::class,'showtransportation']);
     Route::post('/updatetransportation/{id}',[TransportationController::class,'updatetransportation']);
     Route::delete('/deletetransportation/{id}',[TransportationController::class,'destroy']);

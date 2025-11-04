@@ -12,6 +12,8 @@ class Sightseeing extends Model
         'company_name',
         'address',
         'description',
+        'sharing_transfer_adult',
+        'sharing_transfer_child',
         'rate_adult',
         'rate_child',
         'terms_and_conditions'
