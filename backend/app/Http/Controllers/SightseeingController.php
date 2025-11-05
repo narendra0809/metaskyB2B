@@ -1,7 +1,7 @@
 <?php
 
 namespace App\Http\Controllers;
-
+use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Http\Request;
 use App\Models\Sightseeing;
 use Illuminate\Support\Facades\Log;
@@ -17,7 +17,7 @@ class SightseeingController extends Controller
     if ($request->hasFile('file')) {
         try {
             $file = $request->file('file');
-            $rows = Excel::toArray(null,$file)[0]; // Get first sheet as plain array
+            $rows = Excel::toArray(null, $file)[0]; // Get first sheet as plain array
 
             if (count($rows) < 2) {
                 return response()->json([
@@ -26,11 +26,10 @@ class SightseeingController extends Controller
                 ], 422);
             }
 
-            $headers = array_map('strtolower', $rows[0]); // Get headers row in lowercase
-            unset($rows[0]); // Remove header row from data
+            $headers = array_map('strtolower', $rows[0]); // headers in lowercase
+            unset($rows[0]); // remove header row
 
             foreach ($rows as $index => $row) {
-                // Combine header keys with each row values
                 $rowData = array_combine($headers, $row);
 
                 if (!$rowData) {
@@ -38,26 +37,29 @@ class SightseeingController extends Controller
                     continue;
                 }
 
-                // Decode JSON columns
-                $options = isset($rowData['options']) && $rowData['options'] !== 'NULL'
-                    ? json_decode($rowData['options'], true)
-                    : [];
+                $termsAndConditions = [
+                    'mobileVoucher' => $rowData['terms_mobile_voucher'] ?? '',
+                    'instantConfirmation' => $rowData['terms_instant_confirmation'] ?? '',
+                    'tourTransfers' => [], // kept empty as example
+                    'bookingPolicy' => [
+                        'cancellationPolicy' => isset($rowData['terms_cancellation_policy']) ? array_map('trim', explode(',', $rowData['terms_cancellation_policy'])) : [],
+                        'childPolicy' => isset($rowData['terms_child_policy']) ? array_map('trim', explode(',', $rowData['terms_child_policy'])) : [],
+                    ],
+                    'inclusions' => isset($rowData['terms_inclusions']) ? array_map('trim', explode(',', $rowData['terms_inclusions'])) : [],
+                    'exclusions' => isset($rowData['terms_exclusions']) ? array_map('trim', explode(',', $rowData['terms_exclusions'])) : [],
+                ];
 
-                $terms = isset($rowData['terms_and_conditions']) && $rowData['terms_and_conditions'] !== 'NULL'
-                    ? json_decode($rowData['terms_and_conditions'], true)
-                    : null;
-
-                Transportation::create(
-                    [   'company_name' => $rowData['company_name'],
-                        'destination_id' => $rowData['destination_id'],
-                        'company_document' => $rowData['company_document'],
-                        'address' => $rowData['address'],
-                        'transport' => $rowData['transport'],
-                        'vehicle_type' => $rowData['vehicle_type'],
-                        'options' => $options,
-                        'terms_and_conditions' => $terms,
-                    ]
-                );
+                Sightseeing::create([
+                    'destination_id' => $rowData['destination_id'],
+                    'company_name' => $rowData['company_name'],
+                    'address' => $rowData['address'],
+                    'description' => $rowData['description'] ?? '',
+                    'rate_adult' => $rowData['rate_adult'] ?? 0,
+                    'rate_child' => $rowData['rate_child'] ?? 0,
+                    'sharing_transfer_adult' => $rowData['sharing_transfer_adult'] ?? 0,
+                    'sharing_transfer_child' => $rowData['sharing_transfer_child'] ?? 0,
+                    'terms_and_conditions' => $termsAndConditions,
+                ]);
 
                 Log::info("Imported row #$index, company: {$rowData['company_name']}");
             }
@@ -76,7 +78,13 @@ class SightseeingController extends Controller
             ], 500);
         }
     }
-} 
+
+    return response()->json([
+        'success' => false,
+        'message' => 'No file uploaded',
+    ], 400);
+}
+
     public function postSightseeing(Request $request)
     {
         try {

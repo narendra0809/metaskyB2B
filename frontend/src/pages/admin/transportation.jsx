@@ -7,7 +7,7 @@ import { useAuth } from "../../context/AuthContext";
 import Confirm from "../../components/Confirm";
 import Loader from "../../Loader";
 import "../../Loader.css";
-import excelFormat from "../../public/data/transportations.xls";
+import excelFormat from "../../public/data/transportations.xlsx";
 import TermsConditionsModal from "../../components/TermsConditions";
 
 const Transportation = () => {
@@ -1075,8 +1075,8 @@ const Transportation = () => {
                         </tr>
                       );
                     }
-                    // If multiple options, create multiple rows per option, showing company info only on first row
-                    return item.options.map((opt, index) => (
+
+                    return item.options?.map((opt, index) => (
                       <tr key={`${item.id}-${index}`}>
                         {index === 0 && (
                           <>
@@ -1168,3 +1168,10 @@ const Transportation = () => {
 };
 
 export default Transportation;
+
+// {"from":["burjkhalifa"],"to":["burdubai"],"rate":["100200"],"transfer_type":["one_way","two_way"]}
+// [
+//   {from:"dubai",to:"burj",rate:100,transfer_type:"one_way"},
+//   {from:"dubai",to:"burj",rate:100,transfer_type:"one_way"},
+//   {from:"dubai",to:"burj",rate:100,transfer_type:"one_way"},
+// ]

@@ -59,6 +59,7 @@ Route::middleware('auth:sanctum')->group(function () {
     
 // Protected routes for tickets management, requiring user authentication
 Route::post('/tickets', [TicketController::class, 'store']); // Create
+Route::post('/ticket/import', [TicketController::class, 'import']); // Create
 Route::get('/tickets', [TicketController::class, 'index']); // Read (List)
 Route::get('/tickets/{id}', [TicketController::class, 'show']); // Read (Single)
 Route::post('/tickets/{id}', [TicketController::class, 'update']); // Update
@@ -69,6 +70,7 @@ Route::delete('/tickets/{id}', [TicketController::class, 'destroy']); // Delete
 
 // Protected routes for sightseeing management, requiring user authentication
     Route::post('/sightseeing',[SightseeingController::class,'postSightseeing']);
+    Route::post('/sightseeing/import',[SightseeingController::class,'import']);
     Route::get('/sightseeing/{id}',[SightseeingController::class,'showsightseeing']);
     Route::get('/sightseeings',[SightseeingController::class,'index']);
     Route::get('/getsswithcity',[SightseeingController::class,'getsswithcity']);

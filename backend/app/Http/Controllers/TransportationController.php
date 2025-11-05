@@ -10,7 +10,7 @@ class TransportationController extends Controller
 {   
 
 
-public function import(Request $request)
+     public function import(Request $request)
 {
     $validatedData = $request->validate([
         'file' => 'required|file|mimes:xls,xlsx,csv',
@@ -19,7 +19,7 @@ public function import(Request $request)
     if ($request->hasFile('file')) {
         try {
             $file = $request->file('file');
-            $rows = Excel::toArray(null,$file)[0]; // Get first sheet as plain array
+            $rows = Excel::toArray(null, $file)[0];
 
             if (count($rows) < 2) {
                 return response()->json([
@@ -28,11 +28,10 @@ public function import(Request $request)
                 ], 422);
             }
 
-            $headers = array_map('strtolower', $rows[0]); // Get headers row in lowercase
-            unset($rows[0]); // Remove header row from data
+            $headers = array_map('strtolower', $rows[0]);
+            unset($rows[0]);
 
             foreach ($rows as $index => $row) {
-                // Combine header keys with each row values
                 $rowData = array_combine($headers, $row);
 
                 if (!$rowData) {
@@ -40,26 +39,47 @@ public function import(Request $request)
                     continue;
                 }
 
-                // Decode JSON columns
-                $options = isset($rowData['options']) && $rowData['options'] !== 'NULL'
-                    ? json_decode($rowData['options'], true)
-                    : [];
+                // Options parsing - explode each comma-separated string and pair by index
+                $fromArr = isset($rowData['options_from']) ? array_map('trim', explode(',', $rowData['options_from'])) : [];
+                $toArr = isset($rowData['options_to']) ? array_map('trim', explode(',', $rowData['options_to'])) : [];
+                $rateArr = isset($rowData['options_rate']) ? array_map('trim', explode('_', $rowData['options_rate'])) : [];
+                $transferTypeArr = isset($rowData['options_transfer_type']) ? array_map('trim', explode(',', $rowData['options_transfer_type'])) : [];
 
-                $terms = isset($rowData['terms_and_conditions']) && $rowData['terms_and_conditions'] !== 'NULL'
-                    ? json_decode($rowData['terms_and_conditions'], true)
-                    : null;
+                $length = max(count($fromArr), count($toArr), count($rateArr), count($transferTypeArr));
+                $options = [];
 
-                Transportation::create(
-                    [   'company_name' => $rowData['company_name'],
-                        'destination_id' => $rowData['destination_id'],
-                        'company_document' => $rowData['company_document'],
-                        'address' => $rowData['address'],
-                        'transport' => $rowData['transport'],
-                        'vehicle_type' => $rowData['vehicle_type'],
-                        'options' => $options,
-                        'terms_and_conditions' => $terms,
-                    ]
-                );
+                for ($i = 0; $i < $length; $i++) {
+                    $options[] = [
+                        'from' => $fromArr[$i] ?? null,
+                        'to' => $toArr[$i] ?? null,
+                        'rate' => $rateArr[$i] ?? null,
+                        'transfer_type' => $transferTypeArr[$i] ?? null,
+                    ];
+                }
+
+                // Terms and conditions parsing into nested structure
+                $termsAndConditions = [
+                    'mobileVoucher' => $rowData['terms_mobile_voucher'] ?? '',
+                    'instantConfirmation' => $rowData['terms_instant_confirmation'] ?? '',
+                    'tourTransfers' => [], // Preserved empty array as in sample
+                    'bookingPolicy' => [
+                        'cancellationPolicy' => isset($rowData['terms_cancellation_policy']) ? array_map('trim', explode(',', $rowData['terms_cancellation_policy'])) : [],
+                        'childPolicy' => isset($rowData['terms_child_policy']) ? array_map('trim', explode(',', $rowData['terms_child_policy'])) : [],
+                    ],
+                    'inclusions' => isset($rowData['terms_inclusions']) ? array_map('trim', explode(',', $rowData['terms_inclusions'])) : [],
+                    'exclusions' => isset($rowData['terms_exclusions']) ? array_map('trim', explode(',', $rowData['terms_exclusions'])) : [],
+                ];
+
+                Transportation::create([
+                    'destination_id' => $rowData['destination_id'],
+                    'company_name' => $rowData['company_name'],
+                    'company_document' => $rowData['company_document'],
+                    'address' => $rowData['address'],
+                    'transport' => $rowData['transport'],
+                    'vehicle_type' => $rowData['vehicle_type'],
+                    'options' => $options,
+                    'terms_and_conditions' => $termsAndConditions,
+                ]);
 
                 Log::info("Imported row #$index, company: {$rowData['company_name']}");
             }
@@ -78,7 +98,13 @@ public function import(Request $request)
             ], 500);
         }
     }
+
+    return response()->json([
+        'success' => false,
+        'message' => 'No file uploaded',
+    ], 400);
 }
+
 
 
 

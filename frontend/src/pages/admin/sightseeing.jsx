@@ -208,6 +208,52 @@ const Sightseeing = () => {
     }
     setIsConfirm(false);
   };
+  const [importModalOpen, setImportModalOpen] = useState(false);
+  const [importFile, setImportFile] = useState(null);
+  const [importLoading, setImportLoading] = useState(false);
+  const [importError, setImportError] = useState(null);
+
+  const handleFileChange = (e) => {
+    setImportFile(e.target.files[0]);
+    setImportError(null);
+  };
+
+  const handleImportSubmit = async () => {
+    if (!importFile) {
+      setImportError("Please select an Excel file to import");
+      return;
+    }
+
+    setImportLoading(true);
+
+    const formData = new FormData();
+    formData.append("file", importFile);
+
+    try {
+      const res = await fetch(`${base_url}/api/sightseeing/import`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        body: formData,
+      });
+
+      const data = await res.json();
+
+      if (!data.success) {
+        setImportError(data.message || "Import failed");
+      } else {
+        // Optionally refresh data here
+        mainData.refetch();
+        setImportModalOpen(false);
+        setImportFile(null);
+      }
+    } catch (error) {
+      setImportError("Import failed: " + error.message);
+    }
+
+    setImportLoading(false);
+  };
 
   return (
     <>
@@ -532,6 +578,46 @@ const Sightseeing = () => {
           </div>
         </Modal>
 
+        {/* Import Modal */}
+        <Modal
+          open={importModalOpen}
+          handleClose={() => {
+            setImportModalOpen(false);
+            setImportFile(null);
+            setImportError(null);
+          }}
+          title="Import Excel File"
+        >
+          <div className="mb-3">
+            <input
+              type="file"
+              accept=".xls,.xlsx"
+              className="form-control"
+              onChange={handleFileChange}
+            />
+          </div>
+          {importError && <div className="text-danger mb-2">{importError}</div>}
+          <div className="d-flex justify-content-end gap-2">
+            <button
+              className="btn btn-secondary"
+              onClick={() => {
+                setImportModalOpen(false);
+                setImportFile(null);
+                setImportError(null);
+              }}
+            >
+              Cancel
+            </button>
+            <button
+              className="btn btn-primary"
+              onClick={handleImportSubmit}
+              disabled={importLoading}
+            >
+              {importLoading ? "Importing..." : "Import"}
+            </button>
+          </div>
+        </Modal>
+
         {/* Confirm */}
         <Confirm
           open={isConfirm}
@@ -584,7 +670,10 @@ const Sightseeing = () => {
           >
             Download Format
           </a>
-          <button className="btn btn-sm btn-primary" onClick={() => {}}>
+          <button
+            className="btn btn-sm btn-primary"
+            onClick={() => setImportModalOpen(true)}
+          >
             Import Excel
           </button>
           <button

@@ -1,17 +1,14 @@
 <?php
 
 namespace App\Http\Controllers;
-
+use Maatwebsite\Excel\Facades\Excel;
 use App\Models\Ticket;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Log;
 
 class TicketController extends Controller
-{
-    /**
-     * Store a newly created ticket in storage.
-     */
+{    
     public function import(Request $request)
 {
     $validatedData = $request->validate([
@@ -21,7 +18,7 @@ class TicketController extends Controller
     if ($request->hasFile('file')) {
         try {
             $file = $request->file('file');
-            $rows = Excel::toArray(null,$file)[0]; // Get first sheet as plain array
+            $rows = Excel::toArray(null, $file)[0];
 
             if (count($rows) < 2) {
                 return response()->json([
@@ -30,11 +27,10 @@ class TicketController extends Controller
                 ], 422);
             }
 
-            $headers = array_map('strtolower', $rows[0]); // Get headers row in lowercase
-            unset($rows[0]); // Remove header row from data
+            $headers = array_map('strtolower', $rows[0]);
+            unset($rows[0]);
 
             foreach ($rows as $index => $row) {
-                // Combine header keys with each row values
                 $rowData = array_combine($headers, $row);
 
                 if (!$rowData) {
@@ -42,28 +38,49 @@ class TicketController extends Controller
                     continue;
                 }
 
-                // Decode JSON columns
-                $options = isset($rowData['options']) && $rowData['options'] !== 'NULL'
-                    ? json_decode($rowData['options'], true)
+                // category becomes array splitting by commas (if any)
+                $category = isset($rowData['category']) && !empty($rowData['category'])
+                    ? array_map('trim', explode(',', $rowData['category']))
                     : [];
 
-                $terms = isset($rowData['terms_and_conditions']) && $rowData['terms_and_conditions'] !== 'NULL'
-                    ? json_decode($rowData['terms_and_conditions'], true)
-                    : null;
+                // Parse time_slots by splitting slots and prices
+                $slots = isset($rowData['time_slots_slot']) ? array_map('trim', explode(',', $rowData['time_slots_slot'])) : [];
+                $adultPrices = isset($rowData['time_slots_adult_price']) ? array_map('trim', explode('_', $rowData['time_slots_adult_price'])) : [];
+                $childPrices = isset($rowData['time_slots_child_price']) ? array_map('trim', explode('_', $rowData['time_slots_child_price'])) : [];
 
-                Transportation::create(
-                    [   'company_name' => $rowData['company_name'],
-                        'destination_id' => $rowData['destination_id'],
-                        'company_document' => $rowData['company_document'],
-                        'address' => $rowData['address'],
-                        'transport' => $rowData['transport'],
-                        'vehicle_type' => $rowData['vehicle_type'],
-                        'options' => $options,
-                        'terms_and_conditions' => $terms,
-                    ]
-                );
+                $time_slots = [];
+                $countSlots = max(count($slots), count($adultPrices), count($childPrices));
+                for ($i = 0; $i < $countSlots; $i++) {
+                    $time_slots[] = [
+                        'slot' => $slots[$i] ?? null,
+                        'adult_price' => $adultPrices[$i] ?? null,
+                        'child_price' => $childPrices[$i] ?? null,
+                    ];
+                }
 
-                Log::info("Imported row #$index, company: {$rowData['company_name']}");
+                // Terms and conditions mapping similar to previous example with nested structure
+                $termsAndConditions = [
+                    'mobileVoucher' => $rowData['terms_mobile_voucher'] ?? '',
+                    'instantConfirmation' => $rowData['terms_instant_confirmation'] ?? '',
+                    'tourTransfers' => [],
+                    'bookingPolicy' => [
+                        'cancellationPolicy' => isset($rowData['terms_cancellation_policy']) ? array_map('trim', explode(',', $rowData['terms_cancellation_policy'])) : [],
+                        'childPolicy' => isset($rowData['terms_child_policy']) ? array_map('trim', explode(',', $rowData['terms_child_policy'])) : [],
+                    ],
+                    'inclusions' => isset($rowData['terms_inclusions']) ? array_map('trim', explode(',', $rowData['terms_inclusions'])) : [],
+                    'exclusions' => isset($rowData['terms_exclusions']) ? array_map('trim', explode(',', $rowData['terms_exclusions'])) : [],
+                ];
+
+                // Create or update your Ticket model (replace Ticket with your model name)
+                Ticket::create([
+                    'name' => $rowData['name'],
+                    'category' => $category,
+                    'status' => $rowData['status'],
+                    'time_slots' => $time_slots,
+                    'terms_and_conditions' => $termsAndConditions,
+                ]);
+
+                Log::info("Imported row #$index, ticket: {$rowData['name']}");
             }
 
             return response()->json([
@@ -80,7 +97,14 @@ class TicketController extends Controller
             ], 500);
         }
     }
+
+    return response()->json([
+        'success' => false,
+        'message' => 'No file uploaded',
+    ], 400);
 }
+
+ 
     public function store(Request $request)
     {
         Log::info('Incoming Request: ' . json_encode($request->all()));
