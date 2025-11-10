@@ -1,6 +1,7 @@
 import { useState } from "react";
 import useApiData from "../hooks/useApiData";
 import { useAuth } from "../context/AuthContext";
+import Loader from "../Loader";
 
 /* -- components -- */
 const TransportPrice = () => {
@@ -51,14 +52,13 @@ const TransportPrice = () => {
       <tr key={index}>
         <td className="align-middle">{item.company_name}</td>
         <td className="align-middle">{item.city}</td>
-        <td>
+        <td>{item.vehicle_type}</td>
+        <td style={{ textAlign: "left", verticalAlign: "top", padding: "8px" }}>
           {item.options.map((ele, i) => (
-            <p key={i}>{ele.type}</p>
-          ))}
-        </td>
-        <td>
-          {item.options.map((ele, i) => (
-            <p key={i}>₹ {ele.rate} /-</p>
+            <p key={i} style={{ margin: "4px 0" }}>
+              {ele.from} {ele.transfer_type === "one_way" ? "→" : "↔"} {ele.to}{" "}
+              AED {ele.rate} /- ({ele.transfer_type})
+            </p>
           ))}
         </td>
       </tr>
@@ -66,7 +66,10 @@ const TransportPrice = () => {
   } else {
     output = (
       <tr>
-        <td>Loading...</td>
+        <td colSpan={4} style={{ textAlign: "center" }}>
+          {" "}
+          <Loader />
+        </td>
       </tr>
     );
   }
@@ -157,19 +160,11 @@ const TransportPrice = () => {
                     <tr>
                       <th>Transporter Name</th>
                       <th>City</th>
-                      <th>Vehicle Types</th>
+                      <th>Vehicle Capacity</th>
                       <th>Vehicle Cost</th>
                     </tr>
                   </thead>
-                  <tbody className="bg-white">
-                    {output?.length > 0 ? (
-                      output
-                    ) : (
-                      <tr>
-                        <td colSpan={99}>No record found</td>
-                      </tr>
-                    )}
-                  </tbody>
+                  <tbody className="bg-white">{output}</tbody>
                 </table>
               </div>
               <div className="d-flex justify-content-between align-items-center">

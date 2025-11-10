@@ -1,6 +1,8 @@
 import { useState } from "react";
 import useApiData from "../hooks/useApiData";
 import { useAuth } from "../context/AuthContext";
+import { getTotal } from "../functions/utils";
+import Loader from "../Loader";
 
 const SightseeingPrice = () => {
   const base_url = import.meta.env.VITE_API_URL;
@@ -49,10 +51,28 @@ const SightseeingPrice = () => {
       output = outputData.map((item, index) => (
         <tr key={index}>
           <td className="align-middle">{item.company_name}</td>
-          <td className="align-middle">{item.description}</td>
+          {/* <td className="align-middle">{item.description}</td> */}
           <td className="align-middle">{item.city}</td>
-          <td className="align-middle">{item.rate_adult}</td>
-          <td className="align-middle">{item.rate_child}</td>
+          <td className="align-middle">
+            {item.rate_adult} + {item.sharing_transfer_adult} (Sharing transfer
+            rate)
+          </td>
+          <td className="align-middle">
+            {item.rate_child} + {item.sharing_transfer_child} (Sharing transfer
+            rate)
+          </td>
+          <td className="align-middle">
+            <div>
+              <p style={{ margin: 0 }}>
+                <strong>Total Adult Rate: </strong>
+                {getTotal(item.rate_adult, item.sharing_transfer_adult)}
+              </p>
+              <p style={{ margin: 0 }}>
+                <strong>Total Child Rate: </strong>
+                {getTotal(item.rate_child, item.sharing_transfer_child)}
+              </p>
+            </div>
+          </td>
         </tr>
       ));
     } else {
@@ -65,7 +85,10 @@ const SightseeingPrice = () => {
   } else {
     output = (
       <tr>
-        <td colSpan={5}>Loading...</td>
+        <td colSpan={6} style={{ textAlign: "center" }}>
+          {" "}
+          <Loader />
+        </td>
       </tr>
     );
   }
@@ -151,21 +174,14 @@ const SightseeingPrice = () => {
                   <thead>
                     <tr>
                       <th>Sightseeing Authority </th>
-                      <th>Description</th>
+                      {/* <th>Description</th> */}
                       <th>City</th>
-                      <th>Adult Cost</th>
-                      <th>Child Cost</th>
+                      <th>Adult Rate(AED)</th>
+                      <th>Child Rate(AED)</th>
+                      <th>Total Rates(AED)</th>
                     </tr>
                   </thead>
-                  <tbody className="bg-white">
-                    {output?.length > 0 ? (
-                      output
-                    ) : (
-                      <tr>
-                        <td colSpan={5}>No record found</td>
-                      </tr>
-                    )}
-                  </tbody>
+                  <tbody className="bg-white">{output}</tbody>
                 </table>
               </div>
               <div className="d-flex justify-content-between align-items-center">

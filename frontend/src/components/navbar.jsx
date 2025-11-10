@@ -132,7 +132,7 @@ const Navbar = () => {
           title={"Price"}
           iconClass={"fa-solid fa-indian-rupee-sign"}
         >
-          <NavLink to="/room-price" className="nav-dropdown-link">
+          <NavLink to="/ticket-price" className="nav-dropdown-link">
             {/* <i className="fa-solid fa-chevron-right nav-dropdown-icons"></i> */}
             <img
               src={arrow}

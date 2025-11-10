@@ -3,6 +3,8 @@ import useApiData from "../hooks/useApiData";
 import useSendData from "../hooks/useSendData";
 import Alert from "../components/Alert";
 import { useAuth } from "../context/AuthContext";
+import { extractRates } from "../functions/utils";
+import TermsConditionsModal from "../components/TermsConditions";
 
 const primeSlots = [
   "3:30 PM - 4:00 PM",
@@ -25,7 +27,8 @@ const Calculator = () => {
   const base_url = import.meta.env.VITE_API_URL;
   const { authUser, authToken } = useAuth();
   const today = new Date().toISOString().split("T")[0];
-
+  const [termsModalOpen, setTermsModalOpen] = useState(false);
+  const [termsModalData, setTermsModalData] = useState(null);
   // Fetch Data
   const countriesData = useApiData(`${base_url}/api/countries`, authToken);
   const destinationsData = useApiData(
@@ -40,7 +43,6 @@ const Calculator = () => {
   const sightseeingData = useApiData(`${base_url}/api/sightseeings`, authToken);
   const taxesData = useApiData(`${base_url}/api/taxes`, authToken);
   const subFormData = useSendData(`${base_url}/api/addbooking`, authToken);
-
   const tickets = useApiData(`${base_url}/api/tickets`, authToken);
 
   // Memoize the default form object
@@ -53,36 +55,7 @@ const Calculator = () => {
       travel_date_to: "",
       no_adults: 0,
       no_children: 0,
-      // hotel_info: [
-      //   {
-      //     destination_id: "",
-      //     hotel_id: "",
-      //     room_type: "",
-      //     rooms: 0,
-      //     ex_adults: 0,
-      //     ex_children: 0,
-      //     check_in: "",
-      //     check_out: "",
-      //     room_type_cost: 0,
-      //     ex_adult_cost: 0,
-      //     ex_children_cost: 0,
-      //     meals: [],
-      //   },
-      // ],
-      ticket_info: [
-        // {
-        //   id: "",
-        //   name: "",
-        //   category: "",
-        //   time_slot: "",
-        //   transfer_option: "",
-        //   adults: 0,
-        //   children: 0,
-        //   date: "",
-        //   adult_price: 0,
-        //   child_price: 0,
-        // },
-      ],
+      ticket_info: [],
       transport_info: [],
       sightseeing_info: [],
       remarks: "",
@@ -100,7 +73,7 @@ const Calculator = () => {
   const [showTransportPrompt, setShowTransportPrompt] = useState(true);
   const [showTicketPrompt, setShowTicketPrompt] = useState(true);
   const [showSightseeingPrompt, setShowSightseeingPrompt] = useState(true);
-
+  console.log(formData.transport_info);
   // Calculate values
   const [calc, setCalc] = useState({
     total: 0,
@@ -120,17 +93,13 @@ const Calculator = () => {
   useEffect(() => {
     if (taxesData.data?.data) {
       const taxes = [...taxesData.data.data];
-      if (taxes) {
-        taxes.forEach((tax) => {
-          setFormData((prev) => ({
-            ...prev,
-            taxes: [
-              ...prev.taxes,
-              { tax_name: tax.name, tax_value: tax.percentage },
-            ],
-          }));
-        });
-      }
+      setFormData((prev) => ({
+        ...prev,
+        taxes: taxes.map((tax) => ({
+          tax_name: tax.name,
+          tax_value: tax.percentage,
+        })),
+      }));
     }
   }, [taxesData.loading, taxesData.data?.data]);
 
@@ -138,27 +107,6 @@ const Calculator = () => {
   const handleAddInfo = (type) => {
     setToSubmit(false);
     switch (type) {
-      // case "hotel":
-      //   setFormData((prev) => ({
-      //     ...prev,
-      //     hotel_info: [
-      //       ...prev.hotel_info,
-      //       {
-      //         destination_id: "",
-      //         hotel_id: "",
-      //         room_type: "",
-      //         rooms: 0,
-      //         ex_adults: 0,
-      //         ex_children: 0,
-      //         check_in: "",
-      //         check_out: "",
-      //         room_type_cost: 0,
-      //         ex_adult_cost: 0,
-      //         ex_children_cost: 0,
-      //       },
-      //     ],
-      //   }));
-      //   break;
       case "transport":
         setShowTransportPrompt(false);
         setFormData((prev) => ({
@@ -265,125 +213,77 @@ const Calculator = () => {
     setFormData((prev) => ({ ...prev, [name]: filteredValue }));
   };
 
-  // Handle Nested Data Change
   const handleNestedDataChange = ({ currentTarget }, infoType, index) => {
     setToSubmit(false);
     const { name, value } = currentTarget;
     const data = { ...formData };
-
-    if (infoType == "hotel_info") {
-      // switch (name) {
-      //   case "check_in":
-      //     data.hotel_info[index].check_out = "";
-      //     break;
-      //   case "destination_id":
-      //     data.hotel_info[index].hotel_id = "";
-      //     data.hotel_info[index].ex_adult_cost = "";
-      //     data.hotel_info[index].ex_children_cost = "";
-      //     data.hotel_info[index].room_type = "";
-      //     data.hotel_info[index].room_type_cost = "";
-      //     break;
-      //   case "hotel_id":
-      //     data.hotel_info[index].ex_adult_cost = "";
-      //     data.hotel_info[index].ex_children_cost = "";
-      //     data.hotel_info[index].room_type = "";
-      //     data.hotel_info[index].room_type_cost = "";
-      //     data.hotel_info[index].meals = [];
-      //     // Select Hotel
-      //     const s_hotel = hotelsData.data?.data?.find(
-      //       (hotel) => hotel.id == value
-      //     );
-      //     if (s_hotel) {
-      //       // Assign rate
-      //       data.hotel_info[index].ex_adult_cost = s_hotel.ex_adult_rate;
-      //       data.hotel_info[index].ex_children_cost = s_hotel.ex_child_rate;
-      //       // Assign Meals
-      //       s_hotel.meals?.forEach((meal) => {
-      //         data.hotel_info[index].meals = [
-      //           ...data.hotel_info[index].meals,
-      //           {
-      //             name: meal.name,
-      //             isChecked: false,
-      //             rate: meal.rate,
-      //           },
-      //         ];
-      //       });
-      //     }
-      //     break;
-      //   case "room_type":
-      //     // Select Hotel
-      //     const selectedHotel = hotelsData.data?.data?.find(
-      //       (hotel) => hotel.id == data.hotel_info[index].hotel_id
-      //     );
-      //     if (selectedHotel) {
-      //       // Select Room Type
-      //       const selectedRoomType = selectedHotel.room_types.find(
-      //         (room_type) => room_type.type == value
-      //       );
-      //       // Assign rate
-      //       data.hotel_info[index].room_type_cost = selectedRoomType?.rate;
-      //     }
-      //     break;
-      //   default:
-      //     console.warn(`Unhandled case in hotel_info: ${name}`);
-      //     break;
-      // }
-    } else if (infoType == "transport_info") {
+    if (infoType === "transport_info") {
       switch (name) {
         case "destination_id":
           data.transport_info[index].transport_id = "";
-          data.transport_info[index].v_type = "";
-          data.transport_info[index].transport_cost = "";
+          data.transport_info[index].option_index = null;
+          data.transport_info[index].transport_cost = 0;
           break;
         case "transport_id":
-          data.transport_info[index].v_type = "";
-          data.transport_info[index].transport_cost = "";
+          data.transport_info[index].option_index = null;
+          data.transport_info[index].transport_cost = 0;
+          data.transport_info[index].v_type = transportData.data?.data?.find(
+            (t) => t.id == value
+          ).vehicle_type;
           break;
-        case "v_type":
-          // Select Transport
+        case "option_index":
           const selectedTransport = transportData.data?.data?.find(
-            (transport) =>
-              transport.id == data.transport_info[index].transport_id
+            (t) => t.id == data.transport_info[index].transport_id
           );
-          if (selectedTransport) {
-            // Select Transport Type
-            const selectedType = selectedTransport.options.find(
-              (v_type) => v_type.type == value
-            );
-            // Assign rate
-            data.transport_info[index].transport_cost = selectedType?.rate;
+          if (selectedTransport && selectedTransport.options) {
+            const selectedOption = selectedTransport.options[value];
+            data.transport_info[index].transport_cost = selectedOption
+              ? Number(selectedOption.rate)
+              : 0;
+            data.transport_info[index].terms_and_conditions =
+              JSON.stringify(selectedTransport?.terms_and_conditions) || null;
           }
           break;
         default:
           console.warn(`Unhandled case in transport_info: ${name}`);
           break;
       }
-    } else if (infoType == "sightseeing_info") {
+    } else if (infoType === "sightseeing_info") {
       switch (name) {
         case "destination_id":
           data.sightseeing_info[index].sightseeing_id = "";
-          data.sightseeing_info[index].adult_cost = 0;
-          data.sightseeing_info[index].children_cost = 0;
+          data.sightseeing_info[index].rate_adult = 0;
+          data.sightseeing_info[index].rate_child = 0;
+          data.sightseeing_info[index].sharing_transfer_adult = 0;
+          data.sightseeing_info[index].sharing_transfer_child = 0;
           break;
         case "sightseeing_id":
-          // Select Sightseeing
           const selectedSightseeing = sightseeingData.data?.data?.find(
-            (sightseeing) => sightseeing.id == value
+            (s) => s.id == value
           );
-
-          data.sightseeing_info[index].adult_cost =
-            selectedSightseeing?.rate_adult;
-          data.sightseeing_info[index].children_cost =
-            selectedSightseeing?.rate_child;
-
+          if (selectedSightseeing) {
+            data.sightseeing_info[index].rate_adult = Number(
+              selectedSightseeing.rate_adult
+            );
+            data.sightseeing_info[index].rate_child = Number(
+              selectedSightseeing.rate_child
+            );
+            data.sightseeing_info[index].sharing_transfer_adult = Number(
+              selectedSightseeing.sharing_transfer_adult
+            );
+            data.sightseeing_info[index].sharing_transfer_child = Number(
+              selectedSightseeing.sharing_transfer_child
+            );
+            data.sightseeing_info[index].sightseeing_id = value;
+            data.sightseeing_info[index].terms_and_conditions =
+              JSON.stringify(selectedSightseeing?.terms_and_conditions) || null;
+          }
           break;
         default:
           console.warn(`Unhandled case in sightseeing_info: ${name}`);
           break;
       }
     } else if (infoType === "ticket_info") {
-      const { name, value } = currentTarget;
-      const data = { ...formData };
       if (name === "id") {
         data.ticket_info[index] = {
           ...data.ticket_info[index],
@@ -391,75 +291,61 @@ const Calculator = () => {
           name: tickets.data?.data?.find((t) => t.id == value)?.name || "",
           category: [],
           time_slot: "",
-          transfer_option: "",
           adult_price: 0,
           child_price: 0,
+          adults: 0,
+          children: 0,
+          transfer_option: "",
         };
       } else if (name === "category") {
-        // When category changes, reset time slot
         data.ticket_info[index] = {
           ...data.ticket_info[index],
           category: value,
           time_slot: "",
-          transfer_option: "",
           adult_price: 0,
           child_price: 0,
+          transfer_option: "",
         };
       } else if (name === "time_slot") {
-        // When time slot changes, reset transfer option
+        const selectedTicket = tickets.data?.data?.find(
+          (t) => t.id == data.ticket_info[index].id
+        );
+        const rates = extractRates(value);
+        const selectedTime = selectedTicket?.time_slots?.find(
+          (slot) =>
+            slot.slot == value ||
+            (!slot.slot &&
+              Number(slot.adult_price) === rates.adultRate &&
+              Number(slot.child_price) === rates.childRate)
+        );
+
         data.ticket_info[index] = {
           ...data.ticket_info[index],
           time_slot: value,
+          adult_price: Number(selectedTime.adult_price),
+          child_price: Number(selectedTime.child_price),
+          terms_and_conditions:
+            JSON.stringify(selectedTicket?.terms_and_conditions) || null,
           transfer_option: "",
-          adult_price: 0,
-          child_price: 0,
         };
       } else {
-        // For other fields (transfer_option, adults, children, date)
         data.ticket_info[index][name] = value;
 
-        // Calculate prices when transfer option is selected
+        // Calculate prices when transfer option is selected (if applicable)
         if (name === "transfer_option") {
           const selectedTicket = tickets.data?.data?.find(
-            (t) => t.id == data.ticket_info[index].id
+            (t) => t.id === data.ticket_info[index].id
           );
-          const timeSlot = selectedTicket?.time_slots?.find(
-            (s) => s.slot == data.ticket_info[index].time_slot
-          );
-          const transferOption = selectedTicket?.transfer_options?.find(
-            (o) => o.option == value
-          );
-
-          if (timeSlot && transferOption) {
-            data.ticket_info[index].adult_price =
-              Number(timeSlot.adult_price) + Number(transferOption.adult_price);
-            data.ticket_info[index].child_price =
-              Number(timeSlot.child_price) + Number(transferOption.child_price);
-          }
+          // Find transfer option prices if available in your data model (adjust if needed)
+          // Assuming transfer_option may modify price here similar to old logic
+          // This part depends on how transfer prices come with tickets
         }
       }
     }
-
     data[infoType][index][name] = value;
     setFormData(data);
   };
-
-  // Handle Meals
-  // const handleMealsChange = ({ currentTarget }, index) => {
-  //   setToSubmit(false);
-  //   const { name } = currentTarget;
-  //   const data = { ...formData };
-
-  //   const foundMeal = data.hotel_info[index].meals.find(
-  //     (item) => item.name == name
-  //   );
-
-  //   foundMeal.isChecked = !foundMeal.isChecked; // Toggle the isChecked value
-
-  //   setFormData(data);
-  // };
-
-  // Handle Cost Calculation
+  // Updated Calculate function to sum values considering new data structure
   const handleCalculate = () => {
     if (!formData.customer_name) {
       setErr("Customer name field is required!");
@@ -486,149 +372,70 @@ const Calculator = () => {
       return;
     }
 
-    let total = 0,
-      adultsTotal = 0,
-      childrenTotal = 0,
-      perAdult = 0,
-      perChild = 0,
-      taxAmount = 0,
-      finalAmount = 0;
-
-    let transportInfoAdults = 0,
-      sightseeingInfoAdults = 0;
-    let transportInfoChildren = 0,
-      sightseeingInfoChildren = 0;
-
-    // formData.hotel_info.forEach((hotel) => {
-    //   const checkInOutDays = getDaysBetweenDates(
-    //     hotel.check_in,
-    //     hotel.check_out
-    //   );
-    //   let mealsCost = 0;
-    //   let adultAmountRoom = 0,
-    //     adultAmountFood = 0;
-    //   let childrenAmountRoom = 0,
-    //     childrenAmountFood = 0;
-
-    //   // Cost for Adult's room
-    //   adultAmountRoom +=
-    //     Number(hotel.rooms) *
-    //       Number(hotel.room_type_cost || 0) *
-    //       checkInOutDays +
-    //     checkInOutDays * Number(hotel.ex_adult_cost) * Number(hotel.ex_adults);
-
-    //   // Children rooms cost
-    //   childrenAmountRoom +=
-    //     checkInOutDays *
-    //     Number(hotel.ex_children_cost) *
-    //     Number(hotel.ex_children);
-
-    //   // Per hotel meals cost
-    //   hotel.meals
-    //     .filter((meal) => meal.isChecked)
-    //     .forEach((meal) => {
-    //       mealsCost += Number(meal.rate);
-    //     });
-
-    //   // Adult Meals cost
-    //   adultAmountFood +=
-    //     mealsCost *
-    //     (Number(formData.no_adults) + Number(hotel.ex_adults)) *
-    //     checkInOutDays;
-
-    //   // Children Meals cost
-    //   childrenAmountFood +=
-    //     mealsCost *
-    //     (Number(formData.no_children) + Number(hotel.ex_children)) *
-    //     checkInOutDays;
-
-    //   // // Total Adult Hotel Cost
-    //   // hotelInfoAdults += adultAmountRoom + adultAmountFood;
-    //   // hotelInfoChildren += childrenAmountRoom + childrenAmountFood;
-    // });
+    let transportAdults = 0,
+      transportChildren = 0,
+      sightseeingAdults = 0,
+      sightseeingChildren = 0,
+      ticketAdults = 0,
+      ticketChildren = 0;
 
     formData.transport_info.forEach((transport) => {
-      transportInfoAdults += Number(transport.transport_cost);
+      // Include transport cost directly since you have option_index selected
+      transportAdults += Number(transport.transport_cost) || 0;
     });
 
     formData.sightseeing_info.forEach((sight) => {
-      const adultCost = sight.adult_cost;
-      const childrenCost = sight.children_cost;
-
-      sightseeingInfoAdults += adultCost * sight.adults;
-      sightseeingInfoChildren += childrenCost * sight.children;
+      sightseeingAdults +=
+        (Number(sight.rate_adult) || 0) * (sight.adults || 0);
+      sightseeingChildren +=
+        (Number(sight.rate_child) || 0) * (sight.children || 0);
+      // Add sharing transfer cost if applicable, assuming it should be added once per person
+      sightseeingAdults +=
+        (Number(sight.sharing_transfer_adult) || 0) * (sight.adults || 0);
+      sightseeingChildren +=
+        (Number(sight.sharing_transfer_child) || 0) * (sight.children || 0);
     });
 
-    let ticketInfoAdults = 0,
-      ticketInfoChildren = 0;
-
-    formData.ticket_info?.forEach((ticket) => {
-      if (ticket.adult_price && ticket.child_price) {
-        ticketInfoAdults += Number(ticket.adult_price) * Number(ticket.adults);
-        ticketInfoChildren +=
-          Number(ticket.child_price) * Number(ticket.children);
-      }
+    formData.ticket_info.forEach((ticket) => {
+      ticketAdults +=
+        (Number(ticket.adult_price) || 0) * (Number(ticket.adults) || 0);
+      ticketChildren +=
+        (Number(ticket.child_price) || 0) * (Number(ticket.children) || 0);
     });
+    const adultsTotal = transportAdults + sightseeingAdults + ticketAdults;
+    const childrenTotal =
+      transportChildren + sightseeingChildren + ticketChildren;
 
-    // Totalling
-    // adults
-    adultsTotal =
-      transportInfoAdults + sightseeingInfoAdults + ticketInfoAdults;
-    // Per adult
-    perAdult =
-      Math.round(
-        (transportInfoAdults + sightseeingInfoAdults + ticketInfoAdults) /
-          Number(formData.no_adults)
-      ) || 0;
+    const total = adultsTotal + childrenTotal;
 
-    // Children
-    childrenTotal =
-      transportInfoChildren + sightseeingInfoChildren + ticketInfoChildren;
-    // Per child
-    if (formData.no_children <= 0) {
-      perChild = 0;
-    } else {
-      perChild =
-        Math.round(
-          (transportInfoChildren +
-            sightseeingInfoChildren +
-            ticketInfoChildren) /
-            Number(formData.no_children)
-        ) || 0;
-    }
-    // Total
-    total =
-      transportInfoAdults +
-        sightseeingInfoAdults +
-        ticketInfoAdults +
-        ticketInfoChildren +
-        transportInfoChildren +
-        sightseeingInfoChildren || 0;
-
-    // Taxes
+    // Calculate tax
+    let taxAmount = 0;
     formData.taxes.forEach((tax) => {
       taxAmount += total * (tax.tax_value / 100);
     });
+    console.log(formData.taxes);
+    const finalAmount = total + taxAmount;
 
-    finalAmount = total + taxAmount;
+    const perAdult =
+      formData.no_adults > 0 ? Math.round(adultsTotal / formData.no_adults) : 0;
+    const perChild =
+      formData.no_children > 0
+        ? Math.round(childrenTotal / formData.no_children)
+        : 0;
 
-    // Update State
-    setCalc((prev) => ({
-      ...prev,
-      adultsTotal: adultsTotal,
-      perAdult: perAdult,
-      childrenTotal: childrenTotal,
-      perChild: perChild,
-      total: total,
-      taxAmount: taxAmount,
-      finalAmount: finalAmount,
-    }));
+    setCalc({
+      adultsTotal,
+      childrenTotal,
+      total,
+      taxAmount,
+      finalAmount,
+      perAdult,
+      perChild,
+    });
 
-    // Set for Submission
     setToSubmit(true);
   };
 
-  // Submit
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -640,12 +447,25 @@ const Calculator = () => {
     }
 
     const data = { ...formData };
+    data.ticket_info = data.ticket_info.map((tck) =>
+      tck.category.length === 0 ? { ...tck, category: "" } : tck
+    );
     data.final_payment = Number(calc.finalAmount);
     data.total_per_adult = Number(calc.perAdult);
     data.total_per_child = Number(calc.perChild);
     console.log("Data to be sent: ", data);
     const result = await subFormData.sendData(data);
     console.log("Response from server : ", result);
+  };
+
+  const handleShowTerms = (itemTerms) => {
+    setTermsModalData(JSON.parse(itemTerms));
+    setTermsModalOpen(true);
+  };
+
+  const handleCloseTerms = () => {
+    setTermsModalOpen(false);
+    setTermsModalData(null);
   };
 
   useEffect(() => {
@@ -664,24 +484,9 @@ const Calculator = () => {
     }
   }, [subFormData.loading, subFormData.response, defaultForm]);
 
-  // Function -> Number of days
-  function getDaysBetweenDates(date1, date2) {
-    const startDate = new Date(date1);
-    const endDate = new Date(date2);
-    const differenceInMillis = endDate - startDate;
-
-    return differenceInMillis / (1000 * 60 * 60 * 24) || 0; // Convert milliseconds to days
-  }
-
   return (
     <>
-      <Alert
-        open={popUp}
-        handleClose={() => {
-          setPopUp(false);
-        }}
-        success={success}
-      >
+      <Alert open={popUp} handleClose={() => setPopUp(false)} success={success}>
         <p>{err}</p>
       </Alert>
       <>
@@ -693,6 +498,7 @@ const Calculator = () => {
                 <span>Basic info</span>
               </div>
               <div className="row row-cols-1 row-cols-md-2 row-cols-lg-3">
+                {/* Basic Inputs (Customer name, phone, dates, adults, children) */}
                 <div className="col mb-3 mb-md-4">
                   <label htmlFor="customer_number" className="fw-bold">
                     Customer Name
@@ -777,6 +583,7 @@ const Calculator = () => {
                 </div>
               </div>
             </div>
+
             {/* Transport Info */}
             <div className="px-2 py-2 px-md-4 mb-4">
               <div className="title-line">
@@ -786,9 +593,7 @@ const Calculator = () => {
               {showTransportPrompt && (
                 <div
                   className="mb-3 p-3 rounded"
-                  style={{
-                    border: "1px solid #16acbf",
-                  }}
+                  style={{ border: "1px solid #16acbf" }}
                 >
                   <p className="mb-2 fw-bold">
                     Do you need transportation services for your trip?
@@ -807,16 +612,32 @@ const Calculator = () => {
                   <div className="mb-3" key={index}>
                     <div className="d-flex align-items-center justify-content-between column-gap-3">
                       <h5 className="fs-6 fw-bold">Transport {index + 1}</h5>
-                      <button
-                        className="btn btn-danger rounded-circle"
-                        onClick={() => {
-                          handleDeleteInfo("transport_info", index);
-                        }}
-                      >
-                        <i className="fa-regular fa-trash-can"></i>
-                      </button>
+                      <div className="d-flex gap-3">
+                        <button
+                          className="btn btn-danger rounded-circle"
+                          onClick={() =>
+                            handleDeleteInfo("transport_info", index)
+                          }
+                        >
+                          <i className="fa-regular fa-trash-can"></i>
+                        </button>
+                        {item.option_index !== null &&
+                          item.option_index !== undefined &&
+                          item.option_index !== "" && (
+                            <button
+                              className="btn btn-info rounded-circle"
+                              title="View Terms & Conditions"
+                              onClick={() =>
+                                handleShowTerms(item.terms_and_conditions || {})
+                              }
+                            >
+                              <i className="fa-solid fa-info"></i>
+                            </button>
+                          )}
+                      </div>
                     </div>
                     <div className="row row-cols-1 row-cols-md-2 row-cols-lg-4">
+                      {/* Destination */}
                       <div className="col mb-3 mb-md-4">
                         <label htmlFor="destination_id" className="fw-bold">
                           City
@@ -826,9 +647,9 @@ const Calculator = () => {
                           className="form-control mt-1"
                           name="destination_id"
                           value={item.destination_id}
-                          onChange={(e) => {
-                            handleNestedDataChange(e, "transport_info", index);
-                          }}
+                          onChange={(e) =>
+                            handleNestedDataChange(e, "transport_info", index)
+                          }
                           disabled={
                             !formData.travel_date_from ||
                             !formData.travel_date_to ||
@@ -837,16 +658,17 @@ const Calculator = () => {
                         >
                           <option value="">-- select --</option>
                           {!destinationsData.loading &&
-                            destinationsData.data?.destinations?.map((item) => (
-                              <option key={item.id} value={item.id}>
+                            destinationsData.data?.destinations?.map((dest) => (
+                              <option key={dest.id} value={dest.id}>
                                 {countriesData.data?.cities.find(
-                                  (city) => city.id == item.city_id
+                                  (city) => city.id == dest.city_id
                                 )?.name || "N/A"}
                               </option>
                             ))}
                         </select>
                       </div>
 
+                      {/* Transport company */}
                       <div className="col mb-3 mb-md-4">
                         <label htmlFor="transport_id" className="fw-bold">
                           Transport
@@ -856,9 +678,9 @@ const Calculator = () => {
                           className="form-control mt-1"
                           name="transport_id"
                           value={item.transport_id}
-                          onChange={(e) => {
-                            handleNestedDataChange(e, "transport_info", index);
-                          }}
+                          onChange={(e) =>
+                            handleNestedDataChange(e, "transport_info", index)
+                          }
                           disabled={!item.destination_id}
                         >
                           <option value="">-- select --</option>
@@ -876,32 +698,55 @@ const Calculator = () => {
                       </div>
 
                       <div className="col mb-3 mb-md-4">
-                        <label htmlFor="v_type" className="fw-bold">
-                          No. Of People
+                        <label
+                          htmlFor="v_type"
+                          className="fw-bold d-block mb-1"
+                        >
+                          Vehicle Capacity
                         </label>
                         <select
                           id="v_type"
                           className="form-control mt-1"
                           name="v_type"
-                          value={item.v_type}
-                          onChange={(e) => {
-                            handleNestedDataChange(e, "transport_info", index);
-                          }}
+                          disabled
+                        >
+                          <option value="">{item.v_type}</option>
+                        </select>
+                      </div>
+
+                      {/* Option selection */}
+                      <div className="col mb-3 mb-md-4">
+                        <label htmlFor="option_index" className="fw-bold">
+                          Transfer Options
+                        </label>
+                        <select
+                          id="option_index"
+                          className="form-control mt-1"
+                          name="option_index"
+                          value={
+                            item.option_index !== null &&
+                            item.option_index !== undefined
+                              ? String(item.option_index)
+                              : ""
+                          }
+                          onChange={(e) =>
+                            handleNestedDataChange(e, "transport_info", index)
+                          }
                           disabled={!item.transport_id}
                         >
-                          <option value="">0</option>
+                          <option value="">-- select --</option>
                           {transportData.data?.data
-                            ?.find(
-                              (transport) => transport.id == item.transport_id
-                            )
+                            ?.find((t) => t.id == item.transport_id)
                             ?.options.map((option, i) => (
-                              <option key={i} value={option.type}>
-                                {option.type || "N/A"}
+                              <option key={i} value={String(i)}>
+                                {option.from || "N/A"} → {option.to || "N/A"}{" "}
+                                AED {option.rate} /- ({option.transfer_type})
                               </option>
                             ))}
                         </select>
                       </div>
 
+                      {/* Date */}
                       <div className="col mb-3 mb-md-4">
                         <label htmlFor="date" className="fw-bold">
                           Date
@@ -914,9 +759,9 @@ const Calculator = () => {
                           max={formData.travel_date_to}
                           name="date"
                           value={item.date}
-                          onChange={(e) => {
-                            handleNestedDataChange(e, "transport_info", index);
-                          }}
+                          onChange={(e) =>
+                            handleNestedDataChange(e, "transport_info", index)
+                          }
                           disabled={
                             !formData.travel_date_from ||
                             !formData.travel_date_to
@@ -930,14 +775,13 @@ const Calculator = () => {
               {formData.transport_info.length > 0 && (
                 <button
                   className="btn btn-info"
-                  onClick={() => {
-                    handleAddInfo("transport");
-                  }}
+                  onClick={() => handleAddInfo("transport")}
                 >
                   Add Another Transport
                 </button>
               )}
             </div>
+
             {/* Sightseeing Info */}
             <div className="px-2 py-2 px-md-4 mb-4">
               <div className="title-line">
@@ -947,9 +791,7 @@ const Calculator = () => {
               {showSightseeingPrompt && (
                 <div
                   className="mb-3 p-3 rounded"
-                  style={{
-                    border: "1px solid #16acbf",
-                  }}
+                  style={{ border: "1px solid #16acbf" }}
                 >
                   <p className="mb-2 fw-bold">
                     Would you like to add any sightseeing activities?
@@ -968,16 +810,30 @@ const Calculator = () => {
                   <div className="mb-3" key={index}>
                     <div className="d-flex align-items-center justify-content-between column-gap-3">
                       <h5 className="fs-6 fw-bold">Sightseeing {index + 1}</h5>
-                      <button
-                        className="btn btn-danger rounded-circle"
-                        onClick={() => {
-                          handleDeleteInfo("sightseeing_info", index);
-                        }}
-                      >
-                        <i className="fa-regular fa-trash-can"></i>
-                      </button>
+                      <div className="d-flex gap-3">
+                        <button
+                          className="btn btn-danger rounded-circle"
+                          onClick={() =>
+                            handleDeleteInfo("sightseeing_info", index)
+                          }
+                        >
+                          <i className="fa-regular fa-trash-can"></i>
+                        </button>
+                        {item.sightseeing_id && (
+                          <button
+                            className="btn btn-info rounded-circle"
+                            title="View Terms & Conditions"
+                            onClick={() =>
+                              handleShowTerms(item.terms_and_conditions || {})
+                            }
+                          >
+                            <i className="fa-solid fa-info"></i>
+                          </button>
+                        )}
+                      </div>
                     </div>
                     <div className="row row-cols-1 row-cols-md-2 row-cols-lg-4">
+                      {/* Destination */}
                       <div className="col mb-3 mb-md-4">
                         <label htmlFor="destination_id" className="fw-bold">
                           City
@@ -987,13 +843,9 @@ const Calculator = () => {
                           className="form-control mt-1"
                           name="destination_id"
                           value={item.destination_id}
-                          onChange={(e) => {
-                            handleNestedDataChange(
-                              e,
-                              "sightseeing_info",
-                              index
-                            );
-                          }}
+                          onChange={(e) =>
+                            handleNestedDataChange(e, "sightseeing_info", index)
+                          }
                           disabled={
                             !formData.travel_date_from ||
                             !formData.travel_date_to ||
@@ -1002,16 +854,17 @@ const Calculator = () => {
                         >
                           <option value="">-- select --</option>
                           {!destinationsData.loading &&
-                            destinationsData.data?.destinations?.map((item) => (
-                              <option key={item.id} value={item.id}>
+                            destinationsData.data?.destinations?.map((dest) => (
+                              <option key={dest.id} value={dest.id}>
                                 {countriesData.data?.cities.find(
-                                  (city) => city.id == item.city_id
+                                  (city) => city.id == dest.city_id
                                 )?.name || "N/A"}
                               </option>
                             ))}
                         </select>
                       </div>
 
+                      {/* Sightseeing */}
                       <div className="col mb-3 mb-md-4">
                         <label htmlFor="sightseeing_id" className="fw-bold">
                           Sightseeing
@@ -1021,33 +874,26 @@ const Calculator = () => {
                           className="form-control mt-1"
                           name="sightseeing_id"
                           value={item.sightseeing_id}
-                          onChange={(e) => {
-                            handleNestedDataChange(
-                              e,
-                              "sightseeing_info",
-                              index
-                            );
-                          }}
+                          onChange={(e) =>
+                            handleNestedDataChange(e, "sightseeing_info", index)
+                          }
                           disabled={!item.destination_id}
                         >
                           <option value="">-- select --</option>
                           {sightseeingData.data?.data
                             ?.filter(
-                              (sightseeing) =>
-                                sightseeing.destination_id ==
-                                item.destination_id
+                              (sight) =>
+                                sight.destination_id == item.destination_id
                             )
-                            .map((sightseeing) => (
-                              <option
-                                key={sightseeing.id}
-                                value={sightseeing.id}
-                              >
-                                {sightseeing.description || "N/A"}
+                            .map((sight) => (
+                              <option key={sight.id} value={sight.id}>
+                                {sight.company_name || "N/A"}
                               </option>
                             ))}
                         </select>
                       </div>
 
+                      {/* No of adults */}
                       <div className="col mb-3 mb-md-4">
                         <label htmlFor="adults" className="fw-bold">
                           No Of Adult
@@ -1058,17 +904,14 @@ const Calculator = () => {
                           className="form-control mt-1"
                           name="adults"
                           value={item.adults}
-                          onChange={(e) => {
-                            handleNestedDataChange(
-                              e,
-                              "sightseeing_info",
-                              index
-                            );
-                          }}
+                          onChange={(e) =>
+                            handleNestedDataChange(e, "sightseeing_info", index)
+                          }
                           disabled={!item.sightseeing_id}
                         />
                       </div>
 
+                      {/* No of children */}
                       <div className="col mb-3 mb-md-4">
                         <label htmlFor="children" className="fw-bold">
                           No Of Children
@@ -1078,17 +921,60 @@ const Calculator = () => {
                           className="form-control mt-1"
                           name="children"
                           value={item.children}
-                          onChange={(e) => {
-                            handleNestedDataChange(
-                              e,
-                              "sightseeing_info",
-                              index
-                            );
-                          }}
-                          disabled={!item.destination_id}
+                          onChange={(e) =>
+                            handleNestedDataChange(e, "sightseeing_info", index)
+                          }
+                          disabled={!item.sightseeing_id}
+                        />
+                      </div>
+                      <div className="col mb-3 mb-md-4">
+                        <label htmlFor="adults" className="fw-bold">
+                          Adult Rate
+                        </label>
+                        <input
+                          type="number"
+                          className="form-control mt-1"
+                          value={item.rate_adult}
+                          disabled
+                        />
+                      </div>
+                      <div className="col mb-3 mb-md-4">
+                        <label htmlFor="adults" className="fw-bold">
+                          Child Rate
+                        </label>
+                        <input
+                          type="number"
+                          className="form-control mt-1"
+                          value={item.rate_child}
+                          disabled
+                        />
+                      </div>
+                      <div className="col mb-3 mb-md-4">
+                        <label htmlFor="adults" className="fw-bold">
+                          Sharing Transfer Adult Rate
+                        </label>
+
+                        <input
+                          type="number"
+                          className="form-control mt-1"
+                          value={item.sharing_transfer_adult}
+                          disabled
+                        />
+                      </div>
+                      <div className="col mb-3 mb-md-4">
+                        <label htmlFor="adults" className="fw-bold">
+                          Sharing Transfer Child Rate
+                        </label>
+
+                        <input
+                          type="number"
+                          className="form-control mt-1"
+                          value={item.sharing_transfer_child}
+                          disabled
                         />
                       </div>
 
+                      {/* Date */}
                       <div className="col mb-3 mb-md-4">
                         <label htmlFor="date" className="fw-bold">
                           Date
@@ -1101,13 +987,9 @@ const Calculator = () => {
                           max={formData.travel_date_to}
                           name="date"
                           value={item.date}
-                          onChange={(e) => {
-                            handleNestedDataChange(
-                              e,
-                              "sightseeing_info",
-                              index
-                            );
-                          }}
+                          onChange={(e) =>
+                            handleNestedDataChange(e, "sightseeing_info", index)
+                          }
                           disabled={
                             !formData.travel_date_from ||
                             !formData.travel_date_to
@@ -1121,14 +1003,13 @@ const Calculator = () => {
               {formData.sightseeing_info.length > 0 && (
                 <button
                   className="btn btn-info"
-                  onClick={() => {
-                    handleAddInfo("sightseeing");
-                  }}
+                  onClick={() => handleAddInfo("sightseeing")}
                 >
                   Add Another Sightseeing
                 </button>
               )}
             </div>
+
             {/* Tickets */}
             <div className="px-2 py-2 px-md-4 mb-4">
               <div className="title-line">
@@ -1165,17 +1046,32 @@ const Calculator = () => {
                       <div className="mb-3" key={index}>
                         <div className="d-flex align-items-center justify-content-between column-gap-3">
                           <h5 className="fs-6 fw-bold">Ticket {index + 1}</h5>
-                          <button
-                            className="btn btn-danger rounded-circle"
-                            onClick={() =>
-                              handleDeleteInfo("ticket_info", index)
-                            }
-                          >
-                            <i className="fa-regular fa-trash-can"></i>
-                          </button>
+                          <div className="d-flex gap-3">
+                            <button
+                              className="btn btn-danger rounded-circle"
+                              onClick={() =>
+                                handleDeleteInfo("ticket_info", index)
+                              }
+                            >
+                              <i className="fa-regular fa-trash-can"></i>
+                            </button>
+                            {item.time_slot && (
+                              <button
+                                className="btn btn-info rounded-circle"
+                                title="View Terms & Conditions"
+                                onClick={() =>
+                                  handleShowTerms(
+                                    item.terms_and_conditions || {}
+                                  )
+                                }
+                              >
+                                <i className="fa-solid fa-info"></i>
+                              </button>
+                            )}
+                          </div>
                         </div>
                         <div className="row row-cols-1 row-cols-md-2 row-cols-lg-4">
-                          {/* Ticket Selection */}
+                          {/* Ticket */}
                           <div className="col mb-3 mb-md-4">
                             <label
                               htmlFor={`ticket_${index}`}
@@ -1201,7 +1097,7 @@ const Calculator = () => {
                             </select>
                           </div>
 
-                          {/* Category Selection (shown when ticket is selected) */}
+                          {/* Category */}
                           {item.id && (
                             <div className="col mb-3 mb-md-4">
                               <label
@@ -1235,7 +1131,7 @@ const Calculator = () => {
                             </div>
                           )}
 
-                          {/* Time Slot Selection (shown when category is selected) */}
+                          {/* Time Slot */}
                           {item.category && (
                             <div className="col mb-3 mb-md-4">
                               <label
@@ -1260,11 +1156,11 @@ const Calculator = () => {
                                 <option value="">-- Select Time Slot --</option>
                                 {tickets.data?.data
                                   ?.find((t) => t.id == item.id)
-                                  ?.time_slots?.filter((slot) =>
-                                    item.category == "Prime"
-                                      ? primeSlots.includes(slot.slot)
-                                      : nonPrimeSlots.includes(slot.slot)
-                                  )
+                                  ?.time_slots // ?.filter((slot) =>
+                                  //   item.category == "Prime"
+                                  //     ? primeSlots.includes(slot.slot)
+                                  //     : nonPrimeSlots.includes(slot.slot)
+                                  // )
                                   ?.map((slot, i) => (
                                     <option key={i} value={slot.slot}>
                                       {slot.slot} (Adult: {slot.adult_price},
@@ -1275,119 +1171,65 @@ const Calculator = () => {
                             </div>
                           )}
 
-                          {/* Transfer Options (shown when time slot is selected) */}
-                          {item.time_slot && (
-                            <div className="col mb-3 mb-md-4">
-                              <label
-                                htmlFor={`transfer_option_${index}`}
-                                className="fw-bold"
-                              >
-                                Transfer Option
-                              </label>
-                              <select
-                                id={`transfer_option_${index}`}
-                                className="form-control mt-1"
-                                name="transfer_option"
-                                value={item.transfer_option}
-                                onChange={(e) =>
-                                  handleNestedDataChange(
-                                    e,
-                                    "ticket_info",
-                                    index
-                                  )
-                                }
-                              >
-                                <option value="">-- Select Transfer --</option>
-                                {tickets.data?.data
-                                  ?.find((t) => t.id == item.id)
-                                  ?.transfer_options?.map((option, i) => (
-                                    <option key={i} value={option.option}>
-                                      {option.option} (Adult:{" "}
-                                      {option.adult_price}, Child:{" "}
-                                      {option.child_price})
-                                    </option>
-                                  ))}
-                              </select>
-                            </div>
-                          )}
+                          <div className="col mb-3 mb-md-4">
+                            <label
+                              htmlFor={`ticket_adults_${index}`}
+                              className="fw-bold"
+                            >
+                              No. of Adults
+                            </label>
+                            <input
+                              type="number"
+                              id={`ticket_adults_${index}`}
+                              className="form-control mt-1"
+                              name="adults"
+                              value={item.adults}
+                              onChange={(e) =>
+                                handleNestedDataChange(e, "ticket_info", index)
+                              }
+                              min="0"
+                            />
+                          </div>
 
-                          {/* Quantity and Date Fields */}
-                          {item.transfer_option && (
-                            <>
-                              <div className="col mb-3 mb-md-4">
-                                <label
-                                  htmlFor={`ticket_adults_${index}`}
-                                  className="fw-bold"
-                                >
-                                  No. of Adults
-                                </label>
-                                <input
-                                  type="number"
-                                  id={`ticket_adults_${index}`}
-                                  className="form-control mt-1"
-                                  name="adults"
-                                  value={item.adults}
-                                  onChange={(e) =>
-                                    handleNestedDataChange(
-                                      e,
-                                      "ticket_info",
-                                      index
-                                    )
-                                  }
-                                  min="0"
-                                />
-                              </div>
-
-                              <div className="col mb-3 mb-md-4">
-                                <label
-                                  htmlFor={`ticket_children_${index}`}
-                                  className="fw-bold"
-                                >
-                                  No. of Children
-                                </label>
-                                <input
-                                  type="number"
-                                  id={`ticket_children_${index}`}
-                                  className="form-control mt-1"
-                                  name="children"
-                                  value={item.children}
-                                  onChange={(e) =>
-                                    handleNestedDataChange(
-                                      e,
-                                      "ticket_info",
-                                      index
-                                    )
-                                  }
-                                  min="0"
-                                />
-                              </div>
-
-                              <div className="col mb-3 mb-md-4">
-                                <label
-                                  htmlFor={`ticket_date_${index}`}
-                                  className="fw-bold"
-                                >
-                                  Date
-                                </label>
-                                <input
-                                  type="date"
-                                  id={`ticket_date_${index}`}
-                                  className="form-control mt-1"
-                                  name="date"
-                                  value={item.date}
-                                  onChange={(e) =>
-                                    handleNestedDataChange(
-                                      e,
-                                      "ticket_info",
-                                      index
-                                    )
-                                  }
-                                  min={formData.travel_date_from}
-                                  max={formData.travel_date_to}
-                                />
-                              </div>
-                            </>
-                          )}
+                          <div className="col mb-3 mb-md-4">
+                            <label
+                              htmlFor={`ticket_children_${index}`}
+                              className="fw-bold"
+                            >
+                              No. of Children
+                            </label>
+                            <input
+                              type="number"
+                              id={`ticket_children_${index}`}
+                              className="form-control mt-1"
+                              name="children"
+                              value={item.children}
+                              onChange={(e) =>
+                                handleNestedDataChange(e, "ticket_info", index)
+                              }
+                              min="0"
+                            />
+                          </div>
+                          <div className="col mb-3 mb-md-4">
+                            <label
+                              htmlFor={`ticket_date_${index}`}
+                              className="fw-bold"
+                            >
+                              Date
+                            </label>
+                            <input
+                              type="date"
+                              id={`ticket_date_${index}`}
+                              className="form-control mt-1"
+                              name="date"
+                              value={item.date}
+                              onChange={(e) =>
+                                handleNestedDataChange(e, "ticket_info", index)
+                              }
+                              min={formData.travel_date_from}
+                              max={formData.travel_date_to}
+                            />
+                          </div>
                         </div>
                       </div>
                     ))
@@ -1411,9 +1253,7 @@ const Calculator = () => {
                   {formData.ticket_info?.length > 0 && (
                     <button
                       className="btn btn-info"
-                      onClick={() => {
-                        handleAddInfo("ticket");
-                      }}
+                      onClick={() => handleAddInfo("ticket")}
                     >
                       Add Another Ticket
                     </button>
@@ -1421,6 +1261,16 @@ const Calculator = () => {
                 </>
               )}
             </div>
+
+            {termsModalOpen && (
+              <TermsConditionsModal
+                open={termsModalOpen}
+                onClose={handleCloseTerms}
+                initialData={termsModalData}
+                readOnly={true}
+              />
+            )}
+
             {/* Remarks */}
             <div className="px-2 py-2 px-md-4 mb-4">
               <div className="row row-cols-1">
@@ -1439,59 +1289,45 @@ const Calculator = () => {
                 </div>
               </div>
             </div>
-            {toSubmit && (
-              <>
-                {/* Pricing */}
-                <div className="px-2 py-2 px-md-4 mb-4">
-                  <div className="title-line">
-                    <span>Pricing</span>
-                  </div>
 
-                  <div className="row row-cols-1 row-cols-md-2 row-cols-lg-3">
-                    <div className="col mb-3 mb-md-4">Adult's Total:-</div>
-                    <div className="col mb-3 mb-md-4">
-                      <span>{calc.adultsTotal}/-</span>
-                    </div>
-                  </div>
-                  <div className="row row-cols-1 row-cols-md-2 row-cols-lg-3">
-                    <div className="col mb-3 mb-md-4">Children's Total:-</div>
-                    <div className="col mb-3 mb-md-4">
-                      <span>{calc.childrenTotal}/-</span>
-                    </div>
-                  </div>
-                  <div className="row row-cols-1 row-cols-md-2 row-cols-lg-3">
-                    <div className="col mb-3 mb-md-4">Per Adult:-</div>
-                    <div className="col mb-3 mb-md-4">
-                      <span>{calc.perAdult}/-</span>
-                    </div>
-                  </div>
-                  <div className="row row-cols-1 row-cols-md-2 row-cols-lg-3">
-                    <div className="col mb-3 mb-md-4">Per Children:-</div>
-                    <div className="col mb-3 mb-md-4">
-                      <span>{calc.perChild}/-</span>
-                    </div>
-                  </div>
-                  <div className="row row-cols-1 row-cols-md-2 row-cols-lg-3 fw-bold">
-                    <div className="col mb-3 mb-md-4">Total:-</div>
-                    <div className="col mb-3 mb-md-4">
-                      <span>{calc.total}/-</span>
-                    </div>
-                  </div>
-                  <div className="row row-cols-1 row-cols-md-2 row-cols-lg-3 fw-bold">
-                    <div className="col mb-3 mb-md-4">Taxed Amount:-</div>
-                    <div className="col mb-3 mb-md-4">
-                      <span>{calc.taxAmount}/-</span>
-                    </div>
-                  </div>
-                  <div className="row row-cols-1 row-cols-md-2 row-cols-lg-3 fw-bold">
-                    <div className="col mb-3 mb-md-4">Final Payment:-</div>
-                    <div className="col mb-3 mb-md-4">
-                      <span>{calc.finalAmount}/-</span>
-                    </div>
-                  </div>
+            {/* Pricing Display */}
+            {toSubmit && (
+              <div className="px-2 py-2 px-md-4 mb-4">
+                <div className="title-line">
+                  <span>Pricing</span>
                 </div>
-              </>
+                <div className="row row-cols-1 row-cols-md-2 row-cols-lg-3">
+                  <div className="col mb-3 mb-md-4">Adult's Total:-</div>
+                  <div className="col mb-3 mb-md-4">{calc.adultsTotal}/-</div>
+                </div>
+                <div className="row row-cols-1 row-cols-md-2 row-cols-lg-3">
+                  <div className="col mb-3 mb-md-4">Children's Total:-</div>
+                  <div className="col mb-3 mb-md-4">{calc.childrenTotal}/-</div>
+                </div>
+                <div className="row row-cols-1 row-cols-md-2 row-cols-lg-3">
+                  <div className="col mb-3 mb-md-4">Per Adult:-</div>
+                  <div className="col mb-3 mb-md-4">{calc.perAdult}/-</div>
+                </div>
+                <div className="row row-cols-1 row-cols-md-2 row-cols-lg-3">
+                  <div className="col mb-3 mb-md-4">Per Children:-</div>
+                  <div className="col mb-3 mb-md-4">{calc.perChild}/-</div>
+                </div>
+                <div className="row row-cols-1 row-cols-md-2 row-cols-lg-3 fw-bold">
+                  <div className="col mb-3 mb-md-4">Total:-</div>
+                  <div className="col mb-3 mb-md-4">{calc.total}/-</div>
+                </div>
+                <div className="row row-cols-1 row-cols-md-2 row-cols-lg-3 fw-bold">
+                  <div className="col mb-3 mb-md-4">Taxed Amount:-</div>
+                  <div className="col mb-3 mb-md-4">{calc.taxAmount}/-</div>
+                </div>
+                <div className="row row-cols-1 row-cols-md-2 row-cols-lg-3 fw-bold">
+                  <div className="col mb-3 mb-md-4">Final Payment:-</div>
+                  <div className="col mb-3 mb-md-4">{calc.finalAmount}/-</div>
+                </div>
+              </div>
             )}
+
+            {/* Buttons */}
             <div className="px-2 py-2 px-md-4 mb-4">
               {!toSubmit ? (
                 <button

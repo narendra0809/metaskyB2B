@@ -18,7 +18,7 @@ import Customers from "./pages/Customers";
 import EditCalculator from "./pages/EditCalculator";
 import Itinerary from "./pages/Itinerary";
 import Payments from "./pages/Payments";
-import RoomPrice from "./pages/RoomPrice";
+import RoomPrice from "./pages/TicketPrice";
 import SightseeingPrice from "./pages/SightseeingPrice";
 import Summary from "./pages/Summary";
 import TermsAndConditions from "./pages/TermsAndConditions";
@@ -35,6 +35,7 @@ import Staff from "./pages/admin/Staff";
 import AllAccounts from "./pages/admin/AllAccounts";
 import Banking from "./pages/admin/Banking";
 import AgentWallets from "./pages/admin/AgentWallets";
+import TicketPrice from "./pages/TicketPrice";
 
 function App() {
   const { loggedIn, authUser } = useAuth();
@@ -111,8 +112,8 @@ function App() {
               element={<ProtectedRoute element={<ChangeProfile />} />}
             />
             <Route
-              path="/room-price"
-              element={<ProtectedRoute element={<RoomPrice />} />}
+              path="/ticket-price"
+              element={<ProtectedRoute element={<TicketPrice />} />}
             />
             <Route
               path="/transport-price"

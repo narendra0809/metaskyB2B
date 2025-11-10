@@ -38,19 +38,20 @@ class BookingController extends Controller
             'ticket_info.*.name' => 'required|string',
             'ticket_info.*.date' => 'required|date',
             'ticket_info.*.time_slot' => 'required|string',
-            'ticket_info.*.category' => 'required|string',
-            'ticket_info.*.transfer_option' => 'required|string',
+            'ticket_info.*.category' => 'sometimes|nullable|string',
             'ticket_info.*.adult_price' => 'required|numeric',
             'ticket_info.*.child_price' => 'required|numeric',
             'ticket_info.*.adults' => 'required|string',
             'ticket_info.*.children' => 'required|string',
+            'ticket_info.*.terms_and_conditions' => 'nullable|json',
             'transport_info' => 'nullable|array',
             'transport_info.*.destination_id' => 'nullable|exists:destinations,id',
             'transport_info.*.transport_id' => 'nullable|exists:transportations,id',
-            'transport_info.*.no_of_people' => 'nullable|integer',
             'transport_info.*.v_type' => 'nullable|string',
+            'transport_info.*.option_index' => 'nullable|string',
             'transport_info.*.date' => 'nullable|date',
             'transport_info.*.transport_cost' => 'nullable|numeric',
+            'transport_info.*.terms_and_conditions' => 'nullable|json',
             'sightseeing_info' => 'nullable|array',
             'sightseeing_info.*.destination_id' => 'nullable|exists:destinations,id',
             'sightseeing_info.*.sightseeing_id' => 'nullable|exists:sightseeings,id',
@@ -59,6 +60,9 @@ class BookingController extends Controller
             'sightseeing_info.*.date' => 'nullable|date',
             'sightseeing_info.*.adult_cost' => 'nullable|numeric',
             'sightseeing_info.*.children_cost' => 'nullable|numeric',
+            'sightseeing_info.*.sharing_transfer_adult' => 'nullable|numeric',
+            'sightseeing_info.*.sharing_transfer_child' => 'nullable|numeric',
+            'sightseeing_info.*.terms_and_conditions' => 'nullable|json',
             'remarks' => 'nullable|string',
             'taxes' => 'nullable|array',
             'taxes.*.tax_name' => 'nullable|string',
@@ -399,263 +403,6 @@ public function bookingPayment($bookingId)
     }
 }
 
-
-
-// public function editBooking(Request $request, $bookingId)
-// {
-//     try {
-//         // Find the booking
-//         $booking = Booking::findOrFail($bookingId);
-
-//         // Check if the booking status is 'approved'
-//         if ($booking->customer_status === 'approved') {
-//             return response()->json([
-//                 'success' => false,
-//                 'message' => 'Booking cannot be edited. Contact admin for further assistance.',
-//             ], 403);
-//         }
-
-//         // Get the authenticated user
-//         $user = Auth::user();
-
-//         // Check if the user is an admin or the agent who created the booking
-//         if ($user->role === 'admin' || ($user->role === 'agent' && $booking->user_id === $user->id)) {
-//             // Validate the incoming request
-//             $validatedData = $request->validate([
-//                 'customer_name' => 'sometimes|required|string',
-//                 'phone_no' => 'sometimes|required|string',
-//                 'travel_date_from' => 'sometimes|required|date',
-//                 'travel_date_to' => 'sometimes|required|date',
-//                 'no_adults' => 'sometimes|required|integer',
-//                 'no_children' => 'sometimes|required|integer',
-//                 'hotel_info' => 'nullable|array',
-//                 'hotel_info.*.destination_id' => 'nullable|exists:destinations,id',
-//                 'hotel_info.*.hotel_id' => 'nullable|exists:hotels,id',
-//                 'hotel_info.*.room_type' => 'nullable|string',
-//                 'hotel_info.*.rooms' => 'nullable|integer',
-//                 'hotel_info.*.ex_adults' => 'nullable|integer',
-//                 'hotel_info.*.ex_children' => 'nullable|integer',
-//                 'hotel_info.*.ex_adult_cost' => 'nullable|string',
-//                 'hotel_info.*.ex_children_cost' => 'nullable|string',
-//                 'hotel_info.*.check_in' => 'nullable|date',
-//                 'hotel_info.*.check_out' => 'nullable|date',
-//                 'hotel_info.*.room_type_cost' => 'nullable|numeric',
-//                 'hotel_info.*.meals' => 'nullable|array',
-//                 'hotel_info.*.meals.*.name' => 'required|string',
-//                 'hotel_info.*.meals.*.rate' => 'required|numeric',
-//                 'hotel_info.*.meals.*.isChecked' => 'required|boolean',
-//                 'transport_info' => 'nullable|array',
-//                 'transport_info.*.destination_id' => 'nullable|exists:destinations,id',
-//                 'transport_info.*.transport_id' => 'nullable|exists:transportations,id',
-//                 'transport_info.*.no_of_people' => 'nullable|integer',
-//                 'transport_info.*.v_type' => 'nullable|string',
-//                 'transport_info.*.date' => 'nullable|date',
-//                 'transport_info.*.transport_cost' => 'nullable|numeric',
-//                 'sightseeing_info' => 'nullable|array',
-//                 'sightseeing_info.*.destination_id' => 'nullable|exists:destinations,id',
-//                 'sightseeing_info.*.sightseeing_id' => 'nullable|exists:sightseeings,id',
-//                 'sightseeing_info.*.adults' => 'nullable|integer',
-//                 'sightseeing_info.*.children' => 'nullable|integer',
-//                 'sightseeing_info.*.date' => 'nullable|date',
-//                 'sightseeing_info.*.adult_cost' => 'nullable|numeric',
-//                 'sightseeing_info.*.children_cost' => 'nullable|numeric',
-//                 'remarks' => 'nullable|string',
-//                 'taxes' => 'nullable|array',
-//                 'taxes.*.tax_name' => 'nullable|string',
-//                 'taxes.*.tax_value' => 'nullable|numeric',
-//                 'final_payment' => 'sometimes|required|numeric',
-//                 'total_per_adult' => 'sometimes|required|numeric',
-//                 'total_per_child' => 'sometimes|required|numeric',
-//                 'customer_status' => 'sometimes|required|in:pending,confirmed,cancelled',
-//                 'payment_status' => 'sometimes|required|in:unpaid,paid',
-//             ]);
-
-//             // Encode nested arrays as JSON
-//             $hotelInfo = isset($validatedData['hotel_info']) ? json_encode($validatedData['hotel_info']) : $booking->hotel_info;
-//             $transportInfo = isset($validatedData['transport_info']) ? json_encode($validatedData['transport_info']) : $booking->transport_info;
-//             $sightseeingInfo = isset($validatedData['sightseeing_info']) ? json_encode($validatedData['sightseeing_info']) : $booking->sightseeing_info;
-//             $taxes = isset($validatedData['taxes']) ? json_encode($validatedData['taxes']) : $booking->taxes;
-
-//             // Update the booking
-//             $booking->update([
-//                 'customer_name' => $validatedData['customer_name'] ?? $booking->customer_name,
-//                 'phone_no' => $validatedData['phone_no'] ?? $booking->phone_no,
-//                 'travel_date_from' => $validatedData['travel_date_from'] ?? $booking->travel_date_from,
-//                 'travel_date_to' => $validatedData['travel_date_to'] ?? $booking->travel_date_to,
-//                 'no_adults' => $validatedData['no_adults'] ?? $booking->no_adults,
-//                 'no_children' => $validatedData['no_children'] ?? $booking->no_children,
-//                 'hotel_info' => $hotelInfo,
-//                 'transport_info' => $transportInfo,
-//                 'sightseeing_info' => $sightseeingInfo,
-//                 'remarks' => $validatedData['remarks'] ?? $booking->remarks,
-//                 'taxes' => $taxes,
-//                 'final_payment' => $validatedData['final_payment'] ?? $booking->final_payment,
-//                 'total_per_adult' => $validatedData['total_per_adult'] ?? $booking->total_per_adult,
-//                 'total_per_child' => $validatedData['total_per_child'] ?? $booking->total_per_child,
-//                 'customer_status' => $validatedData['customer_status'] ?? $booking->customer_status,
-//                 'payment_status' => $validatedData['payment_status'] ?? $booking->payment_status,
-//             ]);
-
-//             return response()->json([
-//                 'success' => true,
-//                 'message' => 'Booking updated successfully.',
-//                 'booking' => $booking,
-//             ], 200);
-//         } else {
-//             return response()->json([
-//                 'success' => false,
-//                 'message' => 'Unauthorized to edit this booking.',
-//             ], 403);
-//         }
-//     } catch (\Exception $e) {
-//         Log::error('Error updating booking: ' . $e->getMessage());
-
-//         return response()->json([
-//             'success' => false,
-//             'message' => 'Failed to update booking. Please try again.',
-//             'error' => $e->getMessage(),
-//         ], 500);
-//     }
-// }
-
-// public function editBooking(Request $request, $bookingId)
-// {
-//     try {
-//         // Find the booking
-//         $booking = Booking::findOrFail($bookingId);
-
-//         // Check if the booking status is 'approved'
-//         if ($booking->customer_status === 'approved') {
-//             return response()->json([
-//                 'success' => false,
-//                 'message' => 'Booking cannot be edited. Contact admin for further assistance.',
-//             ], 403);
-//         }
-
-//         // Get the authenticated user
-//         $user = Auth::user();
-
-//         // Check if the user is an admin or the agent who created the booking
-//         if ($user->role === 'admin' || ($user->role === 'agent' && $booking->user_id === $user->id)) {
-//             // Validate the incoming request
-//             $validatedData = $request->validate([
-//                 'customer_name' => 'sometimes|required|string',
-//                 'phone_no' => 'sometimes|required|string',
-//                 'travel_date_from' => 'sometimes|required|date',
-//                 'travel_date_to' => 'sometimes|required|date',
-//                 'no_adults' => 'sometimes|required|integer',
-//                 'no_children' => 'sometimes|required|integer',
-//                 'hotel_info' => 'nullable|array',
-//                 'hotel_info.*.destination_id' => 'nullable|exists:destinations,id',
-//                 'hotel_info.*.hotel_id' => 'nullable|exists:hotels,id',
-//                 'hotel_info.*.room_type' => 'nullable|string',
-//                 'hotel_info.*.rooms' => 'nullable|integer',
-//                 'hotel_info.*.ex_adults' => 'nullable|integer',
-//                 'hotel_info.*.ex_children' => 'nullable|integer',
-//                 'hotel_info.*.ex_adult_cost' => 'nullable|string',
-//                 'hotel_info.*.ex_children_cost' => 'nullable|string',
-//                 'hotel_info.*.check_in' => 'nullable|date',
-//                 'hotel_info.*.check_out' => 'nullable|date',
-//                 'hotel_info.*.room_type_cost' => 'nullable|numeric',
-//                 'hotel_info.*.meals' => 'nullable|array',
-//                 'hotel_info.*.meals.*.name' => 'required|string',
-//                 'hotel_info.*.meals.*.rate' => 'required|numeric',
-//                 'hotel_info.*.meals.*.isChecked' => 'required|boolean',
-//                 'transport_info' => 'nullable|array',
-//                 'transport_info.*.destination_id' => 'nullable|exists:destinations,id',
-//                 'transport_info.*.transport_id' => 'nullable|exists:transportations,id',
-//                 'transport_info.*.no_of_people' => 'nullable|integer',
-//                 'transport_info.*.v_type' => 'nullable|string',
-//                 'transport_info.*.date' => 'nullable|date',
-//                 'transport_info.*.transport_cost' => 'nullable|numeric',
-//                 'sightseeing_info' => 'nullable|array',
-//                 'sightseeing_info.*.destination_id' => 'nullable|exists:destinations,id',
-//                 'sightseeing_info.*.sightseeing_id' => 'nullable|exists:sightseeings,id',
-//                 'sightseeing_info.*.adults' => 'nullable|integer',
-//                 'sightseeing_info.*.children' => 'nullable|integer',
-//                 'sightseeing_info.*.date' => 'nullable|date',
-//                 'sightseeing_info.*.adult_cost' => 'nullable|numeric',
-//                 'sightseeing_info.*.children_cost' => 'nullable|numeric',
-//                 'remarks' => 'nullable|string',
-//                 'taxes' => 'nullable|array',
-//                 'taxes.*.tax_name' => 'nullable|string',
-//                 'taxes.*.tax_value' => 'nullable|numeric',
-//                 'final_payment' => 'sometimes|required|numeric',
-//                 'total_per_adult' => 'sometimes|required|numeric',
-//                 'total_per_child' => 'sometimes|required|numeric',
-//                 'customer_status' => 'sometimes|required|in:pending,confirmed,cancelled',
-//                 'payment_status' => 'sometimes|required|in:unpaid,paid',
-//             ]);
-
-//             // Encode nested arrays as JSON
-//             $hotelInfo = isset($validatedData['hotel_info']) ? json_encode($validatedData['hotel_info']) : $booking->hotel_info;
-//             $transportInfo = isset($validatedData['transport_info']) ? json_encode($validatedData['transport_info']) : $booking->transport_info;
-//             $sightseeingInfo = isset($validatedData['sightseeing_info']) ? json_encode($validatedData['sightseeing_info']) : $booking->sightseeing_info;
-//             $taxes = isset($validatedData['taxes']) ? json_encode($validatedData['taxes']) : $booking->taxes;
-
-//             // Update the booking
-//             $booking->update([
-//                 'customer_name' => $validatedData['customer_name'] ?? $booking->customer_name,
-//                 'phone_no' => $validatedData['phone_no'] ?? $booking->phone_no,
-//                 'travel_date_from' => $validatedData['travel_date_from'] ?? $booking->travel_date_from,
-//                 'travel_date_to' => $validatedData['travel_date_to'] ?? $booking->travel_date_to,
-//                 'no_adults' => $validatedData['no_adults'] ?? $booking->no_adults,
-//                 'no_children' => $validatedData['no_children'] ?? $booking->no_children,
-//                 'hotel_info' => $hotelInfo,
-//                 'transport_info' => $transportInfo,
-//                 'sightseeing_info' => $sightseeingInfo,
-//                 'remarks' => $validatedData['remarks'] ?? $booking->remarks,
-//                 'taxes' => $taxes,
-//                 'final_payment' => $validatedData['final_payment'] ?? $booking->final_payment,
-//                 'total_per_adult' => $validatedData['total_per_adult'] ?? $booking->total_per_adult,
-//                 'total_per_child' => $validatedData['total_per_child'] ?? $booking->total_per_child,
-//                 'customer_status' => $validatedData['customer_status'] ?? $booking->customer_status,
-//                 'payment_status' => $validatedData['payment_status'] ?? $booking->payment_status,
-//             ]);
-
-//             // Update related Payment record
-//             $payment = Payment::where('booking_id', $booking->id)->first();
-//             if ($payment) {
-//                 $payment->update([
-//                     'amount' => $validatedData['final_payment'] ?? $payment->amount,
-//                     'status' => $validatedData['payment_status'] ?? $payment->status,
-//                 ]);
-//             }
-
-//             // Update related Transaction record
-//             $transaction = Trasaction::where('booking_id', $booking->id)->first();
-//             if ($transaction) {
-//                 $transaction->update([
-//                     'amount' => $validatedData['final_payment'] ?? $transaction->amount,
-//                     'payment_status' => $validatedData['payment_status'] === 'paid' ? 'Credit' : 'Debit',
-//                     'status' => $validatedData['payment_status'] ?? $transaction->status,
-//                 ]);
-//             }
-
-//             return response()->json([
-//                 'success' => true,
-//                 'message' => 'Booking updated successfully.',
-//                 'booking' => $booking,
-//                 'payment' => $payment,
-//                 'transaction' => $transaction,
-//             ], 200);
-//         } else {
-//             return response()->json([
-//                 'success' => false,
-//                 'message' => 'Unauthorized to edit this booking.',
-//             ], 403);
-//         }
-//     } catch (\Exception $e) {
-//         Log::error('Error updating booking: ' . $e->getMessage());
-
-//         return response()->json([
-//             'success' => false,
-//             'message' => 'Failed to update booking. Please try again.',
-//             'error' => $e->getMessage(),
-//         ], 500);
-//     }
-// }
-
 public function editBooking(Request $request, $bookingId)
 {
     try {
@@ -683,29 +430,25 @@ public function editBooking(Request $request, $bookingId)
                 'travel_date_to' => 'sometimes|required|date',
                 'no_adults' => 'sometimes|required|integer',
                 'no_children' => 'sometimes|required|integer',
-                'hotel_info' => 'nullable|array',
-                'hotel_info.*.destination_id' => 'nullable|exists:destinations,id',
-                'hotel_info.*.hotel_id' => 'nullable|exists:hotels,id',
-                'hotel_info.*.room_type' => 'nullable|string',
-                'hotel_info.*.rooms' => 'nullable|integer',
-                'hotel_info.*.ex_adults' => 'nullable|integer',
-                'hotel_info.*.ex_children' => 'nullable|integer',
-                'hotel_info.*.ex_adult_cost' => 'nullable|string',
-                'hotel_info.*.ex_children_cost' => 'nullable|string',
-                'hotel_info.*.check_in' => 'nullable|date',
-                'hotel_info.*.check_out' => 'nullable|date',
-                'hotel_info.*.room_type_cost' => 'nullable|numeric',
-                'hotel_info.*.meals' => 'nullable|array',
-                'hotel_info.*.meals.*.name' => 'required|string',
-                'hotel_info.*.meals.*.rate' => 'required|numeric',
-                'hotel_info.*.meals.*.isChecked' => 'required|boolean',
+                'ticket_info' => 'nullable|array',
+                'ticket_info.*.id' => 'nullable|string',
+                'ticket_info.*.name' => 'nullable|string',
+                'ticket_info.*.date' => 'nullable|date',
+                'ticket_info.*.time_slot' => 'nullable|string',
+                'ticket_info.*.category' => 'sometimes|nullable|string',
+                'ticket_info.*.adult_price' => 'nullable|numeric',
+                'ticket_info.*.child_price' => 'nullable|numeric',
+                'ticket_info.*.adults' => 'nullable|string',
+                'ticket_info.*.children' => 'nullable|string',
+                'ticket_info.*.terms_and_conditions' => 'nullable|json',
                 'transport_info' => 'nullable|array',
                 'transport_info.*.destination_id' => 'nullable|exists:destinations,id',
                 'transport_info.*.transport_id' => 'nullable|exists:transportations,id',
-                'transport_info.*.no_of_people' => 'nullable|integer',
                 'transport_info.*.v_type' => 'nullable|string',
+                'transport_info.*.option_index' => 'nullable|string',
                 'transport_info.*.date' => 'nullable|date',
                 'transport_info.*.transport_cost' => 'nullable|numeric',
+                'transport_info.*.terms_and_conditions' => 'nullable|json',
                 'sightseeing_info' => 'nullable|array',
                 'sightseeing_info.*.destination_id' => 'nullable|exists:destinations,id',
                 'sightseeing_info.*.sightseeing_id' => 'nullable|exists:sightseeings,id',
@@ -714,6 +457,9 @@ public function editBooking(Request $request, $bookingId)
                 'sightseeing_info.*.date' => 'nullable|date',
                 'sightseeing_info.*.adult_cost' => 'nullable|numeric',
                 'sightseeing_info.*.children_cost' => 'nullable|numeric',
+                'sightseeing_info.*.sharing_transfer_adult' => 'nullable|numeric',
+                'sightseeing_info.*.sharing_transfer_child' => 'nullable|numeric',
+                'sightseeing_info.*.terms_and_conditions' => 'nullable|json',
                 'remarks' => 'nullable|string',
                 'taxes' => 'nullable|array',
                 'taxes.*.tax_name' => 'nullable|string',
@@ -726,7 +472,7 @@ public function editBooking(Request $request, $bookingId)
             ]);
 
             // Encode nested arrays as JSON
-            $hotelInfo = isset($validatedData['hotel_info']) ? json_encode($validatedData['hotel_info']) : $booking->hotel_info;
+            $ticketInfo = isset($validatedData['ticket_info']) ? json_encode($validatedData['ticket_info']) : $booking->ticket_info;
             $transportInfo = isset($validatedData['transport_info']) ? json_encode($validatedData['transport_info']) : $booking->transport_info;
             $sightseeingInfo = isset($validatedData['sightseeing_info']) ? json_encode($validatedData['sightseeing_info']) : $booking->sightseeing_info;
             $taxes = isset($validatedData['taxes']) ? json_encode($validatedData['taxes']) : $booking->taxes;
@@ -739,7 +485,7 @@ public function editBooking(Request $request, $bookingId)
                 'travel_date_to' => $validatedData['travel_date_to'] ?? $booking->travel_date_to,
                 'no_adults' => $validatedData['no_adults'] ?? $booking->no_adults,
                 'no_children' => $validatedData['no_children'] ?? $booking->no_children,
-                'hotel_info' => $hotelInfo,
+                'ticket_info' => $ticketInfo,
                 'transport_info' => $transportInfo,
                 'sightseeing_info' => $sightseeingInfo,
                 'remarks' => $validatedData['remarks'] ?? $booking->remarks,

@@ -250,7 +250,7 @@ class SightseeingController extends Controller
             $sightseeing = Sightseeing::with([
                 'destination.city:id,name'
             ])
-            ->select('id', 'company_name', 'destination_id', 'description', 'rate_adult', 'rate_child')
+            ->select('id', 'company_name', 'destination_id', 'description', 'rate_adult', 'rate_child','sharing_transfer_adult','sharing_transfer_child')
             ->get()
             ->map(function ($sightseeing) {
                 return [

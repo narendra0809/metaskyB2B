@@ -4,7 +4,7 @@ import Loader from "../Loader";
 import "../Loader.css";
 import { useAuth } from "../context/AuthContext";
 
-const RoomPrice = () => {
+const TicketPrice = () => {
   const base_url = import.meta.env.VITE_API_URL;
   const { authToken } = useAuth();
 
@@ -39,15 +39,6 @@ const RoomPrice = () => {
       output = outputData.map((item, index) => (
         <tr key={index}>
           <td className="align-middle">{item.name}</td>
-          <td className="align-middle">
-            {item.transfer_options.map((option) => (
-              <p key={option.option}>
-                {option.option} |{" "}
-                <span>Adult Rate : {option.adult_price} AED</span> |{" "}
-                <span>Child Rate : {option.child_price} AED</span>
-              </p>
-            ))}
-          </td>
           <td>
             {item.time_slots.map((time, i) => (
               <p key={i}>
@@ -62,7 +53,7 @@ const RoomPrice = () => {
       output = (
         <tr>
           <td colSpan={4} style={{ textAlign: "center" }}>
-            No hotels found
+            No tickets found
           </td>
         </tr>
       );
@@ -70,7 +61,7 @@ const RoomPrice = () => {
   } else {
     output = (
       <tr>
-        <td colSpan={4}>
+        <td colSpan={4} style={{ textAlign: "center" }}>
           {" "}
           <Loader />
         </td>
@@ -144,21 +135,12 @@ const RoomPrice = () => {
                   <thead>
                     <tr>
                       <th>Name</th>
-                      <th>Transfer Options</th>
                       <th>Time Slots</th>
                       {/* <th>Total Adult Rate</th>
                       <th>Total Child Rate</th> */}
                     </tr>
                   </thead>
-                  <tbody className="bg-white">
-                    {output?.length > 0 ? (
-                      output
-                    ) : (
-                      <tr>
-                        <td colSpan={4}>No record found</td>
-                      </tr>
-                    )}
-                  </tbody>
+                  <tbody className="bg-white">{output}</tbody>
                 </table>
               </div>
               <div className="d-flex justify-content-between align-items-center">
@@ -198,4 +180,4 @@ const RoomPrice = () => {
   );
 };
 
-export default RoomPrice;
+export default TicketPrice;

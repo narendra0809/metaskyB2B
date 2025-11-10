@@ -189,7 +189,7 @@ input[type="date"] {
   }
 }
 .form-control:disabled {
-  background-color: #4f5f6f;
+  background-color: #000d3d;
   opacity: 1;
 }
 .p-3 {

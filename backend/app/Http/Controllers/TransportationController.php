@@ -354,11 +354,12 @@ class TransportationController extends Controller
             $transports = Transportation::with([
                 'destination.city:id,name'
             ])
-                ->select('id', 'company_name', 'destination_id', 'options', 'terms_and_conditions')
+                ->select('id', 'company_name','vehicle_type', 'destination_id', 'options', 'terms_and_conditions')
                 ->get()
                 ->map(function ($transport) {
                     return [
                         'company_name' => $transport->company_name,
+                        'vehicle_type' => $transport->vehicle_type,
                         'city' => optional($transport->destination->city)->name ?? 'Unknown',
                         'options' => collect($transport->options ?? [])->map(function ($option) {
                             return [
