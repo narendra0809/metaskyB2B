@@ -15,78 +15,47 @@ const Tickets = () => {
   const { authToken } = useAuth();
   const token = authToken;
 
-  // Fetch tickets data
   const mainData = useApiData(`${base_url}/api/tickets`, token);
-
-  // Hard-coded categories and transfer options since we only have /api/tickets API
-  const categories = [
-    { id: 1, name: "Prime" },
-    { id: 2, name: "Non prime" },
-    { id: 3, name: "All" },
-  ];
-
-  const transferOptions = [
-    { id: 1, name: "private transfer" },
-    { id: 2, name: "sharing transfer" },
-    { id: 3, name: "without transfer" },
-  ];
-
-  // State variables for search and pagination
   const [searchValue, setSearchValue] = useState("");
   const [perPage, setPerPage] = useState(10);
   const [currPageNo, setCurrPageNo] = useState(0);
 
-  // form data states
-  const addForm = useSendData(
-    `${base_url}/api/tickets`, // Using the only available API endpoint
-    token // Auth token
-  );
+  const addForm = useSendData(`${base_url}/api/tickets`, token);
 
   const [editRes, setEditRes] = useState(null);
   const [editLoading, setEditLoading] = useState(false);
   const [timeSlotTemp, setTimeSlotTemp] = useState({
-    slot: "",
+    start_time: "",
+    end_time: "",
     adult_price: "",
     child_price: "",
   });
-  const [transferOptionTemp, setTransferOptionTemp] = useState({
-    option: "",
-    price: 0,
-  });
-  const [categoryOption, setCategoryOption] = useState({ option: "" });
-  // Modal state
+
   const [modals, setModals] = useState({
     addModalOpen: false,
     editModalOpen: false,
   });
 
-  // Form data for add/edit
   const [formData, setFormData] = useState({
     addFormData: {
       name: "",
-      transfer_options: [],
       time_slots: [],
-      category: [],
+      has_time_slots: false,
       status: "Active",
       terms_and_conditions: null,
     },
     editFormData: {
       id: null,
       name: "",
-      transfer_options: [],
       time_slots: [],
       category: [],
+      has_time_slots: false,
       status: "Active",
       terms_and_conditions: null,
     },
   });
 
   const [openTermsConditions, setOpenTermsConditions] = useState(false);
-
-  // Add state for available time slots:
-  const [availableTimeSlots, setAvailableTimeSlots] = useState([]);
-  // Add state for edit time slots
-  const [editAvailableTimeSlots, setEditAvailableTimeSlots] = useState([]);
 
   // Handle search input change
   const handleSearch = (e) => {
@@ -117,50 +86,20 @@ const Tickets = () => {
     perPage * currPageNo + perPage
   );
 
-  // Update time slots based on category selection
-  const updateTimeSlots = (category, isEdit = false) => {
-    const primeSlots = [
-      "3:30 PM - 4:00 PM",
-      "4:00 PM - 4:30 PM",
-      "4:30 PM - 5:00 PM",
-      "5:00 PM - 5:30 PM",
-      "5:30 PM - 6:00 PM",
-      "6:00 PM - 6:30 PM",
-      "6:30 PM - 7:00 PM",
-    ];
-    const nonPrimeSlots = [
-      "7:30 AM - 8:00 AM",
-      "8:00 AM - 8:30 AM",
-      "8:30 AM - 9:00 AM",
-      "11:00 AM - 11:30 AM",
-    ];
-
-    let newSlots = [];
-
-    if (category === "Prime") {
-      newSlots = [...primeSlots];
-    } else if (category === "Non prime") {
-      newSlots = [...nonPrimeSlots];
-    } else if (category === "All") {
-      newSlots = [...nonPrimeSlots, ...primeSlots];
-    }
-
-    if (isEdit) {
-      setEditAvailableTimeSlots(newSlots);
-    } else {
-      setAvailableTimeSlots(newSlots);
-    }
-  };
-
-  // Handle form data changes
   const handleFormDataChange = (formType) => (e) => {
-    const { name, value } = e.target;
+    const { name, value, type, checked } = e.target;
     let filteredValue = value;
 
-    // Special handling for category selection
-    if (name === "category") {
-      // Update available time slots based on category
-      updateTimeSlots(value, formType === "editFormData");
+    if (type === "checkbox") {
+      setFormData((prev) => ({
+        ...prev,
+        [formType]: {
+          ...prev[formType],
+          [name]: checked,
+          time_slots: checked ? prev[formType].time_slots : [],
+        },
+      }));
+      return;
     }
 
     switch (name) {
@@ -207,13 +146,25 @@ const Tickets = () => {
         time_slots: [...(prev[formType]["time_slots"] || []), timeSlotTemp],
       },
     }));
-    setTimeSlotTemp({ slot: "", adult_price: "", child_price: "" });
+    setTimeSlotTemp({
+      start_time: "",
+      end_time: "",
+      adult_price: "",
+      child_price: "",
+    });
   };
 
-  const removeTimeSlot = (formType, slot) => {
+  const removeTimeSlot = (formType, slotObj) => {
     const updatedTimeSlots = formData[formType].time_slots.filter(
-      (timeSlot) => timeSlot.slot !== slot
+      (timeSlot) =>
+        !(
+          timeSlot.start_time === slotObj.start_time &&
+          timeSlot.end_time === slotObj.end_time &&
+          timeSlot.adult_price === slotObj.adult_price &&
+          timeSlot.child_price === slotObj.child_price
+        )
     );
+
     setFormData((prev) => ({
       ...prev,
       [formType]: {
@@ -223,212 +174,62 @@ const Tickets = () => {
     }));
   };
 
-  // Handle transfer option functions
-  const handleTransferOption = (e) => {
-    const { name, value } = e.target;
-    let filteredValue = value;
-
-    // if (name === "price") {
-    //   filteredValue = value
-    //     .replace(/[^0-9.]/g, "")
-    //     .replace(/(\..*)\./g, "AED1");
-    // }
-
-    setTransferOptionTemp((item) => ({ ...item, [name]: filteredValue }));
-  };
-  const handleCategoryOption = (e) => {
-    const { value } = e.target;
-    setCategoryOption({ option: value });
-  };
-
-  const addTransferOption = (formType) => {
-    if (
-      transferOptionTemp.option === "" ||
-      (transferOptionTemp.option !== "without transfer" &&
-        transferOptionTemp.price === "")
-    ) {
-      return;
-    }
-    console.log("inside !");
-    setFormData((prev) => ({
-      ...prev,
-      [formType]: {
-        ...prev[formType],
-        transfer_options: [
-          ...(prev[formType]["transfer_options"] || []),
-          transferOptionTemp,
-        ],
-      },
-    }));
-    setTransferOptionTemp({
-      option: "",
-      price: 0,
-    });
-  };
-
-  const addCategoryOption = (formType) => {
-    if (categoryOption.option === "") return;
-    const isEdit = formType === "editFormData";
-    const categoryExists = formData[formType].category.includes(
-      categoryOption.option
-    );
-    if (categoryExists) return;
-    setFormData((prev) => ({
-      ...prev,
-      [formType]: {
-        ...prev[formType],
-        category: [...prev[formType].category, categoryOption.option],
-      },
-    }));
-    setTimeout(() => {
-      updateTimeSlots(categoryOption.option, isEdit);
-    }, 0);
-
-    setCategoryOption({ option: "" });
-  };
-
-  const removeTimeSlotByCategory = (isEdit = false, category) => {
-    if (category === "Prime") {
-      const primeSlots = [
-        "3:30 PM - 4:00 PM",
-        "4:00 PM - 4:30 PM",
-        "4:30 PM - 5:00 PM",
-        "5:00 PM - 5:30 PM",
-        "5:30 PM - 6:00 PM",
-        "6:00 PM - 6:30 PM",
-        "6:30 PM - 7:00 PM",
-      ];
-      if (isEdit) {
-        setEditAvailableTimeSlots((prev) =>
-          prev.filter((slot) => !primeSlots.includes(slot))
-        );
-      } else {
-        setAvailableTimeSlots((prev) =>
-          prev.filter((slot) => !primeSlots.includes(slot))
-        );
-      }
-    } else if (category === "Non prime") {
-      const nonPrimeSlots = [
-        "7:30 AM - 8:00 AM",
-        "8:00 AM - 8:30 AM",
-        "8:30 AM - 9:00 AM",
-        "11:00 AM - 11:30 AM",
-      ];
-      if (isEdit) {
-        setEditAvailableTimeSlots((prev) =>
-          prev.filter((slot) => !nonPrimeSlots.includes(slot))
-        );
-      } else {
-        setAvailableTimeSlots((prev) =>
-          prev.filter((slot) => !nonPrimeSlots.includes(slot))
-        );
-      }
-    } else if (category === "All") {
-      setAvailableTimeSlots([]);
-    }
-  };
-  const removeCategoryOption = (formType, option) => {
-    const updatedCateogryOptions = formData[formType].category.filter(
-      (categoryOpt) => categoryOpt !== option
-    );
-    removeTimeSlotByCategory(formType === "editFormData", option);
-    setFormData((prev) => ({
-      ...prev,
-      [formType]: {
-        ...prev[formType],
-        category: updatedCateogryOptions,
-      },
-    }));
-  };
-  const removeTransferOption = (formType, option) => {
-    const updatedTransferOptions = formData[formType].transfer_options.filter(
-      (transferOption) => transferOption.option !== option
-    );
-    setFormData((prev) => ({
-      ...prev,
-      [formType]: {
-        ...prev[formType],
-        transfer_options: updatedTransferOptions,
-      },
-    }));
-  };
-
-  // Handle modal open/close
   const toggleModal = (modalType, isOpen) => {
     setEditRes(null);
     setModals((prev) => ({ ...prev, [modalType]: isOpen }));
 
-    // Add default time slots and transfer options from dummy data when opening add modal
     if (modalType === "addModalOpen" && isOpen) {
       setFormData((prev) => ({
         ...prev,
         addFormData: {
           name: "",
-          transfer_options: [],
           time_slots: [],
-          category: [],
+          has_time_slots: false,
           status: "Active",
+          terms_and_conditions: null,
         },
       }));
+      setTimeSlotTemp({
+        start_time: "",
+        end_time: "",
+        adult_price: "",
+        child_price: "",
+      });
     }
   };
 
-  // Update available time slots when editing a ticket based on its category
-  useEffect(() => {
-    if (formData.editFormData.category) {
-      updateTimeSlots(formData.editFormData.category, true);
-    }
-  }, [formData.editFormData.category]);
-
-  // submit form
   const submitFormData = async (formType) => {
-    formData["addFormData"].terms_and_conditions = JSON.stringify(
+    formData.addFormData.terms_and_conditions = JSON.stringify(
       formData.addFormData.terms_and_conditions
     );
-    formData["editFormData"].terms_and_conditions = JSON.stringify(
+    formData.editFormData.terms_and_conditions = JSON.stringify(
       formData.editFormData.terms_and_conditions
     );
+
     switch (formType) {
       case "addFormData":
-        if (formData.addFormData.category.length === 0) {
-          const timeSlots = formData.addFormData.time_slots.map((timeData) => ({
-            adult_price: timeData.adult_price,
-            child_price: timeData.child_price,
-          }));
-          formData["addFormData"].time_slots = timeSlots;
-        }
-
-        await addForm.sendData(formData["addFormData"]);
+        await addForm.sendData(formData.addFormData);
 
         setFormData((item) => ({
           ...item,
-          [formType]: {
+          addFormData: {
             name: "",
-            transfer_options: [],
             time_slots: [],
-            category: [],
+            has_time_slots: false,
             status: "Active",
+            terms_and_conditions: null,
           },
         }));
         break;
+
       case "editFormData":
         setEditLoading(true);
         try {
-          if (formData.editFormData.category.length === 0) {
-            const timeSlots = formData.editFormData.time_slots.map(
-              (timeData) => ({
-                adult_price: timeData.adult_price,
-                child_price: timeData.child_price,
-              })
-            );
-            formData["editFormData"].time_slots = timeSlots;
-          }
           const dataToSend = {
             ...formData.editFormData,
             _method: "POST",
           };
 
-          // Log the data being sent for debugging
           console.log("Sending update data:", dataToSend);
 
           const res = await fetch(
@@ -443,7 +244,6 @@ const Tickets = () => {
             }
           );
 
-          // Log the raw response for debugging
           console.log("Raw response status:", res.status);
 
           if (!res.ok) {
@@ -453,7 +253,7 @@ const Tickets = () => {
           const result = await res.json();
           console.log("Parsed response:", result);
           setEditRes(result);
-          console.log(result);
+
           if (result.success) {
             toggleModal("editModalOpen", false);
             mainData.refetch();
@@ -462,10 +262,10 @@ const Tickets = () => {
               editFormData: {
                 id: null,
                 name: "",
-                transfer_options: [],
                 time_slots: [],
-                category: [],
+                has_time_slots: false,
                 status: "Active",
+                terms_and_conditions: null,
               },
             }));
           }
@@ -482,8 +282,12 @@ const Tickets = () => {
         break;
     }
 
-    setTimeSlotTemp({ slot: "", adult_price: "", child_price: "" });
-    setTransferOptionTemp({ option: "", price: 0 });
+    setTimeSlotTemp({
+      start_time: "",
+      end_time: "",
+      adult_price: "",
+      child_price: "",
+    });
 
     mainData.refetch();
   };
@@ -593,183 +397,112 @@ const Tickets = () => {
                 />
               </div>
 
-              {/* <div className="mb-3">
-                <label htmlFor="transfer_option" className="form-label">
-                  Transfer Option
+              <div className="mb-3 form-check">
+                <input
+                  type="checkbox"
+                  className="form-check-input"
+                  id="has_time_slots_add"
+                  name="has_time_slots"
+                  checked={formData.addFormData.has_time_slots}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      addFormData: {
+                        ...prev.addFormData,
+                        has_time_slots: e.target.checked,
+                        // optional: if turning off, also clear time_slots
+                        time_slots: e.target.checked
+                          ? prev.addFormData.time_slots
+                          : [],
+                      },
+                    }))
+                  }
+                />
+                <label
+                  className="form-check-label"
+                  htmlFor="has_time_slots_add"
+                >
+                  Enable time slots
                 </label>
-                <div className="row g-2">
-                  <div className="col-4">
-                    <select
-                      className="form-control"
-                      name="option"
-                      value={transferOptionTemp.option}
-                      onChange={handleTransferOption}
-                    >
-                      <option value="">-- select --</option>
-                      {transferOptions.map((option) => (
-                        <option key={option.id} value={option.name}>
-                          {option.name}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  {transferOptionTemp.option !== "without transfer" && (
-                    <div className="col-4">
-                      <input
-                        type="text"
-                        className="form-control"
-                        placeholder="Vehicle Price (AED)"
-                        name="price"
-                        value={transferOptionTemp.price}
-                        onChange={handleTransferOption}
-                      />
-                    </div>
-                  )}
-                </div>
-                <div>
-                  {formData.addFormData.transfer_options?.map((item, index) => (
-                    <div className="row m-0 mt-2" key={index}>
-                      <div className="col-4">{item.option}</div>
-                      {item.option !== "without transfer" && (
-                        <div className="col-3">
-                          Price: AED {item.price}
-                          
-                        </div>
-                      )}
-                      <div className="col-2">
-                        <button
-                          className="btn flex-shrink-0"
-                          onClick={() => {
-                            removeTransferOption("addFormData", item.option);
-                          }}
-                        >
-                          <i className="fa-solid fa-trash-can text-danger"></i>
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-                <button
-                  className="btn btn-success mt-3"
-                  onClick={() => {
-                    addTransferOption("addFormData");
-                  }}
-                >
-                  Add Transfer Option
-                </button>
-              </div> */}
-
-              {/* Category */}
-              <div className="mb-3">
-                <label htmlFor="category" className="form-label">
-                  Category
-                </label>
-                <select
-                  className="form-control"
-                  id="category"
-                  name="category"
-                  value={categoryOption.option}
-                  onChange={handleCategoryOption}
-                  disabled={formData.addFormData.category.find(
-                    (cate) => cate === "All"
-                  )}
-                >
-                  <option value="">-- select --</option>
-                  {categories.map((category) => (
-                    <option key={category.id} value={category.name}>
-                      {category.name}
-                    </option>
-                  ))}
-                </select>
-                <div>
-                  {formData.addFormData.category?.map((item, index) => (
-                    <div className="row m-0 mt-2" key={index}>
-                      <div className="col-4">{item}</div>
-                      <div className="col-2">
-                        <button
-                          className="btn flex-shrink-0"
-                          onClick={() => {
-                            removeCategoryOption("addFormData", item);
-                          }}
-                        >
-                          <i className="fa-solid fa-trash-can text-danger"></i>
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-                <button
-                  className="btn btn-success mt-3"
-                  onClick={() => {
-                    addCategoryOption("addFormData");
-                  }}
-                >
-                  Add Category
-                </button>
               </div>
 
               <div className="mb-3">
                 <label htmlFor="time_slot" className="form-label">
-                  {formData.addFormData.category.length === 0
-                    ? "Add Rates"
-                    : "Time Slot"}
+                  {formData.addFormData.has_time_slots ? "Time Slot" : "Rates"}
                 </label>
+
                 <div className="row g-2">
-                  {formData.addFormData.category.length !== 0 && (
-                    <div className="col-4">
-                      <select
-                        className="form-control"
-                        name="slot"
-                        value={timeSlotTemp.slot}
-                        onChange={handleTimeSlot}
-                      >
-                        <option value="">-- select time --</option>
-                        {availableTimeSlots.map((slot, index) => (
-                          <option key={index} value={slot}>
-                            {slot}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
+                  {formData.addFormData.has_time_slots && (
+                    <>
+                      <div className="col-3">
+                        <input
+                          type="time"
+                          className="form-control"
+                          placeholder="Start Time"
+                          name="start_time"
+                          value={timeSlotTemp.start_time || ""}
+                          onChange={handleTimeSlot}
+                        />
+                      </div>
+                      <div className="col-3">
+                        <input
+                          type="time"
+                          className="form-control"
+                          placeholder="End Time"
+                          name="end_time"
+                          value={timeSlotTemp.end_time || ""}
+                          onChange={handleTimeSlot}
+                        />
+                      </div>
+                    </>
                   )}
-                  <div className="col-4">
+
+                  <div
+                    className={
+                      formData.addFormData.has_time_slots ? "col-3" : "col-6"
+                    }
+                  >
                     <input
                       type="text"
                       className="form-control"
-                      placeholder="Adult Rate (AED)"
+                      placeholder="Adult Rate(AED)"
                       name="adult_price"
                       value={timeSlotTemp.adult_price}
                       onChange={handleTimeSlot}
                     />
                   </div>
-                  <div className="col-4">
+                  <div
+                    className={
+                      formData.addFormData.has_time_slots ? "col-3" : "col-6"
+                    }
+                  >
                     <input
                       type="text"
                       className="form-control"
-                      placeholder="Child Rate (AED)"
+                      placeholder="Child Rate(AED)"
                       name="child_price"
                       value={timeSlotTemp.child_price}
                       onChange={handleTimeSlot}
                     />
                   </div>
                 </div>
+
                 <div>
                   {formData.addFormData.time_slots?.map((item, index) => (
                     <div className="row m-0 mt-2" key={index}>
-                      <div className="col-4">{item.slot}</div>
-                      <div className="col-3">
-                        Adult: AED {item.adult_price}
-                        {/* Or: {formatAED(item.adult_price)} */}
-                      </div>
-                      <div className="col-3">
-                        Child: AED {item.child_price}
-                        {/* Or: {formatAED(item.child_price)} */}
-                      </div>
+                      {formData.addFormData.has_time_slots && (
+                        <div className="col-4">
+                          {item.start_time} - {item.end_time}
+                        </div>
+                      )}
+                      <div className="col-3">Adult: AED {item.adult_price}</div>
+                      <div className="col-3">Child: AED {item.child_price}</div>
                       <div className="col-2">
                         <button
                           className="btn flex-shrink-0"
                           onClick={() => {
-                            removeTimeSlot("addFormData", item.slot);
+                            // if you now identify by start+end, adjust removeTimeSlot accordingly
+                            removeTimeSlot("addFormData", item);
                           }}
                         >
                           <i className="fa-solid fa-trash-can text-danger"></i>
@@ -785,7 +518,7 @@ const Tickets = () => {
                     addTimeSlot("addFormData");
                   }}
                 >
-                  {formData.addFormData.category.length !== 0
+                  {formData.addFormData.has_time_slots
                     ? "Add Time Slot"
                     : "Add Rate"}
                 </button>
@@ -864,182 +597,109 @@ const Tickets = () => {
                 />
               </div>
 
-              {/* <div className="mb-3">
-                <label htmlFor="transfer_option" className="form-label">
-                  Transfer Option
+              <div className="mb-3 form-check">
+                <input
+                  type="checkbox"
+                  className="form-check-input"
+                  id="has_time_slots_edit"
+                  name="has_time_slots"
+                  checked={formData.editFormData.has_time_slots}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      editFormData: {
+                        ...prev.editFormData,
+                        has_time_slots: e.target.checked,
+                        time_slots: e.target.checked
+                          ? prev.editFormData.time_slots
+                          : [],
+                      },
+                    }))
+                  }
+                />
+                <label
+                  className="form-check-label"
+                  htmlFor="has_time_slots_edit"
+                >
+                  Enable time slots
                 </label>
-                <div className="row g-2">
-                  <div className="col-4">
-                    <select
-                      className="form-control"
-                      name="option"
-                      value={transferOptionTemp.option}
-                      onChange={handleTransferOption}
-                    >
-                      <option value="">-- select --</option>
-                      {transferOptions.map((option) => (
-                        <option key={option.id} value={option.name}>
-                          {option.name}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <div className="col-4">
-                    <input
-                      type="text"
-                      className="form-control"
-                      placeholder="Price (AED)"
-                      name="price"
-                      value={transferOptionTemp.price}
-                      onChange={handleTransferOption}
-                    />
-                  </div>
-                </div>
-                <div>
-                  {formData.editFormData.transfer_options?.map(
-                    (item, index) => (
-                      <div className="row m-0 mt-2" key={index}>
-                        <div className="col-4">{item.option}</div>
-                        <div className="col-3">
-                          Adult: AED {item.price}
-                          
-                        </div>
-                        <div className="col-2">
-                          <button
-                            className="btn flex-shrink-0"
-                            onClick={() => {
-                              removeTransferOption("editFormData", item.option);
-                            }}
-                          >
-                            <i className="fa-solid fa-trash-can text-danger"></i>
-                          </button>
-                        </div>
-                      </div>
-                    )
-                  )}
-                </div>
-                <button
-                  className="btn btn-success mt-3"
-                  onClick={() => {
-                    addTransferOption("editFormData");
-                  }}
-                >
-                  Add Transfer Option
-                </button>
-              </div> */}
-
-              <div className="mb-3">
-                <label htmlFor="category" className="form-label">
-                  Category
-                </label>
-                <select
-                  className="form-control"
-                  id="category"
-                  name="category"
-                  value={categoryOption.option}
-                  onChange={handleCategoryOption}
-                  disabled={formData.editFormData.category.find(
-                    (cate) => cate === "All"
-                  )}
-                >
-                  <option value="">-- select --</option>
-                  {categories.map((category) => (
-                    <option key={category.id} value={category.name}>
-                      {category.name}
-                    </option>
-                  ))}
-                </select>
-                <div>
-                  {formData.editFormData.category?.map((item, index) => (
-                    <div className="row m-0 mt-2" key={index}>
-                      <div className="col-4">{item}</div>
-                      <div className="col-2">
-                        <button
-                          className="btn flex-shrink-0"
-                          onClick={() => {
-                            removeCategoryOption("editFormData", item);
-                          }}
-                        >
-                          <i className="fa-solid fa-trash-can text-danger"></i>
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-                <button
-                  className="btn btn-success mt-3"
-                  onClick={() => {
-                    addCategoryOption("editFormData");
-                  }}
-                >
-                  Add Category
-                </button>
               </div>
-
               <div className="mb-3">
                 <label htmlFor="time_slot" className="form-label">
-                  {formData.editFormData.category.length === 0
-                    ? "Add Rates"
-                    : "Time Slot"}
+                  {formData.editFormData.has_time_slots ? "Time Slot" : "Rates"}
                 </label>
+
                 <div className="row g-2">
-                  {formData.editFormData.category.length !== 0 && (
-                    <div className="col-4">
-                      <select
-                        className="form-control"
-                        name="slot"
-                        value={timeSlotTemp.slot}
-                        onChange={handleTimeSlot}
-                      >
-                        <option value="">-- select time --</option>
-                        {editAvailableTimeSlots.map((slot, index) => (
-                          <option key={index} value={slot}>
-                            {slot}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
+                  {formData.editFormData.has_time_slots && (
+                    <>
+                      <div className="col-3">
+                        <input
+                          type="time"
+                          className="form-control"
+                          placeholder="Start Time"
+                          name="start_time"
+                          value={timeSlotTemp.start_time || ""}
+                          onChange={handleTimeSlot}
+                        />
+                      </div>
+                      <div className="col-3">
+                        <input
+                          type="time"
+                          className="form-control"
+                          placeholder="End Time"
+                          name="end_time"
+                          value={timeSlotTemp.end_time || ""}
+                          onChange={handleTimeSlot}
+                        />
+                      </div>
+                    </>
                   )}
-                  <div className="col-4">
+
+                  <div
+                    className={
+                      formData.editFormData.has_time_slots ? "col-3" : "col-6"
+                    }
+                  >
                     <input
                       type="text"
                       className="form-control"
-                      placeholder="Adult Rate (AED)"
+                      placeholder="Adult Rate(AED)"
                       name="adult_price"
                       value={timeSlotTemp.adult_price}
                       onChange={handleTimeSlot}
                     />
                   </div>
-                  <div className="col-4">
+                  <div
+                    className={
+                      formData.editFormData.has_time_slots ? "col-3" : "col-6"
+                    }
+                  >
                     <input
                       type="text"
                       className="form-control"
-                      placeholder="Child Rate (AED)"
+                      placeholder="Child Rate(AED)"
                       name="child_price"
                       value={timeSlotTemp.child_price}
                       onChange={handleTimeSlot}
                     />
                   </div>
                 </div>
+
                 <div>
                   {formData.editFormData.time_slots?.map((item, index) => (
                     <div className="row m-0 mt-2" key={index}>
-                      {formData.editFormData.category.length !== 0 && (
-                        <div className="col-4">{item.slot}</div>
+                      {item.start_time && item.end_time && (
+                        <div className="col-4">
+                          {item.start_time} - {item.end_time}
+                        </div>
                       )}
-                      <div className="col-3">
-                        Adult: AED {item.adult_price}
-                        {/* Or: {formatAED(item.adult_price)} */}
-                      </div>
-                      <div className="col-3">
-                        Child: AED {item.child_price}
-                        {/* Or: {formatAED(item.child_price)} */}
-                      </div>
+                      <div className="col-3">Adult: AED {item.adult_price}</div>
+                      <div className="col-3">Child: AED {item.child_price}</div>
                       <div className="col-2">
                         <button
                           className="btn flex-shrink-0"
                           onClick={() => {
-                            removeTimeSlot("editFormData", item.slot);
+                            removeTimeSlot("editFormData", item);
                           }}
                         >
                           <i className="fa-solid fa-trash-can text-danger"></i>
@@ -1048,13 +708,16 @@ const Tickets = () => {
                     </div>
                   ))}
                 </div>
+
                 <button
                   className="btn btn-success mt-3"
                   onClick={() => {
                     addTimeSlot("editFormData");
                   }}
                 >
-                  Add Time Slot
+                  {formData.editFormData.has_time_slots
+                    ? "Add Time Slot"
+                    : "Add Rate"}
                 </button>
               </div>
 
@@ -1217,7 +880,6 @@ const Tickets = () => {
                 <tr>
                   <th>Name</th>
                   <th>Time Slots</th>
-                  <th>Category</th>
                   <th>Status</th>
                   <th style={{ width: "1%" }}>Action</th>
                 </tr>
@@ -1233,27 +895,15 @@ const Tickets = () => {
                   paginatedData.map((item) => (
                     <tr key={item.id}>
                       <td>{item.name}</td>
-                      {/* <td>
-                        {item.transfer_options?.map((transferOption, index) => (
-                          <div key={index}>
-                            {transferOption.option} (Adult: AED{" "}
-                            {transferOption.adult_price}, Child: AED{" "}
-                            {transferOption.child_price})
-                            
-                          </div>
-                        ))}
-                      </td> */}
                       <td>
                         {item.time_slots?.map((timeSlot, index) => (
                           <div key={index}>
-                            {timeSlot.slot} (Adult: AED {timeSlot.adult_price},
-                            Child: AED {timeSlot.child_price})
+                            {timeSlot.start_time &&
+                              timeSlot.end_time &&
+                              `${timeSlot.start_time}-${timeSlot.end_time}`}{" "}
+                            (Adult: AED {timeSlot.adult_price}, Child: AED{" "}
+                            {timeSlot.child_price})
                           </div>
-                        ))}
-                      </td>
-                      <td>
-                        {item.category?.map((catItem, idx) => (
-                          <div key={idx}>{catItem}</div>
                         ))}
                       </td>
                       <td>

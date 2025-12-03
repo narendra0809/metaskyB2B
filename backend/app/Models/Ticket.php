@@ -12,14 +12,14 @@ class Ticket extends Model
 
   protected $fillable = [
     'name',
-    'category',
+    'has_time_slots',
     'status',
     'time_slots',
     'terms_and_conditions',
 ];
 
 protected $casts = [
-    'category' => 'array',
+    // 'category' => 'array',
     'time_slots' => 'array',
     'terms_and_conditions' => 'array',
 ];

@@ -9,142 +9,177 @@ use Illuminate\Support\Facades\Log;
 
 class TicketController extends Controller
 {    
-    public function import(Request $request)
+
+public function import(Request $request)
 {
     $validatedData = $request->validate([
         'file' => 'required|file|mimes:xls,xlsx,csv',
     ]);
 
-    if ($request->hasFile('file')) {
-        try {
-            $file = $request->file('file');
-            $rows = Excel::toArray(null, $file)[0];
+    if (!$request->hasFile('file')) {
+        return response()->json([
+            'success' => false,
+            'message' => 'No file uploaded',
+        ], 400);
+    }
 
-            if (count($rows) < 2) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Excel file contains no data',
-                ], 422);
-            }
+    try {
+        $file = $request->file('file');
+        $rows = Excel::toArray(null, $file)[0];
 
-            $headers = array_map('strtolower', $rows[0]);
-            unset($rows[0]);
-
-            foreach ($rows as $index => $row) {
-                $rowData = array_combine($headers, $row);
-
-                if (!$rowData) {
-                    Log::warning("Row #$index could not be combined with headers, skipping.");
-                    continue;
-                }
-
-                // category becomes array splitting by commas (if any)
-                $category = isset($rowData['category']) && !empty($rowData['category'])
-                    ? array_map('trim', explode(',', $rowData['category']))
-                    : [];
-
-                // Parse time_slots by splitting slots and prices
-                $slots = isset($rowData['time_slots_slot']) ? array_map('trim', explode(',', $rowData['time_slots_slot'])) : [];
-                $adultPrices = isset($rowData['time_slots_adult_price']) ? array_map('trim', explode('_', $rowData['time_slots_adult_price'])) : [];
-                $childPrices = isset($rowData['time_slots_child_price']) ? array_map('trim', explode('_', $rowData['time_slots_child_price'])) : [];
-
-                $time_slots = [];
-                $countSlots = max(count($slots), count($adultPrices), count($childPrices));
-                for ($i = 0; $i < $countSlots; $i++) {
-                    $time_slots[] = [
-                        'slot' => $slots[$i] ?? null,
-                        'adult_price' => $adultPrices[$i] ?? null,
-                        'child_price' => $childPrices[$i] ?? null,
-                    ];
-                }
-
-                // Terms and conditions mapping similar to previous example with nested structure
-                $termsAndConditions = [
-                    'mobileVoucher' => $rowData['terms_mobile_voucher'] ?? '',
-                    'instantConfirmation' => $rowData['terms_instant_confirmation'] ?? '',
-                    'tourTransfers' => [],
-                    'bookingPolicy' => [
-                        'cancellationPolicy' => isset($rowData['terms_cancellation_policy']) ? array_map('trim', explode(',', $rowData['terms_cancellation_policy'])) : [],
-                        'childPolicy' => isset($rowData['terms_child_policy']) ? array_map('trim', explode(',', $rowData['terms_child_policy'])) : [],
-                    ],
-                    'inclusions' => isset($rowData['terms_inclusions']) ? array_map('trim', explode(',', $rowData['terms_inclusions'])) : [],
-                    'exclusions' => isset($rowData['terms_exclusions']) ? array_map('trim', explode(',', $rowData['terms_exclusions'])) : [],
-                ];
-
-                // Create or update your Ticket model (replace Ticket with your model name)
-                Ticket::create([
-                    'name' => $rowData['name'],
-                    'category' => $category,
-                    'status' => $rowData['status'],
-                    'time_slots' => $time_slots,
-                    'terms_and_conditions' => $termsAndConditions,
-                ]);
-
-                Log::info("Imported row #$index, ticket: {$rowData['name']}");
-            }
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Import successful',
-            ]);
-        } catch (\Exception $e) {
-            Log::error('Import failed: ' . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
-
+        if (count($rows) < 2) {
             return response()->json([
                 'success' => false,
-                'message' => 'Import failed',
-                'error' => $e->getMessage(),
-            ], 500);
+                'message' => 'Excel file contains no data',
+            ], 422);
         }
-    }
 
-    return response()->json([
-        'success' => false,
-        'message' => 'No file uploaded',
-    ], 400);
+        $headers = array_map('strtolower', $rows[0]);
+        unset($rows[0]);
+
+        foreach ($rows as $index => $row) {
+            $rowData = array_combine($headers, $row);
+
+            if (!$rowData) {
+                Log::warning("Row #$index could not be combined with headers, skipping.");
+                continue;
+            }
+
+            $startTimes = isset($rowData['time_slots_start_time'])
+                ? array_map('trim', explode(',', $rowData['time_slots_start_time']))
+                : [];
+
+            $endTimes = isset($rowData['time_slots_end_time'])
+                ? array_map('trim', explode(',', $rowData['time_slots_end_time']))
+                : [];
+
+            $adultPricesRaw = isset($rowData['time_slots_adult_price'])
+                ? array_map('trim', explode('_', $rowData['time_slots_adult_price']))
+                : [];
+
+            $childPricesRaw = isset($rowData['time_slots_child_price'])
+                ? array_map('trim', explode('_', $rowData['time_slots_child_price']))
+                : [];
+
+            $slotsCount = max(count($startTimes), count($endTimes),count($adultPricesRaw),count($childPricesRaw));
+
+            if (count($adultPricesRaw) === 1) {
+                $adultPrices = array_fill(0, $slotsCount, $adultPricesRaw[0]);
+            } else {
+                $adultPrices = $adultPricesRaw;
+            }
+
+            if (count($childPricesRaw) === 1) {
+                $childPrices = array_fill(0, $slotsCount, $childPricesRaw[0]);
+            } else {
+                $childPrices = $childPricesRaw;
+            }
+
+            $time_slots = [];
+            for ($i = 0; $i < $slotsCount; $i++) {
+                $time_slots[] = [
+                    'start_time'   => $startTimes[$i]  ?? null,
+                    'end_time'     => $endTimes[$i]    ?? null,
+                    'adult_price'  => $adultPrices[$i] ?? null,
+                    'child_price'  => $childPrices[$i] ?? null,
+                ];
+            }
+
+          
+            $hasTimeSlots = $slotsCount > 0;
+
+         
+            $termsAndConditions = [
+                'mobileVoucher' => $rowData['terms_mobile_voucher'] ?? '',
+                'instantConfirmation' => $rowData['terms_instant_confirmation'] ?? '',
+                'tourTransfers' => [],
+                'bookingPolicy' => [
+                    'cancellationPolicy' => isset($rowData['terms_cancellation_policy'])
+                        ? array_map('trim', explode(',', $rowData['terms_cancellation_policy']))
+                        : [],
+                    'childPolicy' => isset($rowData['terms_child_policy'])
+                        ? array_map('trim', explode(',', $rowData['terms_child_policy']))
+                        : [],
+                ],
+                'inclusions' => isset($rowData['terms_inclusions'])
+                    ? array_map('trim', explode(',', $rowData['terms_inclusions']))
+                    : [],
+                'exclusions' => isset($rowData['terms_exclusions'])
+                    ? array_map('trim', explode(',', $rowData['terms_exclusions']))
+                    : [],
+            ];
+
+            Ticket::create([
+                'name' => $rowData['name'],
+                'status' => $rowData['status'],
+                'has_time_slots' => $hasTimeSlots,
+                'time_slots' => $time_slots,
+                'terms_and_conditions' => $termsAndConditions,
+            ]);
+
+            Log::info("Imported row #$index, ticket: {$rowData['name']}");
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Import successful',
+        ]);
+    } catch (\Exception $e) {
+        Log::error('Import failed: ' . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
+
+        return response()->json([
+            'success' => false,
+            'message' => 'Import failed',
+            'error' => $e->getMessage(),
+        ], 500);
+    }
 }
 
- 
+
     public function store(Request $request)
-    {
-        Log::info('Incoming Request: ' . json_encode($request->all()));
+{
+    Log::info('Incoming Request: ' . json_encode($request->all()));
 
-        $validator = Validator::make($request->all(), [
-            'name' => 'required|string|max:255',
-            'status' => 'required|in:Active,Inactive',
-            // 'transfer_options' => 'nullable|array',
-            // 'transfer_options.*.option' => 'nullable|string|max:100',
-            // 'transfer_options.*.price' => 'nullable|numeric',
-            'category' => 'nullable|array',
-            'category.*' => 'string|max:100',
-            'time_slots' => 'nullable|array',
-            'time_slots.*.slot' => 'nullable|string|max:100',
-            'time_slots.*.adult_price' => 'required|numeric',
-            'time_slots.*.child_price' => 'required|numeric',
-            'terms_and_conditions' => 'nullable|json',
-        ]);
+    $validator = Validator::make($request->all(), [
+        'name' => 'required|string|max:255',
+        'status' => 'required|in:Active,Inactive',
+        'has_time_slots' => 'required|boolean',
+        'time_slots' => 'nullable|array',
+        'time_slots.*.start_time' => 'required_with:time_slots.*.end_time,time_slots.*.adult_price,time_slots.*.child_price|string|max:20',
+        'time_slots.*.end_time'   => 'required_with:time_slots.*.start_time,time_slots.*.adult_price,time_slots.*.child_price|string|max:20',
+        'time_slots.*.adult_price' => 'required_with:time_slots.*.start_time,time_slots.*.end_time|numeric',
+        'time_slots.*.child_price' => 'required_with:time_slots.*.start_time,time_slots.*.end_time|numeric',
+        'terms_and_conditions' => 'nullable|json',
+    ]);
 
-         $terms = $request->has('terms_and_conditions') ? json_decode($request->terms_and_conditions, true) : null;
-
-        if ($validator->fails()) {
-            return response()->json(['success' => false, 'errors' => $validator->errors()], 422);
-        }
-
-        $ticket = Ticket::create([
-            'name' => $request->name,
-            'category' => $request->category,
-            'status' => $request->status,
-            // 'transfer_options' => $request->transfer_options,
-            'time_slots' => $request->time_slots,
-            'terms_and_conditions' => $terms,
-        ]);
-
-        return response()->json(['success' => true, 'message' => 'Ticket created successfully', 'data' => $ticket], 201);
+    if ($validator->fails()) {
+        return response()->json([
+            'success' => false,
+            'errors'  => $validator->errors(),
+        ], 422);
     }
 
-    /**
-     * Display a listing of tickets with filtering.
-     */
+    $terms = $request->has('terms_and_conditions')
+        ? json_decode($request->terms_and_conditions, true)
+        : null;
+
+    $ticket = Ticket::create([
+        'name' => $request->name,
+        'status' => $request->status,
+        'has_time_slots' => $request->boolean('has_time_slots'),
+        'time_slots' => $request->time_slots,
+        'terms_and_conditions' => $terms,
+    ]);
+
+    return response()->json([
+        'success' => true,
+        'message' => 'Ticket created successfully',
+        'data'    => $ticket,
+    ], 201);
+}
+
+    
+
     public function index(Request $request)
     {
         $validator = Validator::make($request->all(), [
@@ -172,9 +207,7 @@ class TicketController extends Controller
         return response()->json(['success' => true, 'data' => $tickets]);
     }
 
-    /**
-     * Display the specified ticket.
-     */
+
     public function show($id)
     {
         $ticket = Ticket::find($id);
@@ -186,23 +219,17 @@ class TicketController extends Controller
         return response()->json(['success' => true, 'data' => $ticket]);
     }
 
-    /**
-     * Update the specified ticket in storage.
-     */
+
     public function update(Request $request, $id)
     {
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
             'status' => 'required|in:Active,Inactive',
-            // 'transfer_options' => 'nullable|array',
-            // 'transfer_options.*.option' => 'string|max:100',
-            // 'transfer_options.*.price' => 'numeric',
-            'category' => 'nullable|array',
-            'category.*' => 'string|max:100',
             'time_slots' => 'nullable|array',
-            'time_slots.*.slot' => 'nullable|max:100',
-            'time_slots.*.adult_price' => 'numeric',
-            'time_slots.*.child_price' => 'numeric',
+            'time_slots.*.start_time' => 'required_with:time_slots.*.end_time,time_slots.*.adult_price,time_slots.*.child_price|string|max:20',
+            'time_slots.*.end_time'   => 'required_with:time_slots.*.start_time,time_slots.*.adult_price,time_slots.*.child_price|string|max:20',
+            'time_slots.*.adult_price' => 'required_with:time_slots.*.start_time,time_slots.*.end_time|numeric',
+            'time_slots.*.child_price' => 'required_with:time_slots.*.start_time,time_slots.*.end_time|numeric',
             'terms_and_conditions' => 'nullable|json',
         ]);
 
@@ -220,9 +247,7 @@ class TicketController extends Controller
 
         $ticket->update([
             'name' => $request->name,
-            'category' => $request->category,
             'status' => $request->status,
-            // 'transfer_options' => $request->transfer_options,
             'time_slots' => $request->time_slots,
             'terms_and_conditions' => $terms,
         ]);
@@ -230,9 +255,6 @@ class TicketController extends Controller
         return response()->json(['success' => true, 'message' => 'Ticket updated successfully', 'data' => $ticket]);
     }
 
-    /**
-     * Remove the specified ticket from storage.
-     */
     public function destroy($id)
     {
         $ticket = Ticket::find($id);

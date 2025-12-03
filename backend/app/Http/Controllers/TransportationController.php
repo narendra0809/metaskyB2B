@@ -117,7 +117,7 @@ class TransportationController extends Controller
                 'company_document' => 'nullable|file|mimes:jpeg,jpg,png,doc,docx,pdf',
                 'address' => 'required|string|max:255',
                 'transport' => 'required|string|max:255',
-                'vehicle_type' => 'required|string|max:100',
+                'vehicle_type' => 'required|string|max:255',
                 'options' => 'required|array',
                 'options.*.from' => 'required|string|max:255',
                 'options.*.to' => 'required|string|max:255',
