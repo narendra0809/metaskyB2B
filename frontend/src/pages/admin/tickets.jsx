@@ -26,7 +26,6 @@ const Tickets = () => {
   const [editLoading, setEditLoading] = useState(false);
   const [timeSlotTemp, setTimeSlotTemp] = useState({
     start_time: "",
-    end_time: "",
     adult_price: "",
     child_price: "",
   });
@@ -148,7 +147,7 @@ const Tickets = () => {
     }));
     setTimeSlotTemp({
       start_time: "",
-      end_time: "",
+
       adult_price: "",
       child_price: "",
     });
@@ -159,7 +158,6 @@ const Tickets = () => {
       (timeSlot) =>
         !(
           timeSlot.start_time === slotObj.start_time &&
-          timeSlot.end_time === slotObj.end_time &&
           timeSlot.adult_price === slotObj.adult_price &&
           timeSlot.child_price === slotObj.child_price
         )
@@ -191,7 +189,7 @@ const Tickets = () => {
       }));
       setTimeSlotTemp({
         start_time: "",
-        end_time: "",
+
         adult_price: "",
         child_price: "",
       });
@@ -284,7 +282,7 @@ const Tickets = () => {
 
     setTimeSlotTemp({
       start_time: "",
-      end_time: "",
+
       adult_price: "",
       child_price: "",
     });
@@ -444,16 +442,6 @@ const Tickets = () => {
                           onChange={handleTimeSlot}
                         />
                       </div>
-                      <div className="col-3">
-                        <input
-                          type="time"
-                          className="form-control"
-                          placeholder="End Time"
-                          name="end_time"
-                          value={timeSlotTemp.end_time || ""}
-                          onChange={handleTimeSlot}
-                        />
-                      </div>
                     </>
                   )}
 
@@ -491,9 +479,7 @@ const Tickets = () => {
                   {formData.addFormData.time_slots?.map((item, index) => (
                     <div className="row m-0 mt-2" key={index}>
                       {formData.addFormData.has_time_slots && (
-                        <div className="col-4">
-                          {item.start_time} - {item.end_time}
-                        </div>
+                        <div className="col-4">{item.start_time}</div>
                       )}
                       <div className="col-3">Adult: AED {item.adult_price}</div>
                       <div className="col-3">Child: AED {item.child_price}</div>
@@ -642,16 +628,6 @@ const Tickets = () => {
                           onChange={handleTimeSlot}
                         />
                       </div>
-                      <div className="col-3">
-                        <input
-                          type="time"
-                          className="form-control"
-                          placeholder="End Time"
-                          name="end_time"
-                          value={timeSlotTemp.end_time || ""}
-                          onChange={handleTimeSlot}
-                        />
-                      </div>
                     </>
                   )}
 
@@ -688,10 +664,8 @@ const Tickets = () => {
                 <div>
                   {formData.editFormData.time_slots?.map((item, index) => (
                     <div className="row m-0 mt-2" key={index}>
-                      {item.start_time && item.end_time && (
-                        <div className="col-4">
-                          {item.start_time} - {item.end_time}
-                        </div>
+                      {item.start_time && (
+                        <div className="col-4">{item.start_time}</div>
                       )}
                       <div className="col-3">Adult: AED {item.adult_price}</div>
                       <div className="col-3">Child: AED {item.child_price}</div>
@@ -898,9 +872,7 @@ const Tickets = () => {
                       <td>
                         {item.time_slots?.map((timeSlot, index) => (
                           <div key={index}>
-                            {timeSlot.start_time &&
-                              timeSlot.end_time &&
-                              `${timeSlot.start_time}-${timeSlot.end_time}`}{" "}
+                            {timeSlot.start_time && `${timeSlot.start_time}`}{" "}
                             (Adult: AED {timeSlot.adult_price}, Child: AED{" "}
                             {timeSlot.child_price})
                           </div>

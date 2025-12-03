@@ -49,9 +49,9 @@ public function import(Request $request)
                 ? array_map('trim', explode(',', $rowData['time_slots_start_time']))
                 : [];
 
-            $endTimes = isset($rowData['time_slots_end_time'])
-                ? array_map('trim', explode(',', $rowData['time_slots_end_time']))
-                : [];
+            // $endTimes = isset($rowData['time_slots_end_time'])
+            //     ? array_map('trim', explode(',', $rowData['time_slots_end_time']))
+            //     : [];
 
             $adultPricesRaw = isset($rowData['time_slots_adult_price'])
                 ? array_map('trim', explode('_', $rowData['time_slots_adult_price']))
@@ -61,7 +61,7 @@ public function import(Request $request)
                 ? array_map('trim', explode('_', $rowData['time_slots_child_price']))
                 : [];
 
-            $slotsCount = max(count($startTimes), count($endTimes),count($adultPricesRaw),count($childPricesRaw));
+            $slotsCount = max(count($startTimes),count($adultPricesRaw),count($childPricesRaw));
 
             if (count($adultPricesRaw) === 1) {
                 $adultPrices = array_fill(0, $slotsCount, $adultPricesRaw[0]);
@@ -79,7 +79,7 @@ public function import(Request $request)
             for ($i = 0; $i < $slotsCount; $i++) {
                 $time_slots[] = [
                     'start_time'   => $startTimes[$i]  ?? null,
-                    'end_time'     => $endTimes[$i]    ?? null,
+                    // 'end_time'     => $endTimes[$i]    ?? null,
                     'adult_price'  => $adultPrices[$i] ?? null,
                     'child_price'  => $childPrices[$i] ?? null,
                 ];
@@ -146,7 +146,7 @@ public function import(Request $request)
         'has_time_slots' => 'required|boolean',
         'time_slots' => 'nullable|array',
         'time_slots.*.start_time' => 'required_with:time_slots.*.end_time,time_slots.*.adult_price,time_slots.*.child_price|string|max:20',
-        'time_slots.*.end_time'   => 'required_with:time_slots.*.start_time,time_slots.*.adult_price,time_slots.*.child_price|string|max:20',
+        // 'time_slots.*.end_time'   => 'required_with:time_slots.*.start_time,time_slots.*.adult_price,time_slots.*.child_price|string|max:20',
         'time_slots.*.adult_price' => 'required_with:time_slots.*.start_time,time_slots.*.end_time|numeric',
         'time_slots.*.child_price' => 'required_with:time_slots.*.start_time,time_slots.*.end_time|numeric',
         'terms_and_conditions' => 'nullable|json',
@@ -227,7 +227,7 @@ public function import(Request $request)
             'status' => 'required|in:Active,Inactive',
             'time_slots' => 'nullable|array',
             'time_slots.*.start_time' => 'required_with:time_slots.*.end_time,time_slots.*.adult_price,time_slots.*.child_price|string|max:20',
-            'time_slots.*.end_time'   => 'required_with:time_slots.*.start_time,time_slots.*.adult_price,time_slots.*.child_price|string|max:20',
+            // 'time_slots.*.end_time'   => 'required_with:time_slots.*.start_time,time_slots.*.adult_price,time_slots.*.child_price|string|max:20',
             'time_slots.*.adult_price' => 'required_with:time_slots.*.start_time,time_slots.*.end_time|numeric',
             'time_slots.*.child_price' => 'required_with:time_slots.*.start_time,time_slots.*.end_time|numeric',
             'terms_and_conditions' => 'nullable|json',
