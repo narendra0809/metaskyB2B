@@ -315,17 +315,17 @@ const Dashboard = () => {
                 <img src={unpaidLogo} alt="UnPaid booking" />
                 <div className="card-content">
                   <span className="nums">{data ? unpaid?.length : "..."}</span>
-                  <small>Unpaid Booking</small>
+                  <small>Total Booking</small>
                 </div>
               </article>
 
-              <article className="dashboard-grid-card" id="box2">
+              {/* <article className="dashboard-grid-card" id="box2">
                 <img src={paidBookingLogo} alt="Paid booking" />
                 <div className="card-content">
                   <span className="nums">{data ? paid?.length : "..."}</span>
                   <small>Paid Booking</small>
                 </div>
-              </article>
+              </article> */}
 
               <article className="dashboard-grid-card" id="box3">
                 <img src={confirmationBookingLogo} alt="Confirmed booking" />
@@ -387,7 +387,7 @@ const Dashboard = () => {
                 </div>
                 <div className="card-content-vertical">
                   <span className="nums">{data ? sightseeings : "..."}</span>
-                  <small>Sightseeings</small>
+                  <small>Sharing Transport</small>
                 </div>
               </article>
 
@@ -404,7 +404,7 @@ const Dashboard = () => {
                 </div>
                 <div className="card-content-vertical">
                   <span className="nums">{data ? transports : "..."}</span>
-                  <small>Transportation</small>
+                  <small>Private Transportation</small>
                 </div>
               </article>
 

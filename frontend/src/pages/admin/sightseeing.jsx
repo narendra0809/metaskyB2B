@@ -262,7 +262,7 @@ const Sightseeing = () => {
         <Modal
           open={modals.addModalOpen}
           handleClose={() => toggleModal("addModalOpen", false)}
-          title="Add Sightseeing"
+          title="Add Sharing Transport"
         >
           {/* Modal content */}
           <div className="container p-3 style={{backgroundColor:#000d3d}}">
@@ -271,13 +271,13 @@ const Sightseeing = () => {
               {/* Add Form Sightseeing */}
               <div className="mb-3">
                 <label htmlFor="company_name" className="form-label">
-                  Sightseeing Authority
+                  Name
                 </label>
                 <input
                   type="text"
                   className="form-control"
                   id="company_name"
-                  placeholder="Sightseeing Authority..."
+                  placeholder="Name..."
                   name="company_name"
                   value={formData.addFormData.company_name}
                   onChange={handleFormDataChange("addFormData")}
@@ -291,7 +291,7 @@ const Sightseeing = () => {
                   type="text"
                   className="form-control"
                   id="address"
-                  placeholder="Sightseeing Address..."
+                  placeholder="Sharing transport Address..."
                   name="address"
                   value={formData.addFormData.address}
                   onChange={handleFormDataChange("addFormData")}
@@ -332,31 +332,7 @@ const Sightseeing = () => {
                   onChange={handleFormDataChange("addFormData")}
                 />
               </div>
-              <div className="mb-3">
-                <label className="form-label d-block">Sharing Transfer</label>
-                <div className="row g-2">
-                  <div className="col">
-                    <input
-                      type="text"
-                      className="form-control"
-                      placeholder="Adult Rate"
-                      name="sharing_transfer_adult"
-                      value={formData.addFormData.sharing_transfer_adult || ""}
-                      onChange={handleFormDataChange("addFormData")}
-                    />
-                  </div>
-                  <div className="col">
-                    <input
-                      type="text"
-                      className="form-control"
-                      placeholder="Child Rate"
-                      name="sharing_transfer_child"
-                      value={formData.addFormData.sharing_transfer_child || ""}
-                      onChange={handleFormDataChange("addFormData")}
-                    />
-                  </div>
-                </div>
-              </div>
+              
               <div className="mb-3">
                 <label htmlFor="rate_adult" className="form-label">
                   Rate Adult
@@ -431,13 +407,13 @@ const Sightseeing = () => {
               {/* Add Form Sightseeing */}
               <div className="mb-3">
                 <label htmlFor="company_name" className="form-label">
-                  Sightseeing Authority
+                  Name
                 </label>
                 <input
                   type="text"
                   className="form-control"
                   id="company_name"
-                  placeholder="Sightseeing Authority..."
+                  placeholder="Name..."
                   name="company_name"
                   value={formData.editFormData.company_name}
                   onChange={handleFormDataChange("editFormData")}
@@ -492,31 +468,7 @@ const Sightseeing = () => {
                   onChange={handleFormDataChange("editFormData")}
                 />
               </div>
-              <div className="mb-3">
-                <label className="form-label d-block">Sharing Transfer</label>
-                <div className="row g-2">
-                  <div className="col">
-                    <input
-                      type="text"
-                      className="form-control"
-                      placeholder="Adult Rate"
-                      name="sharing_transfer_adult"
-                      value={formData.editFormData.sharing_transfer_adult || ""}
-                      onChange={handleFormDataChange("editFormData")}
-                    />
-                  </div>
-                  <div className="col">
-                    <input
-                      type="text"
-                      className="form-control"
-                      placeholder="Child Rate"
-                      name="sharing_transfer_child"
-                      value={formData.editFormData.sharing_transfer_child || ""}
-                      onChange={handleFormDataChange("editFormData")}
-                    />
-                  </div>
-                </div>
-              </div>
+             
 
               <div className="mb-3">
                 <label htmlFor="rate_adult" className="form-label">
@@ -655,7 +607,7 @@ const Sightseeing = () => {
         )}
 
         <div className="display-header">
-          <h2 className="display-title">Sightseeings</h2>
+          <h2 className="display-title">Sharing Transport</h2>
           <input
             type="text"
             className="form-control display-search"
@@ -680,7 +632,7 @@ const Sightseeing = () => {
             className="btn btn-sm btn-primary"
             onClick={() => toggleModal("addModalOpen", true)}
           >
-            Add Sightseeing
+            Add Sharing Transport
           </button>
         </div>
 
@@ -689,11 +641,11 @@ const Sightseeing = () => {
             <table className="table table-bordered table-hover">
               <thead className="table-dark">
                 <tr>
-                  <th>Sightseeing Authority</th>
+                  <th>Name</th>
                   <th>Address</th>
                   <th>Adult Rate</th>
                   <th>Child Rate</th>
-                  <th>Sharing Transfers</th>
+                  {/* <th>Sharing Transfers</th> */}
                   <th>Destination</th>
                   <th style={{ width: "1%" }}>Action</th>
                 </tr>
@@ -710,7 +662,7 @@ const Sightseeing = () => {
                 ) : paginatedData.length > 0 ? (
                   paginatedData.map((item) => (
                     <tr key={item.id}>
-                      {/* Sightseeing Authority */}
+                      {/* Name */}
                       <td>{item.company_name}</td>
 
                       {/* Address */}
@@ -721,10 +673,10 @@ const Sightseeing = () => {
 
                       {/* Child Rate */}
                       <td>{item.rate_child || "N/A"}</td>
-                      <td>
+                      {/* <td>
                         {item.sharing_transfer_adult}(adult) &{" "}
                         {item.sharing_transfer_child}(child)
-                      </td>
+                      </td> */}
 
                       {/* Destination */}
                       <td>

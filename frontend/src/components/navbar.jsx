@@ -45,7 +45,7 @@ const Navbar = () => {
                 alt="Dropdown Arrow"
                 className="nav-dropdown-icons"
               />
-              Sightseeing
+              Sharing Transport
             </NavLink>
             <NavLink to="/transportation" className="nav-dropdown-link">
               {/* <i className="fa-solid fa-chevron-right nav-dropdown-icons"></i> */}
@@ -54,7 +54,7 @@ const Navbar = () => {
                 alt="Dropdown Arrow"
                 className="nav-dropdown-icons"
               />
-              Transportation
+              Private Transport
             </NavLink>
 
             <NavLink to="/tickets" className="nav-dropdown-link">
@@ -97,33 +97,33 @@ const Navbar = () => {
           </NavLinkDropdown>
         )}
 
-        {authUser.role === adminRole && (
+        {/* {authUser.role === adminRole && (
           <NavLink to={"/all-accounts"} className="nav-link">
             <i className="fa-solid fa-file-invoice-dollar nav-icons"></i>
             <span className="no-display">All Accounts</span>
           </NavLink>
-        )}
-        {authUser.role === adminRole && (
+        )} */}
+        {/* {authUser.role === adminRole && (
           <NavLink to={"/banking"} className="nav-link">
             <i className="fa-solid fa-piggy-bank nav-icons"></i>
             <span className="no-display">Banking</span>
           </NavLink>
-        )}
-        {authUser.role === adminRole && (
+        )} */}
+        {/* {authUser.role === adminRole && (
           <NavLink to={"/agent-wallets"} className="nav-link">
             <i className="fa-solid fa-file-invoice-dollar nav-icons"></i>
             <span className="no-display">Agent Wallets</span>
           </NavLink>
-        )}
+        )} */}
 
         <NavLink to={"/customers"} className="nav-link">
           <i className="fa-solid fa-user nav-icons"></i>
           <span className="no-display">Customers</span>
         </NavLink>
-        <NavLink to={"/final-customers"} className="nav-link">
+        {/* <NavLink to={"/final-customers"} className="nav-link">
           <i className="fa-regular fa-user nav-icons"></i>
           <span className="no-display">Final Customers</span>
-        </NavLink>
+        </NavLink> */}
         <NavLink to={"/confirmation-list"} className="nav-link">
           <i className="fa-solid fa-list-ul nav-icons"></i>
           <span className="no-display">Confirmation List</span>
@@ -148,7 +148,7 @@ const Navbar = () => {
               alt="Dropdown Arrow"
               className="nav-dropdown-icons"
             />
-            Transport Price
+            Private Transport Price
           </NavLink>
           <NavLink to="/sightseeing-price" className="nav-dropdown-link">
             {/* <i className="fa-solid fa-chevron-right nav-dropdown-icons"></i> */}
@@ -157,17 +157,17 @@ const Navbar = () => {
               alt="Dropdown Arrow"
               className="nav-dropdown-icons"
             />
-            Sightseeing Price
+            Sharing transport Price
           </NavLink>
         </NavLinkDropdown>
-        <NavLink to={"/wallet"} className="nav-link">
+        {/* <NavLink to={"/wallet"} className="nav-link">
           <i className="fa-brands fa-google-wallet nav-icons"></i>
           <span className="no-display">Wallet</span>
         </NavLink>
         <NavLink to={"/payments"} className="nav-link">
           <i className="fa-regular fa-credit-card nav-icons"></i>
           <span className="no-display">Payments</span>
-        </NavLink>
+        </NavLink> */}
         <NavLink to={"/change-password"} className="nav-link">
           <i className="fa-solid fa-key nav-icons"></i>
           <span className="no-display">Change Password</span>

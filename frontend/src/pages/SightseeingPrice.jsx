@@ -122,7 +122,7 @@ const SightseeingPrice = () => {
     <>
       <section className="page-section">
         <div className="page-header">
-          <h1 className="page-title">Sightseeing Price</h1>
+          <h1 className="page-title">Sharing Transport Price</h1>
         </div>
 
         {/* Table */}
@@ -173,7 +173,7 @@ const SightseeingPrice = () => {
                 <table className="table table-hover text-center">
                   <thead>
                     <tr>
-                      <th>Sightseeing Authority </th>
+                      <th>Name </th>
                       {/* <th>Description</th> */}
                       <th>City</th>
                       <th>Adult Rate(AED)</th>

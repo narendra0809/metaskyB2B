@@ -800,7 +800,7 @@ const Calculator = () => {
                     className="btn btn-main"
                     onClick={() => handleAddInfo("sightseeing")}
                   >
-                    <i className="fas fa-binoculars me-2"></i> Add Sightseeing
+                    <i className="fas fa-binoculars me-2"></i> Add Sharing Transport
                   </button>
                 </div>
               )}

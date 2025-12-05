@@ -853,7 +853,7 @@ const Tickets = () => {
               <thead className="table-dark">
                 <tr>
                   <th>Name</th>
-                  <th>Time Slots</th>
+                  <th>Price</th>
                   <th>Status</th>
                   <th style={{ width: "1%" }}>Action</th>
                 </tr>
@@ -872,7 +872,7 @@ const Tickets = () => {
                       <td>
                         {item.time_slots?.map((timeSlot, index) => (
                           <div key={index}>
-                            {timeSlot.start_time && `${timeSlot.start_time}`}{" "}
+                            {/* {timeSlot.start_time && `${timeSlot.start_time}`}{" "} */}
                             (Adult: AED {timeSlot.adult_price}, Child: AED{" "}
                             {timeSlot.child_price})
                           </div>

@@ -380,7 +380,7 @@ const Transportation = () => {
         <Modal
           open={modals.addModalOpen}
           handleClose={() => toggleModal("addModalOpen", false)}
-          title="Add Transportation"
+          title="Add Private Transportation"
         >
           <div className="container p-3">
             <div className="container border-bottom border-light-subtle">
@@ -644,7 +644,7 @@ const Transportation = () => {
         <Modal
           open={modals.editModalOpen}
           handleClose={() => toggleModal("editModalOpen", false)}
-          title="Edit Transportation"
+          title="Edit Private Transportation"
         >
           <div className="container p-3">
             <div className="container border-bottom border-light-subtle">
@@ -982,7 +982,7 @@ const Transportation = () => {
         )}
 
         <div className="display-header">
-          <h2 className="display-title">Transportations</h2>
+          <h2 className="display-title">Private Transportations</h2>
           <input
             type="text"
             className="form-control display-search"
@@ -1007,7 +1007,7 @@ const Transportation = () => {
             className="btn btn-sm btn-primary"
             onClick={() => toggleModal("addModalOpen", true)}
           >
-            Add Transportation
+            Add Private Transportation
           </button>
         </div>
 

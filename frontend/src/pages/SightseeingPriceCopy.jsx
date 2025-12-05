@@ -85,7 +85,7 @@ const SightseeingPrice = () => {
     <>
       <section className="page-section">
         <div className="page-header">
-          <h1 className="page-title">Sightseeing Price</h1>
+          <h1 className="page-title">Sightseeing Transport Price</h1>
         </div>
 
         {/* Table */}

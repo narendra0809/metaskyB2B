@@ -213,11 +213,11 @@
 //               </div>
 //             )}
 
-//             {/* Transportations */}
+//             {/* Private Transportations */}
 //             {transports.length > 0 && (
 //               <div className="container-fluid mt-4">
 //                 <div className="title-line">
-//                   <span>Transportations</span>
+//                   <span>Private Transportations</span>
 //                 </div>
 //                 <div>
 //                   <div className="listing-card-container">
@@ -326,7 +326,7 @@
 //                                   <div className="col-12 col-sm-6">
 //                                     <p className="fw-bold">
 //                                       <span className="fw-normal">
-//                                         Sightseeing Authority :{" "}
+//                                         Name :{" "}
 //                                       </span>
 //                                       {thisSightseeing?.company_name}
 //                                     </p>
@@ -670,11 +670,11 @@ const Summary = () => {
               </div>
             )}
 
-            {/* Transportations Section */}
+            {/* Private Transportations Section */}
             {transports.length > 0 && (
               <div className="container-fluid mt-4">
                 <div className="title-line">
-                  <span>Transportations</span>
+                  <span>Private Transportations</span>
                 </div>
                 <div className="listing-card-container">
                   {transports.map((transport, i) => {
@@ -753,7 +753,7 @@ const Summary = () => {
             {sightseeings.length > 0 && (
               <div className="container-fluid mt-4">
                 <div className="title-line">
-                  <span>Sightseeings</span>
+                  <span>Sharing transport</span>
                 </div>
                 <div className="listing-card-container">
                   {sightseeings.map((sightseeing, i) => {
@@ -795,7 +795,7 @@ const Summary = () => {
                               <div className="col-12 col-sm-6">
                                 <p className="fw-bold">
                                   <span className="fw-normal">
-                                    Sightseeing Authority:{" "}
+                                    Name:{" "}
                                   </span>
                                   {thisSightseeing?.company_name || "N/A"}
                                 </p>

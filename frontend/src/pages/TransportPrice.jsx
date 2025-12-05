@@ -107,7 +107,7 @@ const TransportPrice = () => {
     <>
       <section className="page-section">
         <div className="page-header">
-          <h1 className="page-title">Transport Price</h1>
+          <h1 className="page-title">Private Transport </h1>
         </div>
 
         {/* Table */}

@@ -734,7 +734,7 @@ const Itinerary = () => {
                           {dayTransports.length > 0 && (
                             <div className="card mb-3">
                               <div className="card-header text-dark">
-                                <h6 className="mb-0">Transportation</h6>
+                                <h6 className="mb-0">Private Transportation</h6>
                               </div>
                               <div className="card-body">
                                 {dayTransports.map((transport, idx) => {
@@ -878,7 +878,7 @@ const Itinerary = () => {
                                             <div className="col-12 col-sm-6">
                                               <p className="fw-bold">
                                                 <span className="fw-normal">
-                                                  Sightseeing Authority:{" "}
+                                                  Name:{" "}
                                                 </span>
                                                 {thisSightseeing?.company_name ||
                                                   "N/A"}
