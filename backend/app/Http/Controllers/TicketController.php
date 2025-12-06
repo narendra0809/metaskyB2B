@@ -145,10 +145,9 @@ public function import(Request $request)
         'status' => 'required|in:Active,Inactive',
         'has_time_slots' => 'required|boolean',
         'time_slots' => 'nullable|array',
-        'time_slots.*.start_time' => 'required_with:time_slots.*.end_time,time_slots.*.adult_price,time_slots.*.child_price|string|max:20',
-        // 'time_slots.*.end_time'   => 'required_with:time_slots.*.start_time,time_slots.*.adult_price,time_slots.*.child_price|string|max:20',
-        'time_slots.*.adult_price' => 'required_with:time_slots.*.start_time,time_slots.*.end_time|numeric',
-        'time_slots.*.child_price' => 'required_with:time_slots.*.start_time,time_slots.*.end_time|numeric',
+        'time_slots.*.start_time' => 'nullable|string|max:20',
+        'time_slots.*.adult_price' => 'required_with:time_slots|numeric',
+        'time_slots.*.child_price' => 'required_with:time_slots|numeric',
         'terms_and_conditions' => 'nullable|json',
     ]);
 
@@ -223,14 +222,14 @@ public function import(Request $request)
     public function update(Request $request, $id)
     {
         $validator = Validator::make($request->all(), [
-            'name' => 'required|string|max:255',
-            'status' => 'required|in:Active,Inactive',
-            'time_slots' => 'nullable|array',
-            'time_slots.*.start_time' => 'required_with:time_slots.*.end_time,time_slots.*.adult_price,time_slots.*.child_price|string|max:20',
-            // 'time_slots.*.end_time'   => 'required_with:time_slots.*.start_time,time_slots.*.adult_price,time_slots.*.child_price|string|max:20',
-            'time_slots.*.adult_price' => 'required_with:time_slots.*.start_time,time_slots.*.end_time|numeric',
-            'time_slots.*.child_price' => 'required_with:time_slots.*.start_time,time_slots.*.end_time|numeric',
-            'terms_and_conditions' => 'nullable|json',
+        'name' => 'required|string|max:255',
+        'status' => 'required|in:Active,Inactive',
+        'has_time_slots' => 'required|boolean',
+        'time_slots' => 'nullable|array',
+        'time_slots.*.start_time' => 'nullable|string|max:20',
+        'time_slots.*.adult_price' => 'required_with:time_slots|numeric',
+        'time_slots.*.child_price' => 'required_with:time_slots|numeric',
+        'terms_and_conditions' => 'nullable|json',
         ]);
 
 

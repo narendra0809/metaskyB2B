@@ -16,3 +16,19 @@ export const extractRates = (rateString) => {
 
   return { adultRate, childRate };
 };
+
+export const convertTo12HoursFormate = (time) => {
+  if (!time) return "";
+
+  let [hours, minutes] = time.split(":");
+
+  hours = parseInt(hours, 10);
+
+  const ampm = hours >= 12 ? "PM" : "AM";
+
+  hours = hours % 12;
+
+  hours = hours ? hours : 12;
+
+  return `${hours}:${minutes} ${ampm}`;
+};

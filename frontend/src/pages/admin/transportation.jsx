@@ -9,6 +9,8 @@ import Loader from "../../Loader";
 import "../../Loader.css";
 import excelFormat from "../../public/data/transportations.xlsx";
 import TermsConditionsModal from "../../components/TermsConditions";
+import PrivateTransportModal from "../../components/admin/PrivateTransport";
+import ImportModal from "../../components/shared/ImportModal";
 
 const Transportation = () => {
   const base_url = import.meta.env.VITE_API_URL;
@@ -23,8 +25,13 @@ const Transportation = () => {
   const [searchValue, setSearchValue] = useState("");
   const [perPage, setPerPage] = useState(10);
   const [currPageNo, setCurrPageNo] = useState(0);
-
+  const [importModalOpen, setImportModalOpen] = useState(false);
   const [openTermsConditions, setOpenTermsConditions] = useState(false);
+
+  // Confirmation
+  const [isConfirm, setIsConfirm] = useState(false);
+  const [recordToDelete, setRecordToDelete] = useState(null);
+
   // Form Data State
   const addForm = useSendFile(`${base_url}/api/transportation`, token);
 
@@ -95,85 +102,16 @@ const Transportation = () => {
   // Filter destinations based on search value
   const filteredData =
     mainData.data?.data?.filter((item) =>
-      item.company_name.toLowerCase().includes(searchValue.toLowerCase())
-    ) || [];
+      item.company_name
+        .toLowerCase()
+        .includes(searchValue.toLowerCase())
+    ).reverse() || [];
 
   // Paginated data
   const paginatedData = filteredData.slice(
     perPage * currPageNo,
     perPage * currPageNo + perPage
   );
-
-  // Handle form data changes
-  const handleFormDataChange = (formType) => (e) => {
-    const { name, value, type } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [formType]: {
-        ...prev[formType],
-        [name]: type === "file" ? e.target.files[0] : value,
-      },
-    }));
-
-    // Clear error for the changing field
-    setFormErrors((prev) => ({
-      ...prev,
-      [formType.replace("Data", "Errors")]: {
-        ...prev[formType.replace("Data", "Errors")],
-        [name]: undefined,
-      },
-    }));
-  };
-
-  /* Options */
-  const addOptions = (formType) => {
-    if (!options.from || !options.to || !options.rate) {
-      return;
-    }
-
-    setFormData((prev) => ({
-      ...prev,
-      [formType]: {
-        ...prev[formType],
-        options: [...prev[formType]["options"], options],
-      },
-    }));
-    setOptions({ from: "", to: "", rate: "", transfer_type: "one_way" });
-  };
-  const handleOptions = (e) => {
-    const { name, value } = e.target;
-    let filteredValue = value;
-
-    switch (name) {
-      case "rate":
-        filteredValue = value
-          .replace(/[^0-9.]/g, "")
-          .replace(/(\..*)\./g, "$1");
-        break;
-
-      default:
-        filteredValue = value;
-        break;
-    }
-
-    setOptions((item) => ({
-      ...item,
-      [name]: filteredValue,
-    }));
-  };
-  console.log(formData.addFormData);
-  const removeOptions = (formType, from, to) => {
-    const updatedOptions = formData[formType].options.filter(
-      (option) => option.from !== from || option.to !== to
-    );
-    setFormData((prev) => ({
-      ...prev,
-      [formType]: {
-        ...prev[formType],
-        options: updatedOptions,
-      },
-    }));
-  };
 
   // Handle modal open/close
   const toggleModal = (modalType, isOpen) => {
@@ -299,10 +237,6 @@ const Transportation = () => {
     }
   };
 
-  // Confirmation
-  const [isConfirm, setIsConfirm] = useState(false);
-  const [recordToDelete, setRecordToDelete] = useState(null);
-
   const handleDeleteClick = (id, name) => {
     setRecordToDelete((prev) => ({ id, name }));
     setIsConfirm(true);
@@ -326,626 +260,47 @@ const Transportation = () => {
     setIsConfirm(false);
   };
 
-  const [importModalOpen, setImportModalOpen] = useState(false);
-  const [importFile, setImportFile] = useState(null);
-  const [importLoading, setImportLoading] = useState(false);
-  const [importError, setImportError] = useState(null);
-
-  const handleFileChange = (e) => {
-    setImportFile(e.target.files[0]);
-    setImportError(null);
-  };
-
-  const handleImportSubmit = async () => {
-    if (!importFile) {
-      setImportError("Please select an Excel file to import");
-      return;
-    }
-
-    setImportLoading(true);
-
-    const formData = new FormData();
-    formData.append("file", importFile);
-
-    try {
-      const res = await fetch(`${base_url}/api/transportation/import`, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-        body: formData,
-      });
-
-      const data = await res.json();
-
-      if (!data.success) {
-        setImportError(data.message || "Import failed");
-      } else {
-        // Optionally refresh data here
-        mainData.refetch();
-        setImportModalOpen(false);
-        setImportFile(null);
-      }
-    } catch (error) {
-      setImportError("Import failed: " + error.message);
-    }
-
-    setImportLoading(false);
-  };
-
   return (
     <>
       <section className="display-section">
-        {/* Add Modal */}
-        <Modal
+        <PrivateTransportModal
           open={modals.addModalOpen}
           handleClose={() => toggleModal("addModalOpen", false)}
           title="Add Private Transportation"
-        >
-          <div className="container p-3">
-            <div className="container border-bottom border-light-subtle">
-              <div className="mb-3">
-                <label htmlFor="company_name" className="form-label">
-                  Transporter Name
-                </label>
-                <input
-                  type="text"
-                  className="form-control"
-                  id="company_name"
-                  placeholder="Transporter Name..."
-                  name="company_name"
-                  value={formData.addFormData.company_name}
-                  onChange={handleFormDataChange("addFormData")}
-                />
-                {formErrors.addFormErrors.company_name && (
-                  <div className="text-danger">
-                    {formErrors.addFormErrors.company_name[0]}
-                  </div>
-                )}
-              </div>
-
-              <div className="mb-3">
-                <label htmlFor="company_document" className="form-label">
-                  Vehicle Documents
-                </label>
-                <input
-                  type="file"
-                  className="form-control"
-                  id="company_document"
-                  name="company_document"
-                  ref={inputDocs}
-                  onChange={handleFormDataChange("addFormData")}
-                />
-                {formErrors.addFormErrors.company_document && (
-                  <div className="text-danger">
-                    {formErrors.addFormErrors.company_document[0]}
-                  </div>
-                )}
-              </div>
-
-              <div className="mb-3">
-                <label htmlFor="address" className="form-label">
-                  Address
-                </label>
-                <input
-                  type="text"
-                  className="form-control"
-                  id="address"
-                  placeholder="Transport Address..."
-                  name="address"
-                  value={formData.addFormData.address}
-                  onChange={handleFormDataChange("addFormData")}
-                />
-                {formErrors.addFormErrors.address && (
-                  <div className="text-danger">
-                    {formErrors.addFormErrors.address[0]}
-                  </div>
-                )}
-              </div>
-
-              <div className="mb-3">
-                <label htmlFor="destination_id" className="form-label">
-                  Destination
-                </label>
-                <select
-                  className="form-control"
-                  name="destination_id"
-                  id="destination_id"
-                  value={formData.addFormData.destination_id}
-                  onChange={handleFormDataChange("addFormData")}
-                >
-                  <option value="">-- select --</option>
-                  {destinationsData.data?.destinations?.map((item) => (
-                    <option key={item.id} value={item.id}>
-                      {countriesData.data?.cities.find(
-                        (city) => city.id === item.city_id
-                      )?.name || "N/A"}
-                    </option>
-                  ))}
-                </select>
-                {formErrors.addFormErrors.destination_id && (
-                  <div className="text-danger">
-                    {formErrors.addFormErrors.destination_id[0]}
-                  </div>
-                )}
-              </div>
-
-              <div className="mb-3">
-                <label htmlFor="transport" className="form-label">
-                  Vehicle Name
-                </label>
-                <input
-                  type="text"
-                  className="form-control"
-                  id="transport"
-                  placeholder="Transport..."
-                  name="transport"
-                  value={formData.addFormData.transport}
-                  onChange={handleFormDataChange("addFormData")}
-                />
-                {formErrors.addFormErrors.transport && (
-                  <div className="text-danger">
-                    {formErrors.addFormErrors.transport[0]}
-                  </div>
-                )}
-              </div>
-
-              <div className="mb-3">
-                <label htmlFor="vehicle_type" className="form-label">
-                  Vehicle Capacity
-                </label>
-                <input
-                  type="text"
-                  className="form-control"
-                  id="vehicle_type"
-                  placeholder="Vehicle Capacity..."
-                  name="vehicle_type"
-                  value={formData.addFormData.vehicle_type}
-                  onChange={handleFormDataChange("addFormData")}
-                />
-                {formErrors.addFormErrors.vehicle_type && (
-                  <div className="text-danger">
-                    {formErrors.addFormErrors.vehicle_type[0]}
-                  </div>
-                )}
-              </div>
-              {/* <div className="mb-3">
-                <label htmlFor="transfer_type" className="form-label">
-                  Transfer Type
-                </label>
-                <select
-                  className="form-control"
-                  name="transfer_type"
-                  id="transfer_type"
-                  value={formData.addFormData.transfer_type}
-                  onChange={handleFormDataChange("addFormData")}
-                >
-                  <option value="one_way">One Way</option>
-                  <option value="two_way">Two Way</option>
-                </select>
-                {formErrors.addFormErrors.transfer_type && (
-                  <div className="text-danger">
-                    {formErrors.addFormErrors.transfer_type[0]}
-                  </div>
-                )}
-              </div> */}
-
-              {/* Options */}
-              <div className="mb-3">
-                <label htmlFor="room_type" className="form-label">
-                  Transfer Options
-                </label>
-                <div className="row g-2">
-                  <div className="col-4">
-                    <input
-                      type="text"
-                      className="form-control"
-                      placeholder="From ..."
-                      name="from"
-                      value={options.from}
-                      onChange={handleOptions}
-                    />
-                  </div>
-                  <div className="col-4">
-                    <input
-                      type="text"
-                      className="form-control"
-                      placeholder="To ..."
-                      name="to"
-                      value={options.to}
-                      onChange={handleOptions}
-                    />
-                  </div>
-                  <div className="col-4">
-                    <input
-                      type="text"
-                      className="form-control"
-                      placeholder="Rate ..."
-                      name="rate"
-                      value={options.rate}
-                      onChange={handleOptions}
-                    />
-                  </div>
-                  <div className="col-4">
-                    <select
-                      className="form-control"
-                      name="transfer_type"
-                      id="transfer_type"
-                      onChange={handleOptions}
-                    >
-                      <option value="one_way">One Way</option>
-                      <option value="two_way">Two Way</option>
-                    </select>
-                  </div>
-                  {formErrors.addFormErrors.options && (
-                    <div className="text-danger mt-1">
-                      {formErrors.addFormErrors.options[0]}
-                    </div>
-                  )}
-                </div>
-                <div>
-                  {formData.addFormData.options.map((item) => (
-                    <div
-                      className="d-flex align-items-center gap-2 mt-2"
-                      key={`${item.from} ${item.to} ${item.rate}`}
-                    >
-                      <div className="flex-grow-1">{item.from}</div>
-                      <div className="flex-grow-1">{item.to}</div>
-                      <div className="flex-grow-1">{item.rate}</div>
-                      <div className="flex-grow-1">{item.transfer_type}</div>
-                      <div>
-                        <button
-                          className="btn p-1"
-                          onClick={() =>
-                            removeOptions("addFormData", item.from, item.to)
-                          }
-                          type="button"
-                        >
-                          <i className="fa-solid fa-trash-can text-danger"></i>
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-                <button
-                  className="btn btn-success mt-3"
-                  onClick={() => addOptions("addFormData")}
-                  type="button"
-                >
-                  Add Option
-                </button>
-              </div>
-            </div>
-
-            <div className="container p-3 d-flex justify-content-between">
-              <button
-                className="btn btn-primary"
-                type="submit"
-                onClick={() => submitFormData("addFormData")}
-                disabled={addForm.loading}
-              >
-                {addForm.loading ? "Processing..." : "Add"}
-              </button>
-              <button
-                className="btn btn-primary"
-                type="button"
-                onClick={() => setOpenTermsConditions(true)}
-                disabled={addForm.loading}
-              >
-                {formData.addFormData.terms_and_conditions
-                  ? "Edit terms & conditions"
-                  : "Add terms & conditions"}
-              </button>
-            </div>
-          </div>
-        </Modal>
-
-        {/* Edit Modal */}
-        <Modal
+          data={formData.addFormData}
+          onDataChange={(newData) =>
+            setFormData((prev) => ({ ...prev, addFormData: newData }))
+          }
+          onSubmit={() => submitFormData("addFormData")}
+          loading={addForm.loading}
+          errors={formErrors.addFormErrors}
+          destinations={destinationsData.data?.destinations || []}
+          cities={countriesData.data?.cities || []}
+          onTermsClick={() => setOpenTermsConditions(true)}
+        />
+        <PrivateTransportModal
           open={modals.editModalOpen}
           handleClose={() => toggleModal("editModalOpen", false)}
           title="Edit Private Transportation"
-        >
-          <div className="container p-3">
-            <div className="container border-bottom border-light-subtle">
-              <div className="mb-3">
-                <label htmlFor="company_name" className="form-label">
-                  Transporter Name
-                </label>
-                <input
-                  type="text"
-                  className="form-control"
-                  id="company_name"
-                  placeholder="Transporter Name..."
-                  name="company_name"
-                  value={formData.editFormData.company_name}
-                  onChange={handleFormDataChange("editFormData")}
-                />
-                {formErrors.editFormErrors.company_name && (
-                  <div className="text-danger">
-                    {formErrors.editFormErrors.company_name[0]}
-                  </div>
-                )}
-              </div>
-
-              <div className="mb-3">
-                <label htmlFor="company_document" className="form-label">
-                  Vehicle Documents
-                </label>
-                <input
-                  type="file"
-                  className="form-control"
-                  id="company_document"
-                  name="company_document"
-                  onChange={handleFormDataChange("editFormData")}
-                />
-                {formErrors.editFormErrors.company_document && (
-                  <div className="text-danger">
-                    {formErrors.editFormErrors.company_document[0]}
-                  </div>
-                )}
-              </div>
-
-              <div className="mb-3">
-                <label htmlFor="address" className="form-label">
-                  Address
-                </label>
-                <input
-                  type="text"
-                  className="form-control"
-                  id="address"
-                  placeholder="Transport Address..."
-                  name="address"
-                  value={formData.editFormData.address}
-                  onChange={handleFormDataChange("editFormData")}
-                />
-                {formErrors.editFormErrors.address && (
-                  <div className="text-danger">
-                    {formErrors.editFormErrors.address[0]}
-                  </div>
-                )}
-              </div>
-
-              <div className="mb-3">
-                <label htmlFor="destination_id" className="form-label">
-                  Destination
-                </label>
-                <select
-                  className="form-control"
-                  name="destination_id"
-                  id="destination_id"
-                  value={formData.editFormData.destination_id}
-                  onChange={handleFormDataChange("editFormData")}
-                >
-                  <option value="">-- select --</option>
-                  {destinationsData.data?.destinations?.map((item) => (
-                    <option key={item.id} value={item.id}>
-                      {countriesData.data?.cities.find(
-                        (city) => city.id === item.city_id
-                      )?.name || "N/A"}
-                    </option>
-                  ))}
-                </select>
-                {formErrors.editFormErrors.destination_id && (
-                  <div className="text-danger">
-                    {formErrors.editFormErrors.destination_id[0]}
-                  </div>
-                )}
-              </div>
-
-              <div className="mb-3">
-                <label htmlFor="transport" className="form-label">
-                  Vehicle Name
-                </label>
-                <input
-                  type="text"
-                  className="form-control"
-                  id="transport"
-                  placeholder="Vehicle Name..."
-                  name="transport"
-                  value={formData.editFormData.transport}
-                  onChange={handleFormDataChange("editFormData")}
-                />
-                {formErrors.editFormErrors.transport && (
-                  <div className="text-danger">
-                    {formErrors.editFormErrors.transport[0]}
-                  </div>
-                )}
-              </div>
-
-              <div className="mb-3">
-                <label htmlFor="vehicle_type" className="form-label">
-                  Vehicle Capacity
-                </label>
-                <input
-                  type="text"
-                  className="form-control"
-                  id="vehicle_type"
-                  placeholder="Vehicle Capacity..."
-                  name="vehicle_type"
-                  value={formData.editFormData.vehicle_type}
-                  onChange={handleFormDataChange("editFormData")}
-                />
-                {formErrors.editFormErrors.vehicle_type && (
-                  <div className="text-danger">
-                    {formErrors.editFormErrors.vehicle_type[0]}
-                  </div>
-                )}
-              </div>
-
-              {/* <div className="mb-3">
-                <label htmlFor="transfer_type" className="form-label">
-                  Transfer Type
-                </label>
-                <select
-                  className="form-control"
-                  name="transfer_type"
-                  id="transfer_type"
-                  value={formData.editFormData.transfer_type}
-                  onChange={handleFormDataChange("editFormData")}
-                >
-                  <option value="one_way">One Way</option>
-                  <option value="two_way">Two Way</option>
-                </select>
-                {formErrors.editFormErrors.transfer_type && (
-                  <div className="text-danger">
-                    {formErrors.editFormErrors.transfer_type[0]}
-                  </div>
-                )}
-              </div> */}
-
-              {/* Options */}
-              <div className="mb-3">
-                <label htmlFor="room_type" className="form-label">
-                  Transfer Options
-                </label>
-                <div className="row g-2">
-                  <div className="col-4">
-                    <input
-                      type="text"
-                      className="form-control"
-                      placeholder="From ..."
-                      name="from"
-                      value={options.from}
-                      onChange={handleOptions}
-                    />
-                  </div>
-                  <div className="col-4">
-                    <input
-                      type="text"
-                      className="form-control"
-                      placeholder="To ..."
-                      name="to"
-                      value={options.to}
-                      onChange={handleOptions}
-                    />
-                  </div>
-                  <div className="col-4">
-                    <input
-                      type="text"
-                      className="form-control"
-                      placeholder="Rate ..."
-                      name="rate"
-                      value={options.rate}
-                      onChange={handleOptions}
-                    />
-                  </div>
-                  <div className="col-4">
-                    <select
-                      className="form-control"
-                      name="transfer_type"
-                      id="transfer_type"
-                      value={options.transfer_type}
-                      onChange={handleOptions}
-                    >
-                      <option value="one_way">One Way</option>
-                      <option value="two_way">Two Way</option>
-                    </select>
-                  </div>
-                </div>
-                {formErrors.editFormErrors.options && (
-                  <div className="text-danger mt-1">
-                    {formErrors.editFormErrors.options[0]}
-                  </div>
-                )}
-                <div>
-                  {formData.editFormData.options.map((item) => (
-                    <div
-                      className="d-flex align-items-center gap-2 mt-2"
-                      key={`${item.from} ${item.to} ${item.rate}`}
-                    >
-                      <div className="flex-grow-1">{item.from}</div>
-                      <div className="flex-grow-1">{item.to}</div>
-                      <div className="flex-grow-1">{item.rate}</div>
-                      <div className="flex-grow-1">{item.transfer_type}</div>
-                      <div>
-                        <button
-                          className="btn p-1"
-                          onClick={() =>
-                            removeOptions("editFormData", item.from, item.to)
-                          }
-                          type="button"
-                        >
-                          <i className="fa-solid fa-trash-can text-danger"></i>
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-
-                <button
-                  className="btn btn-success mt-3"
-                  onClick={() => addOptions("editFormData")} // Use "addFormData" or "editFormData" accordingly
-                  type="button"
-                >
-                  Add Option
-                </button>
-              </div>
-            </div>
-
-            <div className="container p-3 d-flex justify-content-between">
-              <button
-                className="btn btn-warning"
-                type="submit"
-                onClick={() => submitFormData("editFormData")}
-                disabled={editLoading}
-              >
-                {editLoading ? "Processing..." : "Update"}
-              </button>
-              <button
-                className="btn btn-primary"
-                type="button"
-                onClick={() => setOpenTermsConditions(true)}
-                disabled={addForm.loading}
-              >
-                {formData.editFormData.terms_and_conditions
-                  ? "Edit terms & conditions"
-                  : "Add terms & conditions"}
-              </button>
-            </div>
-          </div>
-        </Modal>
-        {/* Import Modal */}
-        <Modal
+          data={formData.editFormData}
+          onDataChange={(newData) =>
+            setFormData((prev) => ({ ...prev, editFormData: newData }))
+          }
+          onSubmit={() => submitFormData("editFormData")}
+          loading={editLoading}
+          errors={formErrors.editFormErrors}
+          destinations={destinationsData.data?.destinations || []}
+          cities={countriesData.data?.cities || []}
+          onTermsClick={() => setOpenTermsConditions(true)}
+        />
+        <ImportModal
           open={importModalOpen}
-          handleClose={() => {
-            setImportModalOpen(false);
-            setImportFile(null);
-            setImportError(null);
-          }}
-          title="Import Excel File"
-        >
-          <div className="mb-3">
-            <input
-              type="file"
-              accept=".xls,.xlsx"
-              className="form-control"
-              onChange={handleFileChange}
-            />
-          </div>
-          {importError && <div className="text-danger mb-2">{importError}</div>}
-          <div className="d-flex justify-content-end gap-2">
-            <button
-              className="btn btn-secondary"
-              onClick={() => {
-                setImportModalOpen(false);
-                setImportFile(null);
-                setImportError(null);
-              }}
-            >
-              Cancel
-            </button>
-            <button
-              className="btn btn-primary"
-              onClick={handleImportSubmit}
-              disabled={importLoading}
-            >
-              {importLoading ? "Importing..." : "Import"}
-            </button>
-          </div>
-        </Modal>
+          onClose={() => setImportModalOpen(false)}
+          apiEndpoint={`${base_url}/api/transport/import`}
+          token={token}
+          onSuccess={() => mainData.refetch()}
+        />
 
-        {/* Confirm */}
         <Confirm
           open={isConfirm}
           handleConfirm={() => {
@@ -1018,8 +373,7 @@ const Transportation = () => {
                 <tr>
                   <th>Transporter Name</th>
                   <th>Transport</th>
-                  <th>Vehicle Type</th>
-                  {/* Removed Address and Destination */}
+                  <th>Vehicle Capacity</th>
                   <th>From</th>
                   <th>To</th>
                   <th>Rate</th>
@@ -1168,10 +522,3 @@ const Transportation = () => {
 };
 
 export default Transportation;
-
-// {"from":["burjkhalifa"],"to":["burdubai"],"rate":["100200"],"transfer_type":["one_way","two_way"]}
-// [
-//   {from:"dubai",to:"burj",rate:100,transfer_type:"one_way"},
-//   {from:"dubai",to:"burj",rate:100,transfer_type:"one_way"},
-//   {from:"dubai",to:"burj",rate:100,transfer_type:"one_way"},
-// ]

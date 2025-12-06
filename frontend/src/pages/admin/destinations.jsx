@@ -7,6 +7,7 @@ import { useAuth } from "../../context/AuthContext";
 import Confirm from "../../components/Confirm";
 import Loader from "../../Loader";
 import "../../Loader.css";
+import DestinationModal from "../../components/admin/DestinationModal";
 
 const Destinations = () => {
   const base_url = import.meta.env.VITE_API_URL;
@@ -40,7 +41,7 @@ const Destinations = () => {
     addFormData: {
       city_id: "",
       state_id: "",
-      country_id: "",
+      country_id: "229",
       status: "",
     },
     editFormData: {
@@ -89,33 +90,21 @@ const Destinations = () => {
     perPage * currPageNo + perPage
   );
 
-  // Handle form data changes
-  const handleFormDataChange = (formType) => (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => {
-      switch (name) {
-        case "country_id":
-          prev[formType] = { ...prev[formType], state_id: "", city_id: "" };
-          break;
-        case "state_id":
-          prev[formType] = { ...prev[formType], city_id: "" };
-          break;
-      }
-
-      return {
-        ...prev,
-        [formType]: {
-          ...prev[formType],
-          [name]: value,
-        },
-      };
-    });
-  };
-
   // Handle modal open/close
   const toggleModal = (modalType, isOpen) => {
     setEditRes(null);
     setModals((prev) => ({ ...prev, [modalType]: isOpen }));
+    if (modalType === "addModalOpen" && isOpen) {
+      setFormData((prev) => ({
+        ...prev,
+        addFormData: {
+          city_id: "",
+          state_id: "",
+          country_id: "229",
+          status: "",
+        },
+      }));
+    }
   };
 
   // Confirmation
@@ -147,9 +136,15 @@ const Destinations = () => {
 
   // submit form
   const submitFormData = async (formType) => {
+    const dataToSend = { ...formData[formType] };
+
+    if (!dataToSend.country_id) {
+      dataToSend.country_id = "229";
+    }
+
     switch (formType) {
       case "addFormData":
-        await addForm.sendData(formData["addFormData"]);
+        await addForm.sendData(dataToSend);
 
         setFormData((item) => ({
           ...item,
@@ -185,232 +180,42 @@ const Destinations = () => {
     destinationsData.refetch();
   };
 
-  const filteredCountry = countriesData.data?.countries.find(
-    (item) => item.id == 229
-  );
   return (
     <>
       <section className="display-section">
         {/* Add Modal */}
-        <Modal
+        <DestinationModal
           open={modals.addModalOpen}
           handleClose={() => toggleModal("addModalOpen", false)}
           title="Add Destination"
-        >
-          <div className="container p-3">
-            <div className="mb-3">
-              <label htmlFor="country_id" className="form-label">
-                Country
-              </label>
-              <select
-                className="form-control"
-                name="country_id"
-                disabled
-                value={formData.addFormData.country_id}
-                onChange={handleFormDataChange("addFormData")}
-              >
-                <option key={filteredCountry?.id} value={filteredCountry?.id}>
-                  {filteredCountry?.name}
-                </option>
-              </select>
-            </div>
-
-            <div className="mb-3">
-              <label htmlFor="state_id" className="form-label">
-                State
-              </label>
-              <select
-                className="form-control"
-                name="state_id"
-                value={formData.addFormData.state_id}
-                onChange={handleFormDataChange("addFormData")}
-              >
-                <option value="">-- select state --</option>
-                {countriesData.data?.states
-                  .filter((item) => item.country_id == 229)
-                  .map((item) => (
-                    <option key={item.id} value={item.id}>
-                      {item.name}
-                    </option>
-                  ))}
-              </select>
-            </div>
-            {/* City */}
-            <div className="mb-3">
-              <label htmlFor="city_id" className="form-label">
-                City
-              </label>
-              <select
-                className="form-control"
-                name="city_id"
-                id="city_id"
-                value={formData.addFormData.city_id}
-                onChange={handleFormDataChange("addFormData")}
-              >
-                <option value="">-- select city --</option>
-                {countriesData.data?.cities
-                  .filter(
-                    (item) => item.state_id == formData.addFormData.state_id
-                  )
-                  .map((item) => (
-                    <option key={item.id} value={item.id}>
-                      {item.name}
-                    </option>
-                  ))}
-              </select>
-            </div>
-            {/* Status */}
-            <div className="mb-3">
-              <label htmlFor="status" className="form-label">
-                Status
-              </label>
-              <select
-                className="form-control"
-                name="status"
-                id="status"
-                value={formData.addFormData.status}
-                onChange={handleFormDataChange("addFormData")}
-              >
-                <option value="">-- select status --</option>
-                <option value={0}>Offline</option>
-                <option value={1}>Online</option>
-              </select>
-            </div>
-            {addForm.response &&
-              (addForm.response?.success ? (
-                <div className="alert alert-success m-0">
-                  {addForm.response?.message}
-                </div>
-              ) : (
-                <div className="alert alert-danger m-0">
-                  {typeof addForm.response.errors === "object"
-                    ? Object.values(addForm.response.errors)[0]
-                    : addForm.response.errors}
-                </div>
-              ))}
-            {/* Other select fields (state, city, status) */}
-          </div>
-          <div className="container p-3">
-            <button
-              className="btn btn-primary"
-              onClick={() => submitFormData("addFormData")}
-            >
-              {addForm.loading ? "Processing" : "Add"}
-            </button>
-          </div>
-        </Modal>
-
+          data={formData.addFormData}
+          onDataChange={(newData) => {
+            console.log(newData);
+            setFormData((prev) => ({ ...prev, addFormData: newData }));
+          }}
+          onSubmit={() => submitFormData("addFormData")}
+          loading={addForm.loading}
+          response={addForm.response}
+          countries={countriesData.data?.countries || []}
+          states={countriesData.data?.states || []}
+          cities={countriesData.data?.cities || []}
+        />
         {/* Edit Modal */}
-        <Modal
+        <DestinationModal
           open={modals.editModalOpen}
           handleClose={() => toggleModal("editModalOpen", false)}
           title="Edit Destination"
-        >
-          {/* Modal content */}
-          <div className="container p-3">
-            {/* Country */}
-            <div className="mb-3">
-              <label htmlFor="country_id" className="form-label">
-                Country
-              </label>
-              <select
-                className="form-control"
-                name="country_id"
-                disabled
-                value={formData.editFormData.country_id}
-                onChange={handleFormDataChange("editFormData")}
-              >
-                <option key={filteredCountry?.id} value={filteredCountry?.id}>
-                  {filteredCountry?.name}
-                </option>
-              </select>
-            </div>
-            {/* state */}
-            <div className="mb-3">
-              <label htmlFor="state_id" className="form-label">
-                State
-              </label>
-              <select
-                className="form-control"
-                name="state_id"
-                value={formData.editFormData.state_id}
-                onChange={handleFormDataChange("editFormData")}
-              >
-                <option value="">-- select state --</option>
-                {countriesData.data?.states
-                  .filter((item) => item.country_id == 229)
-                  .map((item) => (
-                    <option key={item.id} value={item.id}>
-                      {item.name}
-                    </option>
-                  ))}
-              </select>
-            </div>
-            {/* City */}
-            <div className="mb-3">
-              <label htmlFor="city_id" className="form-label">
-                City
-              </label>
-              <select
-                className="form-control"
-                name="city_id"
-                id="city_id"
-                value={formData.editFormData.city_id}
-                onChange={handleFormDataChange("editFormData")}
-              >
-                <option value="">-- select city --</option>
-                {countriesData.data?.cities
-                  .filter(
-                    (item) => item.state_id == formData.editFormData.state_id
-                  )
-                  .map((item) => (
-                    <option key={item.id} value={item.id}>
-                      {item.name}
-                    </option>
-                  ))}
-              </select>
-            </div>
-            {/* Status */}
-            <div className="mb-3">
-              <label htmlFor="status" className="form-label">
-                Status
-              </label>
-              <select
-                className="form-control"
-                name="status"
-                id="status"
-                value={formData.editFormData.status ? "1" : "0"}
-                onChange={handleFormDataChange("editFormData")}
-              >
-                <option value="">-- select status --</option>
-                <option value={0}>Offline</option>
-                <option value={1}>Online</option>
-              </select>
-            </div>
-            {/* Other select fields (state, city, status) */}
-            {editRes &&
-              (editRes?.success ? (
-                <div className="alert alert-success m-0">
-                  {editRes?.message}
-                </div>
-              ) : (
-                <div className="alert alert-danger m-0">
-                  {typeof editRes.error === "object"
-                    ? Object.values(editRes.error)[0]
-                    : editRes.error}
-                </div>
-              ))}
-          </div>
-          <div className="container p-3">
-            <button
-              className="btn btn-warning"
-              onClick={() => submitFormData("editFormData")}
-            >
-              {editLoading ? "Processing" : "Update"}
-            </button>
-          </div>
-        </Modal>
-
+          data={formData.editFormData}
+          onDataChange={(newData) =>
+            setFormData((prev) => ({ ...prev, editFormData: newData }))
+          }
+          onSubmit={() => submitFormData("editFormData")}
+          loading={editLoading}
+          response={editRes}
+          countries={countriesData.data?.countries || []}
+          states={countriesData.data?.states || []}
+          cities={countriesData.data?.cities || []}
+        />
         {/* Confirm */}
         <Confirm
           open={isConfirm}

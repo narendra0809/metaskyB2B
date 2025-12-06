@@ -157,7 +157,7 @@ const Navbar = () => {
               alt="Dropdown Arrow"
               className="nav-dropdown-icons"
             />
-            Sharing transport Price
+            Sharing Transport Price
           </NavLink>
         </NavLinkDropdown>
         {/* <NavLink to={"/wallet"} className="nav-link">

@@ -3,6 +3,7 @@ import useApiData from "../hooks/useApiData";
 import Loader from "../Loader";
 import "../Loader.css";
 import { useAuth } from "../context/AuthContext";
+import { convertTo12HoursFormate } from "../functions/utils";
 
 const TicketPrice = () => {
   const base_url = import.meta.env.VITE_API_URL;
@@ -41,8 +42,13 @@ const TicketPrice = () => {
           <td className="align-middle">{item.name}</td>
           <td>
             {item.time_slots.map((time, i) => (
+              <p key={i}>{convertTo12HoursFormate(time.start_time) || "N/A"}</p>
+            ))}
+          </td>
+          <td>
+            {item.time_slots.map((time, i) => (
               <p key={i}>
-                {time.slot} | <span>Adult Rate : {time.adult_price} AED</span> |{" "}
+                <span>Adult Rate : {time.adult_price} AED</span> |{" "}
                 <span>Child Rate : {time.child_price} AED</span>
               </p>
             ))}
@@ -135,9 +141,8 @@ const TicketPrice = () => {
                   <thead>
                     <tr>
                       <th>Name</th>
-                      <th>Time Slots</th>
-                      {/* <th>Total Adult Rate</th>
-                      <th>Total Child Rate</th> */}
+                      <th>Start Time</th>
+                      <th>Rates</th>
                     </tr>
                   </thead>
                   <tbody className="bg-white">{output}</tbody>

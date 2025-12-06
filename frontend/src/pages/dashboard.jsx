@@ -37,7 +37,6 @@ const Dashboard = () => {
     authToken
   );
 
-  // For cards
   const data = mainData?.data?.data;
 
   const unpaid = data?.filter((item) => {
@@ -310,29 +309,20 @@ const Dashboard = () => {
         <div className="dashboard-grid-container">
           <div className="dashboard-grid">
             {/* Top row - 3 boxes */}
-            <div className="dashboard-grid-row1">
-              <article className="dashboard-grid-card" id="box1">
+
+            <div className="d-flex gap-3 w-100">
+              <article className="dashboard-grid-card w-50" id="box1">
                 <img src={unpaidLogo} alt="UnPaid booking" />
                 <div className="card-content">
-                  <span className="nums">{data ? unpaid?.length : "..."}</span>
+                  <span className="nums">{data ? unpaid?.length : 0}</span>
                   <small>Total Booking</small>
                 </div>
               </article>
 
-              {/* <article className="dashboard-grid-card" id="box2">
-                <img src={paidBookingLogo} alt="Paid booking" />
-                <div className="card-content">
-                  <span className="nums">{data ? paid?.length : "..."}</span>
-                  <small>Paid Booking</small>
-                </div>
-              </article> */}
-
-              <article className="dashboard-grid-card" id="box3">
+              <article className="dashboard-grid-card w-50" id="box3">
                 <img src={confirmationBookingLogo} alt="Confirmed booking" />
                 <div className="card-content">
-                  <span className="nums">
-                    {data ? confirmed?.length : "..."}
-                  </span>
+                  <span className="nums">{data ? confirmed?.length : 0}</span>
                   <small>Confirmed Booking</small>
                 </div>
               </article>
@@ -341,7 +331,7 @@ const Dashboard = () => {
             {/* Bottom row - 6 boxes for admin, 4 boxes for customers */}
             <div
               className={`dashboard-grid-row2 ${
-                authUser?.role !== adminRole ? "customer-view" : ""
+                authUser?.role !== adminRole ? "customer-view" : "customer-view"
               }`}
             >
               <article
@@ -356,7 +346,7 @@ const Dashboard = () => {
                   />
                 </div>
                 <div className="card-content-vertical">
-                  <span className="nums">{data ? destinations : "..."}</span>
+                  <span className="nums">{destinations || 0}</span>
                   <small>Destinations</small>
                 </div>
               </article>
@@ -369,7 +359,7 @@ const Dashboard = () => {
                   <img src={hotelsLogo} alt="Hotels" className="card-icon" />
                 </div>
                 <div className="card-content-vertical">
-                  <span className="nums">{data ? tickets : "..."}</span>
+                  <span className="nums">{tickets || 0}</span>
                   <small>Tickets</small>
                 </div>
               </article>
@@ -386,7 +376,7 @@ const Dashboard = () => {
                   />
                 </div>
                 <div className="card-content-vertical">
-                  <span className="nums">{data ? sightseeings : "..."}</span>
+                  <span className="nums">{sightseeings || 0}</span>
                   <small>Sharing Transport</small>
                 </div>
               </article>
@@ -403,7 +393,7 @@ const Dashboard = () => {
                   />
                 </div>
                 <div className="card-content-vertical">
-                  <span className="nums">{data ? transports : "..."}</span>
+                  <span className="nums">{transports || 0}</span>
                   <small>Private Transportation</small>
                 </div>
               </article>
@@ -419,7 +409,7 @@ const Dashboard = () => {
                       <img src={agentLogo} alt="Agent" className="card-icon" />
                     </div>
                     <div className="card-content-vertical">
-                      <span className="nums">{userData?.length || "..."}</span>
+                      <span className="nums">{userData?.length || 0}</span>
                       <small>Agent</small>
                     </div>
                   </article>
@@ -432,7 +422,7 @@ const Dashboard = () => {
                       <img src={staffLogo} alt="Staff" className="card-icon" />
                     </div>
                     <div className="card-content-vertical">
-                      <span className="nums">{userData?.length || "..."}</span>
+                      <span className="nums">{userData?.length || 0}</span>
                       <small>Staff</small>
                     </div>
                   </article>

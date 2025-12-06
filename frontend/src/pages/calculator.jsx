@@ -1,27 +1,14 @@
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
+import Alert from "../components/Alert";
+import TermsConditionsModal from "../components/TermsConditions";
+import BasicInfo from "../components/agent/calculator/BasicInfo";
+import PricingSummary from "../components/agent/calculator/PricingSummary";
+import SightseeingInfo from "../components/agent/calculator/SightseeingInfo";
+import TicketInfo from "../components/agent/calculator/TicketInfo";
+import TransportInfo from "../components/agent/calculator/TransportInfo";
+import { useAuth } from "../context/AuthContext";
 import useApiData from "../hooks/useApiData";
 import useSendData from "../hooks/useSendData";
-import Alert from "../components/Alert";
-import { useAuth } from "../context/AuthContext";
-import { extractRates } from "../functions/utils";
-import TermsConditionsModal from "../components/TermsConditions";
-
-const primeSlots = [
-  "3:30 PM - 4:00 PM",
-  "4:00 PM - 4:30 PM",
-  "4:30 PM - 5:00 PM",
-  "5:00 PM - 5:30 PM",
-  "5:30 PM - 6:00 PM",
-  "6:00 PM - 6:30 PM",
-  "6:30 PM - 7:00 PM",
-];
-
-const nonPrimeSlots = [
-  "7:30 AM - 8:00 AM",
-  "8:00 AM - 8:30 AM",
-  "8:30 AM - 9:00 AM",
-  "11:00 AM - 11:30 AM",
-];
 
 const Calculator = () => {
   const base_url = import.meta.env.VITE_API_URL;
@@ -29,13 +16,13 @@ const Calculator = () => {
   const today = new Date().toISOString().split("T")[0];
   const [termsModalOpen, setTermsModalOpen] = useState(false);
   const [termsModalData, setTermsModalData] = useState(null);
+
   // Fetch Data
   const countriesData = useApiData(`${base_url}/api/countries`, authToken);
   const destinationsData = useApiData(
     `${base_url}/api/getdestinations`,
     authToken
   );
-  // const hotelsData = useApiData(`${base_url}/api/hotels`, authToken);
   const transportData = useApiData(
     `${base_url}/api/transportations`,
     authToken
@@ -44,7 +31,7 @@ const Calculator = () => {
   const taxesData = useApiData(`${base_url}/api/taxes`, authToken);
   const subFormData = useSendData(`${base_url}/api/addbooking`, authToken);
   const tickets = useApiData(`${base_url}/api/tickets`, authToken);
-
+  console.log(tickets);
   // Memoize the default form object
   const defaultForm = useMemo(
     () => ({
@@ -73,7 +60,7 @@ const Calculator = () => {
   const [showTransportPrompt, setShowTransportPrompt] = useState(true);
   const [showTicketPrompt, setShowTicketPrompt] = useState(true);
   const [showSightseeingPrompt, setShowSightseeingPrompt] = useState(true);
-  console.log(formData.transport_info);
+
   // Calculate values
   const [calc, setCalc] = useState({
     total: 0,
@@ -90,8 +77,9 @@ const Calculator = () => {
   const [popUp, setPopUp] = useState(false);
   const [toSubmit, setToSubmit] = useState(false);
 
+  // Load Taxes
   useEffect(() => {
-    if (taxesData.data?.data) {
+    if (taxesData.data?.data && formData.taxes.length === 0) {
       const taxes = [...taxesData.data.data];
       setFormData((prev) => ({
         ...prev,
@@ -103,9 +91,16 @@ const Calculator = () => {
     }
   }, [taxesData.loading, taxesData.data?.data]);
 
-  // Add Info functions
+  // --- UPDATED: Add Info functions ---
+  // Now automatically inherits adults/children from Basic Info
   const handleAddInfo = (type) => {
     setToSubmit(false);
+
+    // Get current counts from Basic Info to use as defaults
+    const defaultAdults = Number(formData.no_adults) || 0;
+    const defaultChildren = Number(formData.no_children) || 0;
+    const totalPax = defaultAdults + defaultChildren;
+
     switch (type) {
       case "transport":
         setShowTransportPrompt(false);
@@ -116,13 +111,14 @@ const Calculator = () => {
             {
               destination_id: "",
               transport_id: "",
-              no_of_people: 0,
+              no_of_people: totalPax, // Default to total people
               date: "",
               transport_cost: 0,
             },
           ],
         }));
         break;
+
       case "sightseeing":
         setShowSightseeingPrompt(false);
         setFormData((prev) => ({
@@ -132,8 +128,8 @@ const Calculator = () => {
             {
               destination_id: "",
               sightseeing_id: "",
-              adults: 0,
-              children: 0,
+              adults: defaultAdults, // Default from basic info
+              children: defaultChildren, // Default from basic info
               date: "",
               adult_cost: 0,
               children_cost: 0,
@@ -141,23 +137,22 @@ const Calculator = () => {
           ],
         }));
         break;
+
       case "ticket":
         setShowTicketPrompt(false);
-        if (!formData.ticket_info || formData.ticket_info.length === 0) {
-          setFormData((prev) => ({
-            ...prev,
-            ticket_info: [
-              ...(prev.ticket_info || []),
-              {
-                time_slot: "",
-                transfer_option: "",
-                adults: 0,
-                children: 0,
-              },
-            ],
-          }));
-        }
+        setFormData((prev) => ({
+          ...prev,
+          ticket_info: [
+            ...(prev.ticket_info || []),
+            {
+              time_slot: "",
+              adults: defaultAdults,
+              children: defaultChildren,
+            },
+          ],
+        }));
         break;
+
       default:
         console.warn(`Unhandled type: ${type}`);
     }
@@ -170,7 +165,6 @@ const Calculator = () => {
     data[key].splice(index, 1);
     setFormData(data);
 
-    // Show prompt again if all items are deleted
     if (key === "transport_info" && data[key].length === 0) {
       setShowTransportPrompt(true);
     }
@@ -201,13 +195,8 @@ const Calculator = () => {
       formData.travel_date_to = "";
     }
 
-    switch (name) {
-      case "phone_no":
-        filteredValue = value.replace(/[^0-9]/g, "");
-        break;
-      default:
-        filteredValue = value;
-        break;
+    if (name === "phone_no") {
+      filteredValue = value.replace(/[^0-9]/g, "");
     }
 
     setFormData((prev) => ({ ...prev, [name]: filteredValue }));
@@ -245,7 +234,6 @@ const Calculator = () => {
           }
           break;
         default:
-          console.warn(`Unhandled case in transport_info: ${name}`);
           break;
       }
     } else if (infoType === "sightseeing_info") {
@@ -254,8 +242,6 @@ const Calculator = () => {
           data.sightseeing_info[index].sightseeing_id = "";
           data.sightseeing_info[index].rate_adult = 0;
           data.sightseeing_info[index].rate_child = 0;
-          data.sightseeing_info[index].sharing_transfer_adult = 0;
-          data.sightseeing_info[index].sharing_transfer_child = 0;
           break;
         case "sightseeing_id":
           const selectedSightseeing = sightseeingData.data?.data?.find(
@@ -268,84 +254,61 @@ const Calculator = () => {
             data.sightseeing_info[index].rate_child = Number(
               selectedSightseeing.rate_child
             );
-            data.sightseeing_info[index].sharing_transfer_adult = Number(
-              selectedSightseeing.sharing_transfer_adult
-            );
-            data.sightseeing_info[index].sharing_transfer_child = Number(
-              selectedSightseeing.sharing_transfer_child
-            );
             data.sightseeing_info[index].sightseeing_id = value;
             data.sightseeing_info[index].terms_and_conditions =
               JSON.stringify(selectedSightseeing?.terms_and_conditions) || null;
           }
           break;
         default:
-          console.warn(`Unhandled case in sightseeing_info: ${name}`);
           break;
       }
     } else if (infoType === "ticket_info") {
       if (name === "id") {
+        const selectedTicket = tickets.data?.data?.find((t) => t.id == value);
+        const isStartTimeExist = selectedTicket.time_slots.find(
+          ({ start_time }) => start_time
+        );
+        console.log(selectedTicket);
         data.ticket_info[index] = {
           ...data.ticket_info[index],
           id: value,
-          name: tickets.data?.data?.find((t) => t.id == value)?.name || "",
-          category: [],
-          time_slot: "",
-          adult_price: 0,
-          child_price: 0,
-          adults: 0,
-          children: 0,
-          transfer_option: "",
+          name: selectedTicket?.name || "",
+          has_time_slots: selectedTicket?.has_time_slots || 0,
+          start_time: "",
+          adult_price: !isStartTimeExist
+            ? selectedTicket.time_slots[0].adult_price
+            : 0,
+          child_price: !isStartTimeExist
+            ? selectedTicket.time_slots[0].child_price
+            : 0,
+          adults: data.ticket_info[index].adults || 0,
+          children: data.ticket_info[index].children || 0,
         };
-      } else if (name === "category") {
-        data.ticket_info[index] = {
-          ...data.ticket_info[index],
-          category: value,
-          time_slot: "",
-          adult_price: 0,
-          child_price: 0,
-          transfer_option: "",
-        };
-      } else if (name === "time_slot") {
+      } else if (name === "start_time") {
         const selectedTicket = tickets.data?.data?.find(
           (t) => t.id == data.ticket_info[index].id
         );
-        const rates = extractRates(value);
         const selectedTime = selectedTicket?.time_slots?.find(
-          (slot) =>
-            slot.slot == value ||
-            (!slot.slot &&
-              Number(slot.adult_price) === rates.adultRate &&
-              Number(slot.child_price) === rates.childRate)
+          (slot) => slot.start_time == value
         );
 
         data.ticket_info[index] = {
           ...data.ticket_info[index],
-          time_slot: value,
+          start_time: value,
           adult_price: Number(selectedTime.adult_price),
           child_price: Number(selectedTime.child_price),
           terms_and_conditions:
             JSON.stringify(selectedTicket?.terms_and_conditions) || null,
-          transfer_option: "",
         };
       } else {
         data.ticket_info[index][name] = value;
-
-        // Calculate prices when transfer option is selected (if applicable)
-        if (name === "transfer_option") {
-          const selectedTicket = tickets.data?.data?.find(
-            (t) => t.id === data.ticket_info[index].id
-          );
-          // Find transfer option prices if available in your data model (adjust if needed)
-          // Assuming transfer_option may modify price here similar to old logic
-          // This part depends on how transfer prices come with tickets
-        }
       }
     }
     data[infoType][index][name] = value;
     setFormData(data);
   };
-  // Updated Calculate function to sum values considering new data structure
+
+  // Updated Calculate function
   const handleCalculate = () => {
     if (!formData.customer_name) {
       setErr("Customer name field is required!");
@@ -380,7 +343,6 @@ const Calculator = () => {
       ticketChildren = 0;
 
     formData.transport_info.forEach((transport) => {
-      // Include transport cost directly since you have option_index selected
       transportAdults += Number(transport.transport_cost) || 0;
     });
 
@@ -389,11 +351,6 @@ const Calculator = () => {
         (Number(sight.rate_adult) || 0) * (sight.adults || 0);
       sightseeingChildren +=
         (Number(sight.rate_child) || 0) * (sight.children || 0);
-      // Add sharing transfer cost if applicable, assuming it should be added once per person
-      sightseeingAdults +=
-        (Number(sight.sharing_transfer_adult) || 0) * (sight.adults || 0);
-      sightseeingChildren +=
-        (Number(sight.sharing_transfer_child) || 0) * (sight.children || 0);
     });
 
     formData.ticket_info.forEach((ticket) => {
@@ -402,18 +359,17 @@ const Calculator = () => {
       ticketChildren +=
         (Number(ticket.child_price) || 0) * (Number(ticket.children) || 0);
     });
+
     const adultsTotal = transportAdults + sightseeingAdults + ticketAdults;
     const childrenTotal =
       transportChildren + sightseeingChildren + ticketChildren;
-
     const total = adultsTotal + childrenTotal;
 
-    // Calculate tax
     let taxAmount = 0;
     formData.taxes.forEach((tax) => {
       taxAmount += total * (tax.tax_value / 100);
     });
-    console.log(formData.taxes);
+
     const finalAmount = total + taxAmount;
 
     const perAdult =
@@ -447,15 +403,11 @@ const Calculator = () => {
     }
 
     const data = { ...formData };
-    data.ticket_info = data.ticket_info.map((tck) =>
-      tck.category.length === 0 ? { ...tck, category: "" } : tck
-    );
     data.final_payment = Number(calc.finalAmount);
     data.total_per_adult = Number(calc.perAdult);
     data.total_per_child = Number(calc.perChild);
-    console.log("Data to be sent: ", data);
-    const result = await subFormData.sendData(data);
-    console.log("Response from server : ", result);
+    console.log(`DATA :`, data);
+    await subFormData.sendData(data);
   };
 
   const handleShowTerms = (itemTerms) => {
@@ -476,6 +428,9 @@ const Calculator = () => {
         setToSubmit(false);
         setErr(subFormData.response?.message);
         setFormData({ ...defaultForm });
+        setShowTransportPrompt(true);
+        setShowTicketPrompt(true);
+        setShowSightseeingPrompt(true);
       } else {
         setErr(subFormData.response?.error);
       }
@@ -489,867 +444,101 @@ const Calculator = () => {
       <Alert open={popUp} handleClose={() => setPopUp(false)} success={success}>
         <p>{err}</p>
       </Alert>
-      <>
-        <div className="title">Make your package</div>
-        <section className="page-section">
-          <div>
-            <div className="px-2 py-2 px-md-4 mb-4">
-              <div className="title-line">
-                <span>Basic info</span>
+
+      <div className="title">Make your package</div>
+      <section className="page-section">
+        <div>
+          <BasicInfo
+            formData={formData}
+            handleDataChange={handleDataChange}
+            today={today}
+          />
+
+          <TransportInfo
+            formData={formData}
+            showPrompt={showTransportPrompt}
+            handleAdd={handleAddInfo}
+            handleDelete={handleDeleteInfo}
+            handleChange={handleNestedDataChange}
+            handleShowTerms={handleShowTerms}
+            destinationsData={destinationsData}
+            transportData={transportData}
+            countriesData={countriesData}
+          />
+
+          <SightseeingInfo
+            formData={formData}
+            showPrompt={showSightseeingPrompt}
+            handleAdd={handleAddInfo}
+            handleDelete={handleDeleteInfo}
+            handleChange={handleNestedDataChange}
+            handleShowTerms={handleShowTerms}
+            destinationsData={destinationsData}
+            sightseeingData={sightseeingData}
+            countriesData={countriesData}
+          />
+
+          <TicketInfo
+            formData={formData}
+            showPrompt={showTicketPrompt}
+            setShowPrompt={setShowTicketPrompt}
+            handleAdd={handleAddInfo}
+            handleDelete={handleDeleteInfo}
+            handleChange={handleNestedDataChange}
+            handleShowTerms={handleShowTerms}
+            tickets={tickets}
+          />
+
+          {termsModalOpen && (
+            <TermsConditionsModal
+              open={termsModalOpen}
+              onClose={handleCloseTerms}
+              initialData={termsModalData}
+              readOnly={true}
+            />
+          )}
+
+          <div className="px-2 py-2 px-md-4 mb-4">
+            <div className="row row-cols-1">
+              <div className="col mb-3 mb-md-4">
+                <label htmlFor="remarks" className="fw-bold">
+                  Remarks
+                </label>
+                <textarea
+                  className="form-control"
+                  style={{ resize: "vertical" }}
+                  id="remarks"
+                  name="remarks"
+                  value={formData.remarks}
+                  onChange={handleDataChange}
+                ></textarea>
               </div>
-              <div className="row row-cols-1 row-cols-md-2 row-cols-lg-3">
-                {/* Basic Inputs (Customer name, phone, dates, adults, children) */}
-                <div className="col mb-3 mb-md-4">
-                  <label htmlFor="customer_number" className="fw-bold">
-                    Customer Name
-                  </label>
-                  <input
-                    type="text"
-                    id="customer_number"
-                    className="form-control mt-1"
-                    name="customer_name"
-                    value={formData.customer_name}
-                    onChange={handleDataChange}
-                  />
-                </div>
-                <div className="col mb-3 mb-md-4">
-                  <label htmlFor="phone_no" className="fw-bold">
-                    Phone Number
-                  </label>
-                  <input
-                    type="text"
-                    id="phone_no"
-                    className="form-control mt-1"
-                    maxLength={10}
-                    name="phone_no"
-                    value={formData.phone_no}
-                    onChange={handleDataChange}
-                  />
-                </div>
-                <div className="col mb-3 mb-md-4">
-                  <label htmlFor="travel_date_from" className="fw-bold">
-                    Travel Date From
-                  </label>
-                  <input
-                    type="date"
-                    id="travel_date_from"
-                    className="form-control mt-1 text-white"
-                    min={today}
-                    name="travel_date_from"
-                    value={formData.travel_date_from}
-                    onChange={handleDataChange}
-                  />
-                </div>
-                <div className="col mb-3 mb-md-4">
-                  <label htmlFor="travel_date_to" className="fw-bold">
-                    Travel Date To
-                  </label>
-                  <input
-                    type="date"
-                    id="travel_date_to"
-                    className="form-control mt-1"
-                    name="travel_date_to"
-                    min={formData.travel_date_from}
-                    value={formData.travel_date_to}
-                    onChange={handleDataChange}
-                    disabled={!formData.travel_date_from}
-                  />
-                </div>
-                <div className="col mb-3 mb-md-4">
-                  <label htmlFor="no_adults" className="fw-bold">
-                    Adults
-                  </label>
-                  <input
-                    id="no_adults"
-                    type="number"
-                    className="form-control mt-1"
-                    name="no_adults"
-                    value={formData.no_adults}
-                    onChange={handleDataChange}
-                  />
-                </div>
-                <div className="col mb-3 mb-md-4">
-                  <label htmlFor="no_children" className="fw-bold">
-                    Children
-                  </label>
-                  <input
-                    type="number"
-                    id="no_children"
-                    className="form-control mt-1"
-                    name="no_children"
-                    value={formData.no_children}
-                    onChange={handleDataChange}
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* Transport Info */}
-            <div className="px-2 py-2 px-md-4 mb-4">
-              <div className="title-line">
-                <span>Transport info</span>
-              </div>
-
-              {showTransportPrompt && (
-                <div
-                  className="mb-3 p-3 rounded"
-                  style={{ border: "1px solid #16acbf" }}
-                >
-                  <p className="mb-2 fw-bold">
-                    Do you need transportation services for your trip?
-                  </p>
-                  <button
-                    className="btn btn-main"
-                    onClick={() => handleAddInfo("transport")}
-                  >
-                    <i className="fas fa-car me-2"></i> Add Transport
-                  </button>
-                </div>
-              )}
-
-              {formData.transport_info.length > 0 &&
-                formData.transport_info.map((item, index) => (
-                  <div className="mb-3" key={index}>
-                    <div className="d-flex align-items-center justify-content-between column-gap-3">
-                      <h5 className="fs-6 fw-bold">Transport {index + 1}</h5>
-                      <div className="d-flex gap-3">
-                        <button
-                          className="btn btn-danger rounded-circle"
-                          onClick={() =>
-                            handleDeleteInfo("transport_info", index)
-                          }
-                        >
-                          <i className="fa-regular fa-trash-can"></i>
-                        </button>
-                        {item.option_index !== null &&
-                          item.option_index !== undefined &&
-                          item.option_index !== "" && (
-                            <button
-                              className="btn btn-info rounded-circle"
-                              title="View Terms & Conditions"
-                              onClick={() =>
-                                handleShowTerms(item.terms_and_conditions || {})
-                              }
-                            >
-                              <i className="fa-solid fa-info"></i>
-                            </button>
-                          )}
-                      </div>
-                    </div>
-                    <div className="row row-cols-1 row-cols-md-2 row-cols-lg-4">
-                      {/* Destination */}
-                      <div className="col mb-3 mb-md-4">
-                        <label htmlFor="destination_id" className="fw-bold">
-                          City
-                        </label>
-                        <select
-                          id="destination_id"
-                          className="form-control mt-1"
-                          name="destination_id"
-                          value={item.destination_id}
-                          onChange={(e) =>
-                            handleNestedDataChange(e, "transport_info", index)
-                          }
-                          disabled={
-                            !formData.travel_date_from ||
-                            !formData.travel_date_to ||
-                            formData.no_adults < 1
-                          }
-                        >
-                          <option value="">-- select --</option>
-                          {!destinationsData.loading &&
-                            destinationsData.data?.destinations?.map((dest) => (
-                              <option key={dest.id} value={dest.id}>
-                                {countriesData.data?.cities.find(
-                                  (city) => city.id == dest.city_id
-                                )?.name || "N/A"}
-                              </option>
-                            ))}
-                        </select>
-                      </div>
-
-                      {/* Transport company */}
-                      <div className="col mb-3 mb-md-4">
-                        <label htmlFor="transport_id" className="fw-bold">
-                          Transport
-                        </label>
-                        <select
-                          id="transport_id"
-                          className="form-control mt-1"
-                          name="transport_id"
-                          value={item.transport_id}
-                          onChange={(e) =>
-                            handleNestedDataChange(e, "transport_info", index)
-                          }
-                          disabled={!item.destination_id}
-                        >
-                          <option value="">-- select --</option>
-                          {transportData.data?.data
-                            ?.filter(
-                              (transport) =>
-                                transport.destination_id == item.destination_id
-                            )
-                            .map((transport) => (
-                              <option key={transport.id} value={transport.id}>
-                                {transport.transport || "N/A"}
-                              </option>
-                            ))}
-                        </select>
-                      </div>
-
-                      <div className="col mb-3 mb-md-4">
-                        <label
-                          htmlFor="v_type"
-                          className="fw-bold d-block mb-1"
-                        >
-                          Vehicle Capacity
-                        </label>
-                        <select
-                          id="v_type"
-                          className="form-control mt-1"
-                          name="v_type"
-                          disabled
-                        >
-                          <option value="">{item.v_type}</option>
-                        </select>
-                      </div>
-
-                      {/* Option selection */}
-                      <div className="col mb-3 mb-md-4">
-                        <label htmlFor="option_index" className="fw-bold">
-                          Transfer Options
-                        </label>
-                        <select
-                          id="option_index"
-                          className="form-control mt-1"
-                          name="option_index"
-                          value={
-                            item.option_index !== null &&
-                            item.option_index !== undefined
-                              ? String(item.option_index)
-                              : ""
-                          }
-                          onChange={(e) =>
-                            handleNestedDataChange(e, "transport_info", index)
-                          }
-                          disabled={!item.transport_id}
-                        >
-                          <option value="">-- select --</option>
-                          {transportData.data?.data
-                            ?.find((t) => t.id == item.transport_id)
-                            ?.options.map((option, i) => (
-                              <option key={i} value={String(i)}>
-                                {option.from || "N/A"} → {option.to || "N/A"}{" "}
-                                AED {option.rate} /- ({option.transfer_type})
-                              </option>
-                            ))}
-                        </select>
-                      </div>
-
-                      {/* Date */}
-                      <div className="col mb-3 mb-md-4">
-                        <label htmlFor="date" className="fw-bold">
-                          Date
-                        </label>
-                        <input
-                          type="date"
-                          id="date"
-                          className="form-control mt-1"
-                          min={formData.travel_date_from}
-                          max={formData.travel_date_to}
-                          name="date"
-                          value={item.date}
-                          onChange={(e) =>
-                            handleNestedDataChange(e, "transport_info", index)
-                          }
-                          disabled={
-                            !formData.travel_date_from ||
-                            !formData.travel_date_to
-                          }
-                        />
-                      </div>
-                    </div>
-                  </div>
-                ))}
-
-              {formData.transport_info.length > 0 && (
-                <button
-                  className="btn btn-info"
-                  onClick={() => handleAddInfo("transport")}
-                >
-                  Add Another Transport
-                </button>
-              )}
-            </div>
-
-            {/* Sightseeing Info */}
-            <div className="px-2 py-2 px-md-4 mb-4">
-              <div className="title-line">
-                <span>Sightseeing info</span>
-              </div>
-
-              {showSightseeingPrompt && (
-                <div
-                  className="mb-3 p-3 rounded"
-                  style={{ border: "1px solid #16acbf" }}
-                >
-                  <p className="mb-2 fw-bold">
-                    Would you like to add any sightseeing activities?
-                  </p>
-                  <button
-                    className="btn btn-main"
-                    onClick={() => handleAddInfo("sightseeing")}
-                  >
-                    <i className="fas fa-binoculars me-2"></i> Add Sharing Transport
-                  </button>
-                </div>
-              )}
-
-              {formData.sightseeing_info.length > 0 &&
-                formData.sightseeing_info.map((item, index) => (
-                  <div className="mb-3" key={index}>
-                    <div className="d-flex align-items-center justify-content-between column-gap-3">
-                      <h5 className="fs-6 fw-bold">Sightseeing {index + 1}</h5>
-                      <div className="d-flex gap-3">
-                        <button
-                          className="btn btn-danger rounded-circle"
-                          onClick={() =>
-                            handleDeleteInfo("sightseeing_info", index)
-                          }
-                        >
-                          <i className="fa-regular fa-trash-can"></i>
-                        </button>
-                        {item.sightseeing_id && (
-                          <button
-                            className="btn btn-info rounded-circle"
-                            title="View Terms & Conditions"
-                            onClick={() =>
-                              handleShowTerms(item.terms_and_conditions || {})
-                            }
-                          >
-                            <i className="fa-solid fa-info"></i>
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                    <div className="row row-cols-1 row-cols-md-2 row-cols-lg-4">
-                      {/* Destination */}
-                      <div className="col mb-3 mb-md-4">
-                        <label htmlFor="destination_id" className="fw-bold">
-                          City
-                        </label>
-                        <select
-                          id="destination_id"
-                          className="form-control mt-1"
-                          name="destination_id"
-                          value={item.destination_id}
-                          onChange={(e) =>
-                            handleNestedDataChange(e, "sightseeing_info", index)
-                          }
-                          disabled={
-                            !formData.travel_date_from ||
-                            !formData.travel_date_to ||
-                            formData.no_adults < 1
-                          }
-                        >
-                          <option value="">-- select --</option>
-                          {!destinationsData.loading &&
-                            destinationsData.data?.destinations?.map((dest) => (
-                              <option key={dest.id} value={dest.id}>
-                                {countriesData.data?.cities.find(
-                                  (city) => city.id == dest.city_id
-                                )?.name || "N/A"}
-                              </option>
-                            ))}
-                        </select>
-                      </div>
-
-                      {/* Sightseeing */}
-                      <div className="col mb-3 mb-md-4">
-                        <label htmlFor="sightseeing_id" className="fw-bold">
-                          Sightseeing
-                        </label>
-                        <select
-                          id="sightseeing_id"
-                          className="form-control mt-1"
-                          name="sightseeing_id"
-                          value={item.sightseeing_id}
-                          onChange={(e) =>
-                            handleNestedDataChange(e, "sightseeing_info", index)
-                          }
-                          disabled={!item.destination_id}
-                        >
-                          <option value="">-- select --</option>
-                          {sightseeingData.data?.data
-                            ?.filter(
-                              (sight) =>
-                                sight.destination_id == item.destination_id
-                            )
-                            .map((sight) => (
-                              <option key={sight.id} value={sight.id}>
-                                {sight.company_name || "N/A"}
-                              </option>
-                            ))}
-                        </select>
-                      </div>
-
-                      {/* No of adults */}
-                      <div className="col mb-3 mb-md-4">
-                        <label htmlFor="adults" className="fw-bold">
-                          No Of Adult
-                        </label>
-                        <input
-                          type="number"
-                          id="adults"
-                          className="form-control mt-1"
-                          name="adults"
-                          value={item.adults}
-                          onChange={(e) =>
-                            handleNestedDataChange(e, "sightseeing_info", index)
-                          }
-                          disabled={!item.sightseeing_id}
-                        />
-                      </div>
-
-                      {/* No of children */}
-                      <div className="col mb-3 mb-md-4">
-                        <label htmlFor="children" className="fw-bold">
-                          No Of Children
-                        </label>
-                        <input
-                          id="children"
-                          className="form-control mt-1"
-                          name="children"
-                          value={item.children}
-                          onChange={(e) =>
-                            handleNestedDataChange(e, "sightseeing_info", index)
-                          }
-                          disabled={!item.sightseeing_id}
-                        />
-                      </div>
-                      <div className="col mb-3 mb-md-4">
-                        <label htmlFor="adults" className="fw-bold">
-                          Adult Rate
-                        </label>
-                        <input
-                          type="number"
-                          className="form-control mt-1"
-                          value={item.rate_adult}
-                          disabled
-                        />
-                      </div>
-                      <div className="col mb-3 mb-md-4">
-                        <label htmlFor="adults" className="fw-bold">
-                          Child Rate
-                        </label>
-                        <input
-                          type="number"
-                          className="form-control mt-1"
-                          value={item.rate_child}
-                          disabled
-                        />
-                      </div>
-                      <div className="col mb-3 mb-md-4">
-                        <label htmlFor="adults" className="fw-bold">
-                          Sharing Transfer Adult Rate
-                        </label>
-
-                        <input
-                          type="number"
-                          className="form-control mt-1"
-                          value={item.sharing_transfer_adult}
-                          disabled
-                        />
-                      </div>
-                      <div className="col mb-3 mb-md-4">
-                        <label htmlFor="adults" className="fw-bold">
-                          Sharing Transfer Child Rate
-                        </label>
-
-                        <input
-                          type="number"
-                          className="form-control mt-1"
-                          value={item.sharing_transfer_child}
-                          disabled
-                        />
-                      </div>
-
-                      {/* Date */}
-                      <div className="col mb-3 mb-md-4">
-                        <label htmlFor="date" className="fw-bold">
-                          Date
-                        </label>
-                        <input
-                          type="date"
-                          id="date"
-                          className="form-control mt-1"
-                          min={formData.travel_date_from}
-                          max={formData.travel_date_to}
-                          name="date"
-                          value={item.date}
-                          onChange={(e) =>
-                            handleNestedDataChange(e, "sightseeing_info", index)
-                          }
-                          disabled={
-                            !formData.travel_date_from ||
-                            !formData.travel_date_to
-                          }
-                        />
-                      </div>
-                    </div>
-                  </div>
-                ))}
-
-              {formData.sightseeing_info.length > 0 && (
-                <button
-                  className="btn btn-info"
-                  onClick={() => handleAddInfo("sightseeing")}
-                >
-                  Add Another Sightseeing
-                </button>
-              )}
-            </div>
-
-            {/* Tickets */}
-            <div className="px-2 py-2 px-md-4 mb-4">
-              <div className="title-line">
-                <span>Tickets</span>
-              </div>
-
-              {showTicketPrompt ? (
-                <div
-                  className="mb-3 p-3 rounded"
-                  style={{ border: "1px solid #16acbf" }}
-                >
-                  <p className="mb-2 fw-bold">
-                    Would you like to add any tickets to your package?
-                  </p>
-                  <button
-                    className="btn btn-main"
-                    onClick={() => {
-                      setShowTicketPrompt(false);
-                      if (
-                        !formData.ticket_info ||
-                        formData.ticket_info.length === 0
-                      ) {
-                        handleAddInfo("ticket");
-                      }
-                    }}
-                  >
-                    <i className="fas fa-ticket me-2"></i> Add Ticket
-                  </button>
-                </div>
-              ) : (
-                <>
-                  {formData.ticket_info?.length > 0 ? (
-                    formData.ticket_info.map((item, index) => (
-                      <div className="mb-3" key={index}>
-                        <div className="d-flex align-items-center justify-content-between column-gap-3">
-                          <h5 className="fs-6 fw-bold">Ticket {index + 1}</h5>
-                          <div className="d-flex gap-3">
-                            <button
-                              className="btn btn-danger rounded-circle"
-                              onClick={() =>
-                                handleDeleteInfo("ticket_info", index)
-                              }
-                            >
-                              <i className="fa-regular fa-trash-can"></i>
-                            </button>
-                            {item.time_slot && (
-                              <button
-                                className="btn btn-info rounded-circle"
-                                title="View Terms & Conditions"
-                                onClick={() =>
-                                  handleShowTerms(
-                                    item.terms_and_conditions || {}
-                                  )
-                                }
-                              >
-                                <i className="fa-solid fa-info"></i>
-                              </button>
-                            )}
-                          </div>
-                        </div>
-                        <div className="row row-cols-1 row-cols-md-2 row-cols-lg-4">
-                          {/* Ticket */}
-                          <div className="col mb-3 mb-md-4">
-                            <label
-                              htmlFor={`ticket_${index}`}
-                              className="fw-bold"
-                            >
-                              Ticket
-                            </label>
-                            <select
-                              id={`ticket_${index}`}
-                              className="form-control mt-1"
-                              name="id"
-                              value={item.id}
-                              onChange={(e) =>
-                                handleNestedDataChange(e, "ticket_info", index)
-                              }
-                            >
-                              <option value="">-- Select Ticket --</option>
-                              {tickets.data?.data?.map((ticket) => (
-                                <option key={ticket.id} value={ticket.id}>
-                                  {ticket.name}
-                                </option>
-                              ))}
-                            </select>
-                          </div>
-
-                          {/* Category */}
-                          {item.id && (
-                            <div className="col mb-3 mb-md-4">
-                              <label
-                                htmlFor={`category_${index}`}
-                                className="fw-bold"
-                              >
-                                Category
-                              </label>
-                              <select
-                                id={`category_${index}`}
-                                className="form-control mt-1"
-                                name="category"
-                                value={item.category}
-                                onChange={(e) =>
-                                  handleNestedDataChange(
-                                    e,
-                                    "ticket_info",
-                                    index
-                                  )
-                                }
-                              >
-                                <option value="">-- Select Category --</option>
-                                {tickets.data?.data
-                                  ?.find((t) => t.id == item.id)
-                                  ?.category?.map((cat, catIndex) => (
-                                    <option key={catIndex} value={cat}>
-                                      {cat}
-                                    </option>
-                                  ))}
-                              </select>
-                            </div>
-                          )}
-
-                          {/* Time Slot */}
-                          {item.category && (
-                            <div className="col mb-3 mb-md-4">
-                              <label
-                                htmlFor={`time_slot_${index}`}
-                                className="fw-bold"
-                              >
-                                Time Slot
-                              </label>
-                              <select
-                                id={`time_slot_${index}`}
-                                className="form-control mt-1"
-                                name="time_slot"
-                                value={item.time_slot}
-                                onChange={(e) =>
-                                  handleNestedDataChange(
-                                    e,
-                                    "ticket_info",
-                                    index
-                                  )
-                                }
-                              >
-                                <option value="">-- Select Time Slot --</option>
-                                {tickets.data?.data
-                                  ?.find((t) => t.id == item.id)
-                                  ?.time_slots // ?.filter((slot) =>
-                                  //   item.category == "Prime"
-                                  //     ? primeSlots.includes(slot.slot)
-                                  //     : nonPrimeSlots.includes(slot.slot)
-                                  // )
-                                  ?.map((slot, i) => (
-                                    <option key={i} value={slot.slot}>
-                                      {slot.slot} (Adult: {slot.adult_price},
-                                      Child: {slot.child_price})
-                                    </option>
-                                  ))}
-                              </select>
-                            </div>
-                          )}
-
-                          <div className="col mb-3 mb-md-4">
-                            <label
-                              htmlFor={`ticket_adults_${index}`}
-                              className="fw-bold"
-                            >
-                              No. of Adults
-                            </label>
-                            <input
-                              type="number"
-                              id={`ticket_adults_${index}`}
-                              className="form-control mt-1"
-                              name="adults"
-                              value={item.adults}
-                              onChange={(e) =>
-                                handleNestedDataChange(e, "ticket_info", index)
-                              }
-                              min="0"
-                            />
-                          </div>
-
-                          <div className="col mb-3 mb-md-4">
-                            <label
-                              htmlFor={`ticket_children_${index}`}
-                              className="fw-bold"
-                            >
-                              No. of Children
-                            </label>
-                            <input
-                              type="number"
-                              id={`ticket_children_${index}`}
-                              className="form-control mt-1"
-                              name="children"
-                              value={item.children}
-                              onChange={(e) =>
-                                handleNestedDataChange(e, "ticket_info", index)
-                              }
-                              min="0"
-                            />
-                          </div>
-                          <div className="col mb-3 mb-md-4">
-                            <label
-                              htmlFor={`ticket_date_${index}`}
-                              className="fw-bold"
-                            >
-                              Date
-                            </label>
-                            <input
-                              type="date"
-                              id={`ticket_date_${index}`}
-                              className="form-control mt-1"
-                              name="date"
-                              value={item.date}
-                              onChange={(e) =>
-                                handleNestedDataChange(e, "ticket_info", index)
-                              }
-                              min={formData.travel_date_from}
-                              max={formData.travel_date_to}
-                            />
-                          </div>
-                        </div>
-                      </div>
-                    ))
-                  ) : (
-                    <div
-                      className="mb-3 p-3 rounded"
-                      style={{ border: "1px solid #16acbf" }}
-                    >
-                      <p className="mb-2 fw-bold">
-                        Would you like to add any tickets to your package?
-                      </p>
-                      <button
-                        className="btn btn-main"
-                        onClick={() => handleAddInfo("ticket")}
-                      >
-                        <i className="fas fa-ticket me-2"></i> Add Ticket
-                      </button>
-                    </div>
-                  )}
-
-                  {formData.ticket_info?.length > 0 && (
-                    <button
-                      className="btn btn-info"
-                      onClick={() => handleAddInfo("ticket")}
-                    >
-                      Add Another Ticket
-                    </button>
-                  )}
-                </>
-              )}
-            </div>
-
-            {termsModalOpen && (
-              <TermsConditionsModal
-                open={termsModalOpen}
-                onClose={handleCloseTerms}
-                initialData={termsModalData}
-                readOnly={true}
-              />
-            )}
-
-            {/* Remarks */}
-            <div className="px-2 py-2 px-md-4 mb-4">
-              <div className="row row-cols-1">
-                <div className="col mb-3 mb-md-4">
-                  <label htmlFor="remarks" className="fw-bold">
-                    Remarks
-                  </label>
-                  <textarea
-                    className="form-control"
-                    style={{ resize: "vertical" }}
-                    id="remarks"
-                    name="remarks"
-                    value={formData.remarks}
-                    onChange={handleDataChange}
-                  ></textarea>
-                </div>
-              </div>
-            </div>
-
-            {/* Pricing Display */}
-            {toSubmit && (
-              <div className="px-2 py-2 px-md-4 mb-4">
-                <div className="title-line">
-                  <span>Pricing</span>
-                </div>
-                <div className="row row-cols-1 row-cols-md-2 row-cols-lg-3">
-                  <div className="col mb-3 mb-md-4">Adult's Total:-</div>
-                  <div className="col mb-3 mb-md-4">{calc.adultsTotal}/-</div>
-                </div>
-                <div className="row row-cols-1 row-cols-md-2 row-cols-lg-3">
-                  <div className="col mb-3 mb-md-4">Children's Total:-</div>
-                  <div className="col mb-3 mb-md-4">{calc.childrenTotal}/-</div>
-                </div>
-                <div className="row row-cols-1 row-cols-md-2 row-cols-lg-3">
-                  <div className="col mb-3 mb-md-4">Per Adult:-</div>
-                  <div className="col mb-3 mb-md-4">{calc.perAdult}/-</div>
-                </div>
-                <div className="row row-cols-1 row-cols-md-2 row-cols-lg-3">
-                  <div className="col mb-3 mb-md-4">Per Children:-</div>
-                  <div className="col mb-3 mb-md-4">{calc.perChild}/-</div>
-                </div>
-                <div className="row row-cols-1 row-cols-md-2 row-cols-lg-3 fw-bold">
-                  <div className="col mb-3 mb-md-4">Total:-</div>
-                  <div className="col mb-3 mb-md-4">{calc.total}/-</div>
-                </div>
-                <div className="row row-cols-1 row-cols-md-2 row-cols-lg-3 fw-bold">
-                  <div className="col mb-3 mb-md-4">Taxed Amount:-</div>
-                  <div className="col mb-3 mb-md-4">{calc.taxAmount}/-</div>
-                </div>
-                <div className="row row-cols-1 row-cols-md-2 row-cols-lg-3 fw-bold">
-                  <div className="col mb-3 mb-md-4">Final Payment:-</div>
-                  <div className="col mb-3 mb-md-4">{calc.finalAmount}/-</div>
-                </div>
-              </div>
-            )}
-
-            {/* Buttons */}
-            <div className="px-2 py-2 px-md-4 mb-4">
-              {!toSubmit ? (
-                <button
-                  className="btn btn-primary"
-                  type="button"
-                  onClick={handleCalculate}
-                >
-                  Calculate
-                </button>
-              ) : (
-                <button
-                  className="btn btn-main"
-                  type="button"
-                  onClick={handleSubmit}
-                >
-                  Make Package
-                </button>
-              )}
             </div>
           </div>
-        </section>
-      </>
+
+          {toSubmit && <PricingSummary calc={calc} />}
+
+          <div className="px-2 py-2 px-md-4 mb-4">
+            {!toSubmit ? (
+              <button
+                className="btn btn-primary"
+                type="button"
+                onClick={handleCalculate}
+              >
+                Calculate
+              </button>
+            ) : (
+              <button
+                className="btn btn-main"
+                type="button"
+                onClick={handleSubmit}
+              >
+                Make Package
+              </button>
+            )}
+          </div>
+        </div>
+      </section>
     </>
   );
 };

@@ -7,12 +7,10 @@ import change from "../public/images/change.png";
 import changeProfile from "../public/images/changeProfile.png";
 import logoutPic from "../public/images/Logout.png";
 import "./header.css";
-import { useBalance } from "../context/BalanceContext";
 
 const Header = () => {
   const agentRole = "agent";
   const { authUser, logout } = useAuth();
-  const { balance } = useBalance();
   const { navActive, setNavActive } = useContext(NavContext);
 
   const activateNav = () => {
@@ -40,15 +38,6 @@ const Header = () => {
       </div>
 
       <div className="header-right">
-        {authUser.role === agentRole && (
-          <div className="balance-display">
-            <span className="balance-label">Balance:</span>
-            <span className="balance-amount">
-              {balance ? `₹ ${balance}` : <div className="loader"></div>}
-            </span>
-          </div>
-        )}
-
         <div className="profile-section">
           <div className="user-info">
             {/* <i className="fa-solid fa-user"></i> */}

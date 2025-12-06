@@ -1,46 +1,34 @@
-import { useState, useRef } from "react";
-import Modal from "../../components/Modal";
-import useApiData from "../../hooks/useApiData";
-import "./common.css";
-import useSendFile from "../../hooks/useSendFile";
-import { useAuth } from "../../context/AuthContext";
+import { useState } from "react";
+import SightseeingModal from "../../components/admin/SightseeingModal";
 import Confirm from "../../components/Confirm";
+import ImportModal from "../../components/shared/ImportModal";
+import TermsConditionsModal from "../../components/TermsConditions";
+import { useAuth } from "../../context/AuthContext";
+import useApiData from "../../hooks/useApiData";
+import useSendFile from "../../hooks/useSendFile";
 import Loader from "../../Loader";
 import "../../Loader.css";
 import excelFormat from "../../public/data/sightseeings.xlsx";
-import TermsConditionsModal from "../../components/TermsConditions";
+import "./common.css";
 
+const base_url = import.meta.env.VITE_API_URL;
 const Sightseeing = () => {
-  const base_url = import.meta.env.VITE_API_URL;
   const { authToken: token } = useAuth();
-
-  // Fetch destination and country data
+  const [importModalOpen, setImportModalOpen] = useState(false);
   const mainData = useApiData(`${base_url}/api/sightseeings`, token);
-
   const countriesData = useApiData(`${base_url}/api/countries`, token);
   const destinationsData = useApiData(`${base_url}/api/getdestinations`, token);
-
-  // State variables for search and pagination
   const [searchValue, setSearchValue] = useState("");
   const [perPage, setPerPage] = useState(10);
   const [currPageNo, setCurrPageNo] = useState(0);
   const [openTermsConditions, setOpenTermsConditions] = useState(false);
-  // Form Data state
-  const addForm = useSendFile(
-    `${base_url}/api/sightseeing`, // URL to send data to
-    token // Auth token
-  );
-
+  const addForm = useSendFile(`${base_url}/api/sightseeing`, token);
   const [editRes, setEditRes] = useState(null);
   const [editLoading, setEditLoading] = useState(false);
-
-  // Modal state
   const [modals, setModals] = useState({
     addModalOpen: false,
     editModalOpen: false,
   });
-
-  // Form data for add/edit
   const [formData, setFormData] = useState({
     addFormData: {
       destination_id: "",
@@ -63,13 +51,11 @@ const Sightseeing = () => {
     },
   });
 
-  // Handle search input change
   const handleSearch = (e) => {
     setSearchValue(e.target.value);
     setCurrPageNo(0);
   };
 
-  // Handle page change
   const handlePageChange = (increment) => {
     const newPageNo = currPageNo + increment;
     if (
@@ -80,48 +66,16 @@ const Sightseeing = () => {
     }
   };
 
-  // Filter destinations based on search value
   const filteredData =
     mainData.data?.data?.filter((item) =>
       item.company_name.toLowerCase().includes(searchValue.toLowerCase())
     ) || [];
 
-  // Paginated data
   const paginatedData = filteredData.slice(
     perPage * currPageNo,
     perPage * currPageNo + perPage
   );
 
-  // Handle form data changes
-  const handleFormDataChange = (formType) => (e) => {
-    const { name, value, type } = e.target;
-    let filteredValue = value;
-
-    switch (name) {
-      case "rate_adult":
-      case "rate_child":
-        filteredValue = value
-          .replace(/[^0-9.]/g, "")
-          .replace(/(\..*)\./g, "AED1");
-        break;
-
-      default:
-        filteredValue = value;
-        break;
-    }
-
-    setFormData((prev) => {
-      return {
-        ...prev,
-        [formType]: {
-          ...prev[formType],
-          [name]: filteredValue,
-        },
-      };
-    });
-  };
-
-  // Handle modal open/close
   const toggleModal = (modalType, isOpen) => {
     setEditRes(null);
     setModals((prev) => ({ ...prev, [modalType]: isOpen }));
@@ -181,7 +135,6 @@ const Sightseeing = () => {
     mainData.refetch();
   };
 
-  // Confirmation
   const [isConfirm, setIsConfirm] = useState(false);
   const [recordToDelete, setRecordToDelete] = useState(null);
 
@@ -208,367 +161,50 @@ const Sightseeing = () => {
     }
     setIsConfirm(false);
   };
-  const [importModalOpen, setImportModalOpen] = useState(false);
-  const [importFile, setImportFile] = useState(null);
-  const [importLoading, setImportLoading] = useState(false);
-  const [importError, setImportError] = useState(null);
-
-  const handleFileChange = (e) => {
-    setImportFile(e.target.files[0]);
-    setImportError(null);
-  };
-
-  const handleImportSubmit = async () => {
-    if (!importFile) {
-      setImportError("Please select an Excel file to import");
-      return;
-    }
-
-    setImportLoading(true);
-
-    const formData = new FormData();
-    formData.append("file", importFile);
-
-    try {
-      const res = await fetch(`${base_url}/api/sightseeing/import`, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-        body: formData,
-      });
-
-      const data = await res.json();
-
-      if (!data.success) {
-        setImportError(data.message || "Import failed");
-      } else {
-        // Optionally refresh data here
-        mainData.refetch();
-        setImportModalOpen(false);
-        setImportFile(null);
-      }
-    } catch (error) {
-      setImportError("Import failed: " + error.message);
-    }
-
-    setImportLoading(false);
-  };
 
   return (
     <>
       <section className="display-section">
         {/* Add Modal */}
-        <Modal
+        <SightseeingModal
           open={modals.addModalOpen}
           handleClose={() => toggleModal("addModalOpen", false)}
           title="Add Sharing Transport"
-        >
-          {/* Modal content */}
-          <div className="container p-3 style={{backgroundColor:#000d3d}}">
-            {/* Country */}
-            <div className="container border-bottom border-light-subtle">
-              {/* Add Form Sightseeing */}
-              <div className="mb-3">
-                <label htmlFor="company_name" className="form-label">
-                  Name
-                </label>
-                <input
-                  type="text"
-                  className="form-control"
-                  id="company_name"
-                  placeholder="Name..."
-                  name="company_name"
-                  value={formData.addFormData.company_name}
-                  onChange={handleFormDataChange("addFormData")}
-                />
-              </div>
-              <div className="mb-3">
-                <label htmlFor="address" className="form-label">
-                  Address
-                </label>
-                <input
-                  type="text"
-                  className="form-control"
-                  id="address"
-                  placeholder="Sharing transport Address..."
-                  name="address"
-                  value={formData.addFormData.address}
-                  onChange={handleFormDataChange("addFormData")}
-                />
-              </div>
-              <div className="mb-3">
-                <label htmlFor="destination_id" className="form-label">
-                  Destination
-                </label>
-                <select
-                  className="form-control"
-                  name="destination_id"
-                  id="destination_id"
-                  value={formData.addFormData.destination_id}
-                  onChange={handleFormDataChange("addFormData")}
-                >
-                  <option value="">-- select --</option>
-                  {destinationsData.data?.destinations?.map((item) => (
-                    <option key={item.id} value={item.id}>
-                      {countriesData.data?.cities.find(
-                        (city) => city.id === item.city_id
-                      )?.name || "N/A"}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div className="mb-3">
-                <label htmlFor="description" className="form-label">
-                  Description
-                </label>
-                <input
-                  type="text"
-                  className="form-control"
-                  id="description"
-                  placeholder="Description..."
-                  name="description"
-                  value={formData.addFormData.description}
-                  onChange={handleFormDataChange("addFormData")}
-                />
-              </div>
-              
-              <div className="mb-3">
-                <label htmlFor="rate_adult" className="form-label">
-                  Rate Adult
-                </label>
-                <input
-                  type="text"
-                  className="form-control"
-                  id="rate_adult"
-                  placeholder="Rate Adult..."
-                  name="rate_adult"
-                  value={formData.addFormData.rate_adult}
-                  onChange={handleFormDataChange("addFormData")}
-                />
-              </div>
-              <div className="mb-3">
-                <label htmlFor="rate_child" className="form-label">
-                  Rate Child
-                </label>
-                <input
-                  type="text"
-                  className="form-control"
-                  id="rate_child"
-                  placeholder="Rate Child..."
-                  name="rate_child"
-                  value={formData.addFormData.rate_child}
-                  onChange={handleFormDataChange("addFormData")}
-                />
-              </div>
-              {addForm.response &&
-                (addForm.response?.success ? (
-                  <div className="alert alert-success">
-                    {addForm.response?.message}
-                  </div>
-                ) : (
-                  <div className="alert alert-danger">
-                    {typeof addForm.response.errors === "object"
-                      ? Object.values(addForm.response.errors)[0]
-                      : addForm.response.errors}
-                  </div>
-                ))}
-            </div>
-            <div className="container p-3 d-flex justify-content-between">
-              <button
-                className="btn btn-primary"
-                type="submit"
-                onClick={() => submitFormData("addFormData")}
-              >
-                {addForm.loading ? "Processing..." : "Add"}
-              </button>
-              <button
-                className="btn btn-primary"
-                type="button"
-                onClick={() => setOpenTermsConditions(true)}
-              >
-                {formData.addFormData.terms_and_conditions
-                  ? "Edit terms & conditions"
-                  : "Add terms & conditions"}
-              </button>
-            </div>
-          </div>
-        </Modal>
-
+          data={formData.addFormData}
+          onDataChange={(newData) =>
+            setFormData((prev) => ({ ...prev, addFormData: newData }))
+          }
+          onSubmit={() => submitFormData("addFormData")}
+          loading={addForm.loading}
+          response={addForm.response}
+          destinations={destinationsData.data?.destinations || []}
+          cities={countriesData.data?.cities || []}
+          onTermsClick={() => setOpenTermsConditions(true)}
+        />
         {/* Edit Modal */}
-        <Modal
+        <SightseeingModal
           open={modals.editModalOpen}
           handleClose={() => toggleModal("editModalOpen", false)}
           title="Edit Sightseeing"
-        >
-          {/* Modal content */}
-          <div className="container p-3">
-            <div className="container border-bottom border-light-subtle">
-              {/* Add Form Sightseeing */}
-              <div className="mb-3">
-                <label htmlFor="company_name" className="form-label">
-                  Name
-                </label>
-                <input
-                  type="text"
-                  className="form-control"
-                  id="company_name"
-                  placeholder="Name..."
-                  name="company_name"
-                  value={formData.editFormData.company_name}
-                  onChange={handleFormDataChange("editFormData")}
-                />
-              </div>
-              <div className="mb-3">
-                <label htmlFor="address" className="form-label">
-                  Address
-                </label>
-                <input
-                  type="text"
-                  className="form-control"
-                  id="address"
-                  placeholder="Transport Address..."
-                  name="address"
-                  value={formData.editFormData.address}
-                  onChange={handleFormDataChange("editFormData")}
-                />
-              </div>
-              <div className="mb-3">
-                <label htmlFor="destination_id" className="form-label">
-                  Destination
-                </label>
-                <select
-                  className="form-control"
-                  name="destination_id"
-                  id="destination_id"
-                  value={formData.editFormData.destination_id}
-                  onChange={handleFormDataChange("editFormData")}
-                >
-                  <option value="">-- select --</option>
-                  {destinationsData.data?.destinations?.map((item) => (
-                    <option key={item.id} value={item.id}>
-                      {countriesData.data?.cities.find(
-                        (city) => city.id === item.city_id
-                      )?.name || "N/A"}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div className="mb-3">
-                <label htmlFor="description" className="form-label">
-                  Description
-                </label>
-                <input
-                  type="text"
-                  className="form-control"
-                  id="description"
-                  placeholder="Description..."
-                  name="description"
-                  value={formData.editFormData.description}
-                  onChange={handleFormDataChange("editFormData")}
-                />
-              </div>
-             
-
-              <div className="mb-3">
-                <label htmlFor="rate_adult" className="form-label">
-                  Rate Adult
-                </label>
-                <input
-                  type="text"
-                  className="form-control"
-                  id="rate_adult"
-                  placeholder="Rate Adult..."
-                  name="rate_adult"
-                  value={formData.editFormData.rate_adult}
-                  onChange={handleFormDataChange("editFormData")}
-                />
-              </div>
-              <div className="mb-3">
-                <label htmlFor="rate_child" className="form-label">
-                  Rate Child
-                </label>
-                <input
-                  type="text"
-                  className="form-control"
-                  id="rate_child"
-                  placeholder="Rate Child..."
-                  name="rate_child"
-                  value={formData.editFormData.rate_child}
-                  onChange={handleFormDataChange("editFormData")}
-                />
-              </div>
-              {editRes &&
-                (editRes?.success ? (
-                  <div className="alert alert-success">{editRes?.message}</div>
-                ) : (
-                  <div className="alert alert-danger">
-                    {typeof editRes.errors === "object"
-                      ? Object.values(editRes.errors)[0]
-                      : editRes.errors}
-                  </div>
-                ))}
-            </div>
-            <div className="container p-3 d-flex justify-content-between">
-              <button
-                className="btn btn-warning"
-                type="submit"
-                onClick={() => submitFormData("editFormData")}
-              >
-                {editLoading ? "Processing..." : "Update"}
-              </button>
-              <button
-                className="btn btn-primary"
-                type="button"
-                onClick={() => setOpenTermsConditions(true)}
-              >
-                {formData.editFormData.terms_and_conditions
-                  ? "Edit terms & conditions"
-                  : "Add terms & conditions"}
-              </button>
-            </div>
-          </div>
-        </Modal>
-
+          data={formData.editFormData}
+          onDataChange={(newData) =>
+            setFormData((prev) => ({ ...prev, editFormData: newData }))
+          }
+          onSubmit={() => submitFormData("editFormData")}
+          loading={editLoading}
+          response={editRes}
+          destinations={destinationsData.data?.destinations || []}
+          cities={countriesData.data?.cities || []}
+          onTermsClick={() => setOpenTermsConditions(true)}
+        />
         {/* Import Modal */}
-        <Modal
+        <ImportModal
           open={importModalOpen}
-          handleClose={() => {
-            setImportModalOpen(false);
-            setImportFile(null);
-            setImportError(null);
-          }}
-          title="Import Excel File"
-        >
-          <div className="mb-3">
-            <input
-              type="file"
-              accept=".xls,.xlsx"
-              className="form-control"
-              onChange={handleFileChange}
-            />
-          </div>
-          {importError && <div className="text-danger mb-2">{importError}</div>}
-          <div className="d-flex justify-content-end gap-2">
-            <button
-              className="btn btn-secondary"
-              onClick={() => {
-                setImportModalOpen(false);
-                setImportFile(null);
-                setImportError(null);
-              }}
-            >
-              Cancel
-            </button>
-            <button
-              className="btn btn-primary"
-              onClick={handleImportSubmit}
-              disabled={importLoading}
-            >
-              {importLoading ? "Importing..." : "Import"}
-            </button>
-          </div>
-        </Modal>
+          onClose={() => setImportModalOpen(false)}
+          apiEndpoint={`${base_url}/api/sightseeing/import`}
+          token={token}
+          onSuccess={() => mainData.refetch()}
+        />
 
         {/* Confirm */}
         <Confirm

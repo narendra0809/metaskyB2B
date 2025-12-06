@@ -3,10 +3,9 @@ import { useContext, useEffect } from "react";
 /* -- components -- */
 
 import { NavContext } from "../context/NavContext";
-import BalanceContextProvider from "../context/BalanceContext";
-import Header from "./Header";
+import Header from "./header";
 import Footer from "./Footer";
-import Navbar from "./Navbar";
+import Navbar from "./navbar";
 
 const Page = ({ children }) => {
   /* -- contexts -- */
@@ -14,16 +13,14 @@ const Page = ({ children }) => {
 
   return (
     <>
-      <BalanceContextProvider>
-        <Header />
-        <div className="d-flex align-items-stretch">
-          <Navbar />
-          <main className={navActive ? "active" : ""}>
-            <div className="page-wrapper">{children}</div>
-            <Footer />
-          </main>
-        </div>
-      </BalanceContextProvider>
+      <Header />
+      <div className="d-flex align-items-stretch">
+        <Navbar />
+        <main className={navActive ? "active" : ""}>
+          <div className="page-wrapper">{children}</div>
+          <Footer />
+        </main>
+      </div>
     </>
   );
 };
